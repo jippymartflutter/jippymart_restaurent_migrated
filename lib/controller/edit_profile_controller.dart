@@ -27,7 +27,8 @@ class EditProfileController extends GetxController {
   }
 
   getData() async {
-    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid())
+    String userId = await FireStoreUtils.getCurrentUid();
+    await FireStoreUtils.getUserProfile(userId)
         .then((value) {
       if (value != null) {
         userModel.value = value;

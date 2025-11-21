@@ -1009,12 +1009,13 @@ class WalletScreen extends StatelessWidget {
                                                 ? "razorpay"
                                                 : "stripe",
                               );
+                              String userId = await FireStoreUtils.getCurrentUid();
                               await FireStoreUtils.withdrawWalletAmount(
                                   withdrawHistory);
                               await FireStoreUtils.updateUserWallet(
                                       amount:
                                           "-${controller.amountTextFieldController.value.text}",
-                                      userId: FireStoreUtils.getCurrentUid())
+                                      userId: userId)
                                   .then((value) {
                                 Get.back();
                                 FireStoreUtils.sendPayoutMail(

@@ -18,7 +18,8 @@ class ProductListController extends GetxController {
   RxBool isLoading = true.obs;
 
   getUserProfile() async {
-    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid()).then(
+    String userId = await FireStoreUtils.getCurrentUid();
+    await FireStoreUtils.getUserProfile(userId).then(
       (value) {
         if (value != null) {
           Constant.userModel = value;

@@ -65,7 +65,8 @@ class AddRestaurantController extends GetxController {
 
   getRestaurant() async {
     try {
-      await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid())
+      String userId = await FireStoreUtils.getCurrentUid();
+      await FireStoreUtils.getUserProfile(userId)
           .then((model) {
         if (model != null) {
           userModel.value = model;

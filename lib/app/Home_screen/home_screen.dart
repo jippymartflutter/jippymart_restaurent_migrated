@@ -2,15 +2,12 @@ import 'package:bottom_picker/resources/extensions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/utils/const/color_const.dart';
 import 'package:jippymart_restaurant/utils/const/image_const.dart';
 import 'package:jippymart_restaurant/utils/const/text_style_const.dart';
-import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
 import 'package:provider/provider.dart';
-import 'package:jippymart_restaurant/app/Home_screen/order_details_screen.dart';
 import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_screen.dart';
 import 'package:jippymart_restaurant/app/chat_screens/chat_screen.dart';
 import 'package:jippymart_restaurant/app/chat_screens/restaurant_inbox_screen.dart';
@@ -21,7 +18,6 @@ import 'package:jippymart_restaurant/constant/collection_name.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/send_notification.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
-import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
 import 'package:jippymart_restaurant/controller/home_controller.dart';
 import 'package:jippymart_restaurant/models/cart_product_model.dart';
 import 'package:jippymart_restaurant/models/order_model.dart';
@@ -37,9 +33,7 @@ import 'package:jippymart_restaurant/widget/my_separator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../themes/round_button_fill.dart';
-import 'package:duration_picker/duration_picker.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -1143,14 +1137,14 @@ class HomeScreen extends StatelessWidget {
                                       paymentStatus: "success",
                                       note: "Order Refund success",
                                       transactionUser: "user");
-
                               await FireStoreUtils.fireStore
                                   .collection(CollectionName.wallet)
                                   .doc(historyModel.id)
                                   .set(historyModel.toJson());
                               await FireStoreUtils.updateUserWallet(
                                   amount: finalAmount.toString(),
-                                  userId: orderModel.author!.id.toString());
+                                  userId: orderModel.author!.firebaseId.toString()
+                              );
                             }
 
                             ShowToastDialog.closeLoader();
@@ -1789,6 +1783,7 @@ class HomeScreen extends StatelessWidget {
                           textColor: AppThemeData.grey50,
                           height: 5,
                           onPress: () async {
+                            String userId = await FireStoreUtils.getCurrentUid();
                             ShowToastDialog.showLoader('Please wait...'.tr);
                             await AudioPlayerService.playSound(false);
                             orderModel.status = Constant.orderCancelled;
@@ -1878,7 +1873,7 @@ class HomeScreen extends StatelessWidget {
                                     amount: taxAmountData,
                                     id: const Uuid().v4(),
                                     orderId: orderModel.id,
-                                    userId: FireStoreUtils.getCurrentUid(),
+                                    userId:userId,
                                     date: Timestamp.now(),
                                     isTopup: false,
                                     paymentMethod: "tax",
@@ -1891,7 +1886,7 @@ class HomeScreen extends StatelessWidget {
                                     amount: finalAmount,
                                     id: const Uuid().v4(),
                                     orderId: orderModel.id,
-                                    userId: FireStoreUtils.getCurrentUid(),
+                                    userId:userId,
                                     date: Timestamp.now(),
                                     isTopup: false,
                                     paymentMethod: "Wallet",
@@ -2748,7 +2743,6 @@ class HomeScreen extends StatelessWidget {
                               controller
                                   .selectDriverUser.value.inProgressOrderID!
                                   .add(orderModel.id);
-
                               await FireStoreUtils.updateOrder(orderModel);
                               await FireStoreUtils.updateDriverUser(
                                   controller.selectDriverUser.value);

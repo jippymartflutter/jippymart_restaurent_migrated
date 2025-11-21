@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:jippymart_restaurant/controller/login_controller.dart';
 import 'package:mime/mime.dart';
 import 'package:jippymart_restaurant/app/chat_screens/ChatVideoContainer.dart';
 import 'package:jippymart_restaurant/constant/collection_name.dart';
@@ -57,27 +58,28 @@ import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_compress/video_compress.dart';
-
+import 'package:http/http.dart' as http;
 class FireStoreUtils {
   static FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
-  static String getCurrentUid() {
-    return FirebaseAuth.instance.currentUser!.uid;
+  static Future<String> getCurrentUid() async{
+    return await getFirebaseId()??'';
+      // FirebaseAuth.instance.currentUser!.uid;
   }
 
   static Future<bool> isLogin() async {
     bool isLogin = false;
-    if (FirebaseAuth.instance.currentUser != null) {
-      isLogin = await userExistOrNot(FirebaseAuth.instance.currentUser!.uid);
+    String? userId = await getFirebaseId();
+    print("isLogin $userId ");
+    if (userId != null) {
+      isLogin = await userExistOrNot(userId);
     } else {
       isLogin = false;
     }
     return isLogin;
   }
-
   static Future<bool> userExistOrNot(String uid) async {
     bool isExist = false;
-
     await fireStore.collection(CollectionName.users).doc(uid).get().then(
       (value) {
         if (value.exists) {
@@ -92,7 +94,6 @@ class FireStoreUtils {
     });
     return isExist;
   }
-
   static Future<UserModel?> getUserProfile(String uuid) async {
     UserModel? userModel;
     await fireStore
@@ -122,36 +123,58 @@ class FireStoreUtils {
     });
     return userModel;
   }
-
-  static Future<bool?> updateUserWallet(
-      {required String amount, required String userId}) async {
-    bool isAdded = false;
-    await getUserProfile(userId).then((value) async {
-      if (value != null) {
-        UserModel userModel = value;
-        userModel.walletAmount =
-            ((userModel.walletAmount ?? 0.0) + double.parse(amount));
-        await FireStoreUtils.updateUser(userModel).then((value) {
-          isAdded = value;
-        });
+  static Future<bool?> updateUserWallet({
+    required String amount,
+    required String userId
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constant.baseUrl}restaurant/update-user-wallet'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userId': userId,
+          'amount': amount,
+        }),
+      );
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        return responseData['success'] ?? true; // Adjust based on your API response
+      } else {
+        print('Failed to update wallet: ${response.statusCode}');
+        return false;
       }
-    });
-    return isAdded;
+    } catch (e) {
+      // Handle network or other errors
+      print('Error updating wallet: $e');
+      return false;
+    }
   }
 
   static Future<bool> updateUser(UserModel userModel) async {
     bool isUpdate = false;
-    await fireStore
-        .collection(CollectionName.users)
-        .doc(userModel.id)
-        .set(userModel.toJson())
-        .whenComplete(() {
-      Constant.userModel = userModel;
-      isUpdate = true;
-    }).catchError((error) {
+
+    try {
+      final response = await http.post(
+        Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: userModel.toJson(),
+      );
+      if (response.statusCode == 200) {
+        Constant.userModel = userModel;
+        isUpdate = true;
+      } else {
+        log("Failed to update user: ${response.statusCode} - ${response.body}");
+        isUpdate = false;
+      }
+    } catch (error) {
       log("Failed to update user: $error");
       isUpdate = false;
-    });
+    }
+
     return isUpdate;
   }
 
@@ -171,18 +194,26 @@ class FireStoreUtils {
   }
 
   static Future<bool> withdrawWalletAmount(WithdrawalModel userModel) async {
-    bool isUpdate = false;
-    await fireStore
-        .collection(CollectionName.payouts)
-        .doc(userModel.id)
-        .set(userModel.toJson())
-        .whenComplete(() {
-      isUpdate = true;
-    }).catchError((error) {
-      log("Failed to update user: $error");
-      isUpdate = false;
-    });
-    return isUpdate;
+    try {
+      final response = await http.post(
+        Uri.parse('${Constant.baseUrl}restaurant/withdraw'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: userModel.toJson(),
+      );
+      if (response.statusCode == 200) {
+        // Optionally parse the response if needed
+        // final responseData = json.decode(response.body);
+        return true;
+      } else {
+        log("Failed to withdraw: ${response.statusCode} - ${response.body}");
+        return false;
+      }
+    } catch (error) {
+      log("Error during withdrawal: $error");
+      return false;
+    }
   }
 
   static Future<List<OnBoardingModel>> getOnBoardingList() async {
@@ -1243,10 +1274,11 @@ class FireStoreUtils {
   }
 
   static Future<DriverDocumentModel?> getDocumentOfDriver() async {
+    String userId = await FireStoreUtils.getCurrentUid();
     DriverDocumentModel? driverDocumentModel;
     await fireStore
         .collection(CollectionName.documentsVerify)
-        .doc(getCurrentUid())
+        .doc(userId)
         .get()
         .then((value) async {
       if (value.exists) {
@@ -1301,12 +1333,14 @@ class FireStoreUtils {
   }
 
   static Future<bool> uploadDriverDocument(Documents documents) async {
+    String userId = await FireStoreUtils.getCurrentUid();
     bool isAdded = false;
     DriverDocumentModel driverDocumentModel = DriverDocumentModel();
     List<Documents> documentsList = [];
+
     await fireStore
         .collection(CollectionName.documentsVerify)
-        .doc(getCurrentUid())
+        .doc(userId)
         .get()
         .then((value) async {
       if (value.exists) {
@@ -1318,14 +1352,14 @@ class FireStoreUtils {
         if (contain.isEmpty) {
           documentsList.add(documents);
 
-          driverDocumentModel.id = getCurrentUid();
+          driverDocumentModel.id = userId;
           driverDocumentModel.type = "restaurant";
           driverDocumentModel.documents = documentsList;
         } else {
           var index = newDriverDocumentModel.documents!.indexWhere(
               (element) => element.documentId == documents.documentId);
 
-          driverDocumentModel.id = getCurrentUid();
+          driverDocumentModel.id = userId;
           driverDocumentModel.type = "restaurant";
           documentsList.removeAt(index);
           documentsList.insert(index, documents);
@@ -1334,7 +1368,7 @@ class FireStoreUtils {
         }
       } else {
         documentsList.add(documents);
-        driverDocumentModel.id = getCurrentUid();
+        driverDocumentModel.id = userId;
         driverDocumentModel.type = "restaurant";
         driverDocumentModel.documents = documentsList;
       }
@@ -1342,7 +1376,7 @@ class FireStoreUtils {
 
     await fireStore
         .collection(CollectionName.documentsVerify)
-        .doc(getCurrentUid())
+        .doc(userId)
         .set(driverDocumentModel.toJson())
         .then((value) {
       isAdded = true;
@@ -1451,10 +1485,10 @@ class FireStoreUtils {
             .doc(Constant.userModel?.vendorID)
             .delete();
       }
-
+      String userId = await FireStoreUtils.getCurrentUid();
       await fireStore
           .collection(CollectionName.users)
-          .doc(FireStoreUtils.getCurrentUid())
+          .doc(userId)
           .delete();
 
       // delete user  from firebase auth
@@ -1620,9 +1654,10 @@ class FireStoreUtils {
 
   static Future<WithdrawMethodModel?> setWithdrawMethod(
       WithdrawMethodModel withdrawMethodModel) async {
+    String userId = await FireStoreUtils.getCurrentUid();
     if (withdrawMethodModel.id == null) {
       withdrawMethodModel.id = const Uuid().v4();
-      withdrawMethodModel.userId = getCurrentUid();
+      withdrawMethodModel.userId = userId;
     }
     await fireStore
         .collection(CollectionName.withdrawMethod)

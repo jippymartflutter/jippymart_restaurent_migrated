@@ -17,35 +17,35 @@ class PhoneNumberController extends GetxController {
     countryCodeEditingController.value.text = '+91';
   }
 
-  sendCode() async {
-    ShowToastDialog.showLoader("please wait...".tr);
-    await FirebaseAuth.instance
-        .verifyPhoneNumber(
-            phoneNumber: countryCodeEditingController.value.text +
-                phoneNUmberEditingController.value.text,
-            verificationCompleted: (PhoneAuthCredential credential) {},
-            verificationFailed: (FirebaseAuthException e) {
-              debugPrint("FirebaseAuthException--->${e.message}");
-              ShowToastDialog.closeLoader();
-              if (e.code == 'invalid-phone-number') {
-                ShowToastDialog.showToast("invalid_phone_number".tr);
-              } else {
-                ShowToastDialog.showToast(e.message);
-              }
-            },
-            codeSent: (String verificationId, int? resendToken) {
-              ShowToastDialog.closeLoader();
-              Get.to(const OtpScreen(), arguments: {
-                "countryCode": countryCodeEditingController.value.text,
-                "phoneNumber": phoneNUmberEditingController.value.text,
-                "verificationId": verificationId,
-              });
-            },
-            codeAutoRetrievalTimeout: (String verificationId) {})
-        .catchError((error) {
-      debugPrint("catchError--->$error");
-      ShowToastDialog.closeLoader();
-      ShowToastDialog.showToast("multiple_time_request".tr);
-    });
-  }
+  // sendCode() async {
+  //   ShowToastDialog.showLoader("please wait...".tr);
+  //   await FirebaseAuth.instance
+  //       .verifyPhoneNumber(
+  //           phoneNumber: countryCodeEditingController.value.text +
+  //               phoneNUmberEditingController.value.text,
+  //           verificationCompleted: (PhoneAuthCredential credential) {},
+  //           verificationFailed: (FirebaseAuthException e) {
+  //             debugPrint("FirebaseAuthException--->${e.message}");
+  //             ShowToastDialog.closeLoader();
+  //             if (e.code == 'invalid-phone-number') {
+  //               ShowToastDialog.showToast("invalid_phone_number".tr);
+  //             } else {
+  //               ShowToastDialog.showToast(e.message);
+  //             }
+  //           },
+  //           codeSent: (String verificationId, int? resendToken) {
+  //             ShowToastDialog.closeLoader();
+  //             Get.to(const OtpScreen(), arguments: {
+  //               "countryCode": countryCodeEditingController.value.text,
+  //               "phoneNumber": phoneNUmberEditingController.value.text,
+  //               "verificationId": verificationId,
+  //             });
+  //           },
+  //           codeAutoRetrievalTimeout: (String verificationId) {})
+  //       .catchError((error) {
+  //     debugPrint("catchError--->$error");
+  //     ShowToastDialog.closeLoader();
+  //     ShowToastDialog.showToast("multiple_time_request".tr);
+  //   });
+  // }
 }

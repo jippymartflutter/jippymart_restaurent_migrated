@@ -5,6 +5,7 @@ import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
 class UserModel {
   String? id;
   String? firstName;
+  String?firebaseId;
   String? lastName;
   String? email;
   String? profilePictureURL;
@@ -37,6 +38,7 @@ class UserModel {
   UserModel(
       {this.id,
       this.firstName,
+        this.firebaseId,
       this.lastName,
       this.active,
       this.isActive,
@@ -74,6 +76,7 @@ class UserModel {
     zoneId = json['zoneId'] ?? '';
     email = json['email'];
     firstName = json['firstName'];
+    firebaseId = json['firebase_id'];
     lastName = json['lastName'];
     profilePictureURL = json['profilePictureURL'];
     fcmToken = json['fcmToken'];
@@ -121,6 +124,7 @@ class UserModel {
     data['email'] = email;
     data['zoneId'] = zoneId;
     data['firstName'] = firstName;
+    data['firebase_id'] = firebaseId;
     data['lastName'] = lastName;
     data['profilePictureURL'] = profilePictureURL;
     data['fcmToken'] = fcmToken;

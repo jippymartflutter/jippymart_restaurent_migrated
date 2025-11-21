@@ -59,8 +59,9 @@ class SubscriptionController extends GetxController {
   }
 
   getInitPlanSettings() async {
+    String userId = await FireStoreUtils.getCurrentUid();
     userModel.value =
-        await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid()) ??
+        await FireStoreUtils.getUserProfile(userId) ??
             UserModel();
 
     await FirebaseFirestore.instance
@@ -633,6 +634,7 @@ class SubscriptionController extends GetxController {
   }
 
   setOrder() async {
+    String userId = await FireStoreUtils.getCurrentUid();
     ShowToastDialog.showLoader("Please wait".tr);
     userModel.value.subscriptionPlanId = selectedSubscriptionPlan.value.id;
     userModel.value.subscriptionPlan = selectedSubscriptionPlan.value;
@@ -695,7 +697,7 @@ class SubscriptionController extends GetxController {
           date: Timestamp.now(),
           paymentMethod: PaymentGateway.wallet.name,
           transactionUser: "user",
-          userId: FireStoreUtils.getCurrentUid(),
+          userId: userId,
           isTopup: false,
           subscriptionId: subscriptionHistoryData.id,
           note: "Subscription Amount debited".tr,

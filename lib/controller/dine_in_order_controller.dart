@@ -23,7 +23,8 @@ class DineInOrderController extends GetxController {
   RxList<DineInBookingModel> historyList = <DineInBookingModel>[].obs;
 
   getUserProfile() async {
-    await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid()).then(
+    String userId = await FireStoreUtils.getCurrentUid();
+    await FireStoreUtils.getUserProfile(userId).then(
       (value) {
         if (value != null) {
           userModel.value = value;

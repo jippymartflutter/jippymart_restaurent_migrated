@@ -64,6 +64,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
   }
 
   void _proceedToMainApp() async {
+    String userId = await FireStoreUtils.getCurrentUid();
     try {
       if (Preferences.getBoolean(Preferences.isFinishOnBoardingKey) == false) {
         Get.offAll(
@@ -75,7 +76,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
         bool isLogin = await FireStoreUtils.isLogin();
         if (isLogin == true) {
           await FireStoreUtils.getUserProfile(
-            FireStoreUtils.getCurrentUid(),
+           userId,
           ).then((value) async {
             if (value != null) {
               UserModel userModel = value;

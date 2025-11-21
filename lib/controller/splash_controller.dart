@@ -79,8 +79,8 @@ class SplashController extends GetxController {
         Get.offAll(() => const LoginScreen());
         return;
       }
-
-      final userProfile = await FireStoreUtils.getUserProfile(FireStoreUtils.getCurrentUid());
+      String userId = await FireStoreUtils.getCurrentUid();
+      final userProfile = await FireStoreUtils.getUserProfile(userId);
       if (userProfile == null) {
         await FirebaseAuth.instance.signOut();
         Get.offAll(() => const LoginScreen());
