@@ -46,8 +46,7 @@ class HomeController extends GetxController {
         }
       },
     );
-    if (userModel.value.vendorID != null ||
-        userModel.value.vendorID!.isNotEmpty) {
+    if (userModel.value.vendorID != null ) {
       await FireStoreUtils.getVendorById(userModel.value.vendorID!).then(
         (vender) {
           if (vender?.id != null) {
@@ -145,7 +144,6 @@ class HomeController extends GetxController {
       (event) async {
         print('📦 Received ${event.docs.length} orders from Firebase');
         allOrderList.clear();
-
         // First, collect all orders
         for (var element in event.docs) {
           OrderModel orderModel = OrderModel.fromJson(element.data());

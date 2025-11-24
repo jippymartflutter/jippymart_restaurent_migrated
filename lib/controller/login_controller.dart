@@ -34,15 +34,17 @@ class LoginController extends GetxController {
   static Future<Map<String, dynamic>> loginWithEmailAndPasswordApi(
       String email, String password) async {
     try {
+      final body = {
+        'email': email,
+        'password': password,
+      };
+      print(" loginWithEmailAndPasswordApi ${body}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/login'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: json.encode({
-          'email': email,
-          'password': password,
-        }),
+        body: json.encode(body),
       );
       if (response.statusCode == 200) {
         return json.decode(response.body);
