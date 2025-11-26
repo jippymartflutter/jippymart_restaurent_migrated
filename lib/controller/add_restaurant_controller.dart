@@ -269,8 +269,18 @@ class AddRestaurantController extends GetxController {
           if (Constant.userModel!.vendorID!.isNotEmpty) {
             await FireStoreUtils.updateVendor(vendorModel.value).then((value) {
               ShowToastDialog.closeLoader();
+              if (value != null) {
+                ShowToastDialog.showToast(
+                    "Restaurant details save successfully".tr);
+                Get.back();
+              } else {
+                ShowToastDialog.showToast(
+                    "Failed to save restaurant details".tr);
+              }
+            }).catchError((error) {
+              ShowToastDialog.closeLoader();
               ShowToastDialog.showToast(
-                  "Restaurant details save successfully".tr);
+                  "Failed to save restaurant details".tr);
             });
           } else {
             vendorModel.value.adminCommission = Constant.adminCommission;
@@ -302,6 +312,11 @@ class AddRestaurantController extends GetxController {
               ShowToastDialog.closeLoader();
               ShowToastDialog.showToast(
                   "Restaurant details save successfully".tr);
+              Get.back();
+            }).catchError((error) {
+              ShowToastDialog.closeLoader();
+              ShowToastDialog.showToast(
+                  "Failed to save restaurant details".tr);
             });
           }
         } else {

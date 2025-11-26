@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
 
 class VerificationDetailsUploadScreen extends StatelessWidget {
   const VerificationDetailsUploadScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -465,7 +463,8 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
                     ),
                   ),
           );
-        });
+        },
+    );
   }
 
   buildBottomSheet(

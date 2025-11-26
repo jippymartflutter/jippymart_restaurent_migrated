@@ -49,7 +49,6 @@ class ProductListController extends GetxController {
   Future<void> refreshCategoriesWithProducts() async {
     final categories = await FireStoreUtils.getVendorCategoryById();
     if (categories != null) {
-      // Show all categories that have ever had products for this vendor
       final allProductCategoryIds = productList.map((p) => p.categoryID).toSet();
       categoryList.value = categories
         .where((cat) => allProductCategoryIds.contains(cat.id))

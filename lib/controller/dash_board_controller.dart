@@ -59,14 +59,12 @@ class DashBoardController extends GetxController {
       );
     }
   }
-
   Future<void> updateRestStatus(bool status) async {
     vendorModel.value.reststatus = status;
     vendorModel.value.isOpen = status; // Ensure isOpen is updated
     await FireStoreUtils.updateVendor(vendorModel.value);
     vendorModel.refresh();
   }
-
   DateTime? currentBackPressTime;
   RxBool canPopNow = false.obs;
 }

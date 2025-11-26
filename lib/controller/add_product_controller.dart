@@ -175,7 +175,7 @@ class AddProductController extends GetxController {
       if (productModel.value.productSpecification != null) {
         productModel.value.productSpecification!.forEach((key, value) {
           specificationList
-              .add(ProductSpecificationModel(lable: key, value: value));
+              .add(ProductSpecificationModel(lable: key, value: value.toString()));
         });
       }
 
@@ -193,7 +193,7 @@ class AddProductController extends GetxController {
       for (var element in productModel.value.addOnsTitle!) {
         addonsList.add(ProductSpecificationModel(
             lable: element,
-            value: productModel.value.addOnsPrice![
+            value: productModel.value.addOnsPrice.toString()[
             productModel.value.addOnsTitle!.indexOf(element)]));
       }
 
@@ -315,7 +315,6 @@ class AddProductController extends GetxController {
     // }else{
     //   isAttributeNotAvailable.value = false;
     // }
-
     if (selectedProductCategory.value.id == null) {
       ShowToastDialog.showToast("Please Select category".tr);
     } else if (productTitleController.value.text.isEmpty) {
@@ -339,11 +338,9 @@ class AddProductController extends GetxController {
               .addEntries([MapEntry(element.lable.toString(), element.value)]);
         }
       }
-
       // if (itemAttributes.value!.attributes!.isEmpty || itemAttributes.value!.variants!.isEmpty) {
       //   itemAttributes.value = null;
       // }
-
       ShowToastDialog.showLoader("Please wait".tr);
       for (int i = 0; i < images.length; i++) {
         if (images[i].runtimeType == XFile) {
@@ -356,7 +353,6 @@ class AddProductController extends GetxController {
           images.insert(i, url);
         }
       }
-
       List listAddTitle = [];
       List listAddPrice = [];
       for (var element in addonsList) {
@@ -365,8 +361,8 @@ class AddProductController extends GetxController {
           listAddPrice.add(element.value.toString());
         }
       }
-
-      productModel.value.id = productModel.value.id ?? Constant.getUuid();
+      productModel.value.id = productModel.value.id
+          ?? Constant.getUuid();
       productModel.value.photo = images.isNotEmpty ? images.first : "";
       productModel.value.photos = images;
       productModel.value.price = regularPriceController.value.text.toString();
@@ -391,6 +387,7 @@ class AddProductController extends GetxController {
       productModel.value.fats = int.parse(
           fatsController.value.text.isEmpty ? "0" : fatsController.value.text);
       productModel.value.name = productTitleController.value.text;
+print("${productModel.value.name} productModelproductModel ");
       productModel.value.veg = isPureVeg.value;
       productModel.value.nonveg = isNonVeg.value;
       productModel.value.publish = isPublish.value;
@@ -414,9 +411,7 @@ class AddProductController extends GetxController {
       Get.back(result: true);
     }
   }
-
   final ImagePicker _imagePicker = ImagePicker();
-
   Future pickFile({required ImageSource source}) async {
     try {
       XFile? image = await _imagePicker.pickImage(source: source);

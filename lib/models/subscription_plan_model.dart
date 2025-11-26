@@ -48,15 +48,28 @@ class SubscriptionPlanModel {
       place: json['place'],
       image: json['image'],
       type: json['type'],
-      planPoints: json['plan_points'] == null ? [] : List<String>.from(json['plan_points']),
+      planPoints: _parsePlanPoints(json['plan_points']),
     );
+  }
+
+  static List<String>? _parsePlanPoints(dynamic planPoints) {
+    if (planPoints == null) return null;
+    if (planPoints is int) {
+      return [planPoints.toString()];
+    }
+    if (planPoints is String) {
+      return [planPoints];
+    }
+    if (planPoints is List) {
+      return planPoints.map((item) => item.toString()).toList();
+    }
+    return null;
   }
 
   static Timestamp? _parseTimestamp(dynamic timestamp) {
     if (timestamp == null) return null;
     if (timestamp is Timestamp) return timestamp;
     if (timestamp is String) {
-      // Try to parse string to DateTime then to Timestamp
       try {
         final dateTime = DateTime.parse(timestamp);
         return Timestamp.fromDate(dateTime);
@@ -65,19 +78,14 @@ class SubscriptionPlanModel {
       }
     }
     if (timestamp is Map && timestamp['_seconds'] != null && timestamp['_nanoseconds'] != null) {
-      // Handle Firestore timestamp format
       return Timestamp(timestamp['_seconds'], timestamp['_nanoseconds']);
     }
     return null;
   }
 
   static bool _parseBool(dynamic value) {
-    if (value is bool) {
-      return value;
-    }
-    if (value is num) {
-      return value != 0;
-    }
+    if (value is bool) return value;
+    if (value is num) return value != 0;
     if (value is String) {
       final normalized = value.toLowerCase();
       return normalized == 'true' || normalized == '1';

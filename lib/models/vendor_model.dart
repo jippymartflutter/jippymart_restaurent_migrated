@@ -312,22 +312,35 @@ class VendorModel {
     data['categoryPhoto'] = categoryPhoto;
     data['restaurantMenuPhotos'] = restaurantMenuPhotos;
     data['subscriptionPlanId'] = subscriptionPlanId;
-    data['subscriptionExpiryDate'] = subscriptionExpiryDate;
+
+    // Fix: Convert subscriptionExpiryDate Timestamp to ISO string
+    if (subscriptionExpiryDate != null) {
+      data['subscriptionExpiryDate'] = subscriptionExpiryDate!.toDate().toIso8601String();
+    } else {
+      data['subscriptionExpiryDate'] = null;
+    }
+
     data['subscription_plan'] = subscriptionPlan?.toJson();
     data['subscriptionTotalOrders'] = subscriptionTotalOrders;
+
     if (workingHours != null) {
       data['workingHours'] = workingHours!.map((v) => v.toJson()).toList();
     }
+
     data['location'] = location;
     data['fcmToken'] = fcmToken;
+
     if (g != null) {
       data['g'] = g!.toJson();
     }
+
     data['hidephotos'] = hidephotos;
     data['reststatus'] = reststatus;
+
     if (filters != null) {
       data['filters'] = filters!.toJson();
     }
+
     data['reviewsCount'] = reviewsCount;
     data['photo'] = photo;
     data['description'] = description;
@@ -345,18 +358,23 @@ class VendorModel {
     data['longitude'] = longitude;
     data['enabledDiveInFuture'] = enabledDiveInFuture;
     data['restaurantCost'] = restaurantCost;
+
     if (deliveryCharge != null) {
       data['DeliveryCharge'] = deliveryCharge!.minimumDeliveryCharges ?? 0;
     }
+
     if (adminCommission != null) {
       data['adminCommission'] = adminCommission!.toJson();
     }
+
     data['authorProfilePic'] = authorProfilePic;
     data['authorName'] = authorName;
     data['phonenumber'] = phonenumber;
+
     if (specialDiscount != null) {
       data['specialDiscount'] = specialDiscount!.map((v) => v.toJson()).toList();
     }
+
     data['specialDiscountEnable'] = specialDiscountEnable;
     data['coordinates'] = coordinates;
     data['reviewsSum'] = reviewsSum;
@@ -368,20 +386,10 @@ class VendorModel {
     data['cuisineID'] = cuisineID;
     data['cuisineTitle'] = cuisineTitle;
     data['isOpen'] = isOpen;
+
     return data;
   }
 
-  // Helper method to parse JSON fields that might be stringified
-  static dynamic _parseJsonField(dynamic field) {
-    if (field is String) {
-      try {
-        return jsonDecode(field);
-      } catch (e) {
-        return field;
-      }
-    }
-    return field;
-  }
 
   // Helper method to parse JSON fields to List
   static List<dynamic>? _parseJsonFieldToList(dynamic field) {

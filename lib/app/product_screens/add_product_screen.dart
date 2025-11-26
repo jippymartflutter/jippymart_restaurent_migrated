@@ -1658,7 +1658,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                 }
                               }
                             }
-
                             if (controller.itemAttributes.value!.variants !=
                                     null &&
                                 controller.itemAttributes.value!.variants!
@@ -1678,7 +1677,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
                           print(
                               "==> ${controller.itemAttributes.value!.toJson()}");
-
                           controller.saveDetails();
                           // if (controller.itemAttributes.value != null && controller.itemAttributes.value!.variants!.isNotEmpty) {
                           //   for (var i = 0; i < controller.itemAttributes.value!.variants!.length; i++) {

@@ -114,6 +114,7 @@ class FireStoreUtils {
       );
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
+        log(" getUserProfileresponse body ${response.body}");
         if (responseData['success'] ?? true) {
           final userData = responseData['data'] ?? responseData; // Adjust based on your API structure
           final userModel = UserModel.fromJson(userData);
@@ -822,11 +823,10 @@ class FireStoreUtils {
 
     return ratingModel;
   }
-
   static Future<List<ProductModel>?> getProduct() async {
     List<ProductModel> productList = [];
     try {
-      String url  = '${Constant.baseUrl}restaurant/products?vendorID=${Constant.userModel!.vendorID}';
+      String url = '${Constant.baseUrl}restaurant/products?vendorID=${Constant.userModel!.vendorID}';
       print("getProduct $url ");
       final response = await http.get(
         Uri.parse(url),
@@ -840,9 +840,20 @@ class FireStoreUtils {
           final List<dynamic> productsData = jsonResponse['data'];
           print("======>");
           print(productsData.length);
-          for (final productData in productsData) {
-            ProductModel productModel = ProductModel.fromJson(productData);
-            productList.add(productModel);
+
+          for (int i = 0; i < productsData.length; i++) {
+            try {
+              final productData = productsData[i];
+              print("Processing product $i: ${productData['name']}");
+              ProductModel productModel = ProductModel.fromJson(productData);
+              productList.add(productModel);
+            } catch (e, stackTrace) {
+              print("Error processing product $i: $e");
+              print("Stack trace: $stackTrace");
+              print("Problematic product data: ${productsData[i]}");
+              // Continue with next product instead of failing completely
+              continue;
+            }
           }
         } else {
           print("No products found or API returned error");
@@ -855,7 +866,6 @@ class FireStoreUtils {
       print("Error fetching products: $error");
       return null;
     }
-
     return productList;
   }
 
@@ -931,10 +941,13 @@ class FireStoreUtils {
 
   static Future<bool> updateProduct(ProductModel productModel) async {
     bool isUpdate = false;
-
     try {
-      final response = await http.put(
-        Uri.parse('${Constant.baseUrl}restaurant/products/${productModel.id}'),
+      log("updateProduct ${productModel.toJson()} ");
+      print("updateProduct url  ${productModel.id} ");
+      final response = await http.post(
+        Uri.parse('${Constant.baseUrl}restaurant/products'
+            // '/${productModel.id}'
+        ),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -947,10 +960,9 @@ class FireStoreUtils {
         isUpdate = false;
       }
     } catch (error) {
-      print("Failed to update product: $error");
+      print("Failed to update productss: $error");
       isUpdate = false;
     }
-
     return isUpdate;
   }
 
@@ -1790,8 +1802,6 @@ class FireStoreUtils {
       request.fields['documentId'] = documents.documentId ?? '';
       request.fields['status'] = documents.status ?? '';
       request.fields['type'] = 'restaurant';
-
-      // Add image files if they exist
       if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
         // Assuming frontImage is a file path or you have a way to get the file
         var frontImageFile = await http.MultipartFile.fromPath(
@@ -1809,10 +1819,9 @@ class FireStoreUtils {
         );
         request.files.add(backImageFile);
       }
-
       // Send the request
       var response = await request.send();
-
+      print('uploadDriverDocument: ${response.statusCode}');
       if (response.statusCode == 200) {
         isAdded = true;
       } else {
@@ -2008,10 +2017,8 @@ class FireStoreUtils {
       log("updateVendor ${response.body} ");
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
         if (responseData['success'] == true) {
           Constant.vendorAdminCommission = vendor.adminCommission;
-
           if (responseData['data'] != null) {
             return VendorModel.fromJson(responseData['data']);
           } else {
@@ -2444,7 +2451,7 @@ class FireStoreUtils {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
-          return true; // Successfully added
+          return true;
         } else {
           log("Failed to add product: API returned success false - ${responseData['message']}");
           return false;

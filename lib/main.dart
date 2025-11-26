@@ -184,9 +184,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _initializeNotificationsOnce();
     super.initState();
   }
-
   bool _notificationInitialized = false; // Add this flag
-  // ✅ NEW: Initialize notifications only once
   Future<void> _initializeNotificationsOnce() async {
     if (!_notificationInitialized) {
       _notificationInitialized = true;
@@ -196,7 +194,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       );
     }
   }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||

@@ -29,7 +29,6 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
     _initializeVideo();
   }
   final loginController = Get.put(LoginController());
-
   void _initializeVideo() async {
     try {
       Future.delayed(const Duration(seconds: 2), () {
@@ -45,7 +44,6 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
       });
     }
   }
-
   void _navigateToMainApp() async {
     try {
       try {
@@ -63,7 +61,6 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
       );
     }
   }
-
   void _proceedToMainApp() async {
     String userId = await FireStoreUtils.getCurrentUid();
     try {

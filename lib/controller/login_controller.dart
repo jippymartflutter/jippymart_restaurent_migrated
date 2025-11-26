@@ -141,6 +141,24 @@ class LoginController extends GetxController {
 // Helper method to convert API response to UserModel
   Future<UserModel?> _convertApiResponseToUserModel(Map<String, dynamic> userData) async {
     try {
+      Timestamp? _parseTimestamp(dynamic value) {
+        if (value == null) return null;
+        if (value is Timestamp) return value;
+        if (value is String) {// Handle the case where the string might be wrapped in extra quotes
+          String dateString = value.replaceAll('"', '');
+          try {
+            DateTime dateTime = DateTime.parse(dateString);
+            return Timestamp.fromDate(dateTime);
+          } catch (e) {
+            print('Error parsing date: $value - $e');
+            return null;
+          }
+        }
+        if (value is int) {
+          return Timestamp.fromMillisecondsSinceEpoch(value);
+        }
+        return null;
+      }
       // Convert the API response to your UserModel
       // You'll need to adjust this based on your actual UserModel structure
       return UserModel(
@@ -158,11 +176,13 @@ class LoginController extends GetxController {
         zoneId: userData['zoneId'],
         isDocumentVerify: userData['isDocumentVerify'] == "1",
         subscriptionPlanId: userData['subscriptionPlanId'],
-        subscriptionExpiryDate: userData['subscriptionExpiryDate'] != null
-            ? Timestamp.fromDate(DateTime.parse(userData['subscriptionExpiryDate']))
-            : null,
+        subscriptionExpiryDate:_parseTimestamp(userData['subscriptionExpiryDate'],),
+        // userData['subscriptionExpiryDate'] != null
+        //     ? Timestamp.fromDate(DateTime.parse(userData['subscriptionExpiryDate']))
+        //     : null,
         // Add other fields as needed
       );
+
     } catch (e) {
       print("Error converting to UserModel: $e");
       return null;

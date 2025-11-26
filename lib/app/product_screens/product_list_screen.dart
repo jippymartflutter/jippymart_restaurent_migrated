@@ -72,10 +72,8 @@ class ProductToggles extends StatelessWidget {
     );
   }
 }
-
 class ProductListScreen extends StatelessWidget {
   const ProductListScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -104,25 +102,25 @@ class ProductListScreen extends StatelessWidget {
                     ? const SizedBox()
                     : InkWell(
                         onTap: () {
-                          if ((Constant.isSubscriptionModelApplied == true ||
-                                  Constant.adminCommission?.isEnabled ==
-                                      true) &&
-                              Constant.userModel?.subscriptionPlan?.itemLimit !=
-                                  '-1' &&
-                              int.parse(Constant.userModel?.subscriptionPlan
-                                                  ?.itemLimit !=
-                                              null &&
-                                          Constant.userModel?.subscriptionPlan
-                                                  ?.itemLimit
-                                                  .toString() !=
-                                              "null"
-                                      ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
-                                      : '0') <=
-                                  controller.productList.length) {
-                            ShowToastDialog.showToast(
-                                "Your current subscription plan has reached its maximum product limit. Upgrade now to add more products."
-                                    .tr);
-                          } else {
+                          // if ((Constant.isSubscriptionModelApplied == true ||
+                          //         Constant.adminCommission?.isEnabled ==
+                          //             true) &&
+                          //     Constant.userModel?.subscriptionPlan?.itemLimit !=
+                          //         '-1' &&
+                          //     int.parse(Constant.userModel?.subscriptionPlan
+                          //                         ?.itemLimit !=
+                          //                     null &&
+                          //                 Constant.userModel?.subscriptionPlan
+                          //                         ?.itemLimit
+                          //                         .toString() !=
+                          //                     "null"
+                          //             ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
+                          //             : '0') <=
+                          //         controller.productList.length) {
+                          //   ShowToastDialog.showToast(
+                          //       "Your current subscription plan has reached its maximum product limit. Upgrade now to add more products."
+                          //           .tr);
+                          // } else {
                             Get.to(const AddProductScreen())!.then(
                               (value) {
                                 if (value == true) {
@@ -130,7 +128,7 @@ class ProductListScreen extends StatelessWidget {
                                 }
                               },
                             );
-                          }
+                          // }
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -358,33 +356,33 @@ class ProductListScreen extends StatelessWidget {
                                       color: AppThemeData.secondary300,
                                       textColor: AppThemeData.grey50,
                                       onPress: () async {
-                                        if ((Constant
-                                                        .isSubscriptionModelApplied ==
-                                                    true ||
-                                                Constant.adminCommission
-                                                        ?.isEnabled ==
-                                                    true) &&
-                                            Constant.userModel?.subscriptionPlan
-                                                    ?.itemLimit !=
-                                                '-1' &&
-                                            int.parse(Constant
-                                                                .userModel
-                                                                ?.subscriptionPlan
-                                                                ?.itemLimit !=
-                                                            null &&
-                                                        Constant
-                                                                .userModel
-                                                                ?.subscriptionPlan
-                                                                ?.itemLimit
-                                                                .toString() !=
-                                                            "null"
-                                                    ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
-                                                    : '0') <=
-                                                controller.productList.length) {
-                                          ShowToastDialog.showToast(
-                                              "Your current subscription plan has reached its maximum product limit. Upgrade now to add more products."
-                                                  .tr);
-                                        } else {
+                                        // if ((Constant
+                                        //                 .isSubscriptionModelApplied ==
+                                        //             true ||
+                                        //         Constant.adminCommission
+                                        //                 ?.isEnabled ==
+                                        //             true) &&
+                                        //     Constant.userModel?.subscriptionPlan
+                                        //             ?.itemLimit !=
+                                        //         '-1' &&
+                                        //     int.parse(Constant
+                                        //                         .userModel
+                                        //                         ?.subscriptionPlan
+                                        //                         ?.itemLimit !=
+                                        //                     null &&
+                                        //                 Constant
+                                        //                         .userModel
+                                        //                         ?.subscriptionPlan
+                                        //                         ?.itemLimit
+                                        //                         .toString() !=
+                                        //                     "null"
+                                        //             ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
+                                        //             : '0') <=
+                                        //         controller.productList.length) {
+                                        //   ShowToastDialog.showToast(
+                                        //       "Your current subscription plan has reached its maximum product limit. Upgrade now to add more products."
+                                        //           .tr);
+                                        // } else {
                                           Get.to(const AddProductScreen())!
                                               .then(
                                             (value) {
@@ -393,7 +391,7 @@ class ProductListScreen extends StatelessWidget {
                                               }
                                             },
                                           );
-                                        }
+                                        // }
                                       },
                                     ),
                                   ],
@@ -533,30 +531,28 @@ class ProductListScreen extends StatelessWidget {
                                               .filteredProductList[index].disPrice
                                               .toString();
                                         }
-
                                         bool isDisplayItemAlert = false;
-                                        if ((Constant.isSubscriptionModelApplied ==
-                                                true ||
-                                            Constant.adminCommission?.isEnabled ==
-                                                true)) {
-                                          if (controller.userModel.value
-                                                  .subscriptionPlan?.itemLimit ==
-                                              '-1') {
-                                            isDisplayItemAlert = false;
-                                          } else {
-                                            isDisplayItemAlert = (index <
-                                                        int.parse(controller
-                                                                .userModel
-                                                                .value
-                                                                .subscriptionPlan
-                                                                ?.itemLimit ??
-                                                            '0') ==
-                                                    true)
-                                                ? false
-                                                : true;
-                                          }
-                                        }
-
+                                        // if ((Constant.isSubscriptionModelApplied ==
+                                        //         true ||
+                                        //     Constant.adminCommission?.isEnabled ==
+                                        //         true)) {
+                                        //   if (controller.userModel.value
+                                        //           .subscriptionPlan?.itemLimit ==
+                                        //       '-1') {
+                                        //     isDisplayItemAlert = false;
+                                        //   } else {
+                                        //     isDisplayItemAlert = (index <
+                                        //                 int.parse(controller
+                                        //                         .userModel
+                                        //                         .value
+                                        //                         .subscriptionPlan
+                                        //                         ?.itemLimit ??
+                                        //                     '0') ==
+                                        //             true)
+                                        //         ? false
+                                        //         : true;
+                                        //   }
+                                        // }
                                         return InkWell(
                                           onTap: controller.filteredProductList[index].isAvailable == false
                                               ? null
@@ -762,6 +758,6 @@ class ProductListScreen extends StatelessWidget {
                                 ],
                               ),
           );
-        });
+        },);
   }
 }

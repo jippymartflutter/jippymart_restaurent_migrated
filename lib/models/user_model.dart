@@ -81,11 +81,13 @@ class UserModel {
     profilePictureURL = json['profilePictureURL'] ?? json['profile_pic'];
     fcmToken = json['fcmToken'];
     countryCode = json['countryCode'];
-    phoneNumber = json['phoneNumber'];
+    phoneNumber = json['phone'] ?? json['phoneNumber']; // Fixed: API uses 'phone'
     walletAmount = json['wallet_amount'] != null
         ? double.parse(json['wallet_amount'].toString())
         : 0;
-    createdAt = json['createdAt'] ?? json['_created_at'];
+
+    // Handle createdAt safely
+    createdAt = _parseTimestamp(json['createdAt'] ?? json['_created_at']);
 
     // Handle boolean conversions safely
     active = _parseBool(json['active']);
@@ -117,13 +119,41 @@ class UserModel {
     appIdentifier = json['appIdentifier'];
     provider = json['provider'];
     subscriptionPlanId = json['subscriptionPlanId'];
-    subscriptionExpiryDate = json['subscriptionExpiryDate'];
+
+    // FIX: Handle subscriptionExpiryDate from String to Timestamp
+    subscriptionExpiryDate = _parseTimestamp(json['subscriptionExpiryDate']);
+
     subscriptionPlan = json['subscription_plan'] != null
         ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
         : null;
   }
 
-// Helper method to safely parse boolean values from various types
+// Add this helper method to parse Timestamp from various types
+  Timestamp? _parseTimestamp(dynamic value) {
+    if (value == null) return null;
+
+    if (value is Timestamp) return value;
+
+    if (value is String) {
+      // Handle the case where the string might be wrapped in extra quotes
+      String dateString = value.replaceAll('"', '');
+      try {
+        DateTime dateTime = DateTime.parse(dateString);
+        return Timestamp.fromDate(dateTime);
+      } catch (e) {
+        print('Error parsing date: $value - $e');
+        return null;
+      }
+    }
+
+    if (value is int) {
+      return Timestamp.fromMillisecondsSinceEpoch(value);
+    }
+
+    return null;
+  }
+
+// Your existing _parseBool method (keep this)
   bool _parseBool(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
@@ -135,6 +165,8 @@ class UserModel {
     }
     return false;
   }
+
+
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};

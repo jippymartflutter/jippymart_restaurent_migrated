@@ -29,64 +29,125 @@ class ProductModel {
   Timestamp? createdAt;
   bool? isAvailable;
 
-  ProductModel(
-      {this.fats,
-      this.vendorID,
-      this.veg,
-      this.publish,
-      this.addOnsTitle,
-      this.calories,
-      this.proteins,
-      this.addOnsPrice,
-      this.reviewsSum,
-      this.takeawayOption,
-      this.name,
-      this.reviewAttributes,
-      this.productSpecification,
-      this.itemAttribute,
-      this.id,
-      this.quantity,
-      this.grams,
-      this.reviewsCount,
-      this.disPrice,
-      this.photos,
-      this.nonveg,
-      this.photo,
-      this.price,
-      this.categoryID,
-      this.description,
-      this.createdAt,
-      this.isAvailable});
+  ProductModel({
+    this.fats,
+    this.vendorID,
+    this.veg,
+    this.publish,
+    this.addOnsTitle,
+    this.calories,
+    this.proteins,
+    this.addOnsPrice,
+    this.reviewsSum,
+    this.takeawayOption,
+    this.name,
+    this.reviewAttributes,
+    this.productSpecification,
+    this.itemAttribute,
+    this.id,
+    this.quantity,
+    this.grams,
+    this.reviewsCount,
+    this.disPrice,
+    this.photos,
+    this.nonveg,
+    this.photo,
+    this.price,
+    this.categoryID,
+    this.description,
+    this.createdAt,
+    this.isAvailable,
+  });
 
   ProductModel.fromJson(Map<String, dynamic> json) {
     fats = json['fats'];
     vendorID = json['vendorID'];
-    veg = json['veg'];
-    publish = json['publish'];
+
+    // Handle boolean fields that might come as integers (0/1)
+    veg = _convertToBool(json['veg']);
+    publish = _convertToBool(json['publish']);
+    nonveg = _convertToBool(json['nonveg']);
+    takeawayOption = _convertToBool(json['takeawayOption']);
+    isAvailable = _convertToBool(json['isAvailable']);
+
     addOnsTitle = json['addOnsTitle'];
     calories = json['calories'];
     proteins = json['proteins'];
     addOnsPrice = json['addOnsPrice'];
     reviewsSum = json['reviewsSum'] ?? 0.0;
-    takeawayOption = json['takeawayOption'];
     name = json['name'];
     reviewAttributes = json['reviewAttributes'];
     productSpecification = json['product_specification'];
-    itemAttribute = json['item_attribute'] != null ? ItemAttribute.fromJson(json['item_attribute']) : null;
+    itemAttribute = json['item_attribute'] != null && json['item_attribute'] is Map
+        ? ItemAttribute.fromJson(json['item_attribute'])
+        : null;
     id = json['id'];
     quantity = json['quantity'];
     grams = json['grams'];
     reviewsCount = json['reviewsCount'] ?? 0.0;
-    disPrice = json['disPrice'] ?? "0";
+
+    // Fix: Convert disPrice to string
+    disPrice = _convertToString(json['disPrice']) ?? "0";
+
     photos = json['photos'] ?? [];
-    nonveg = json['nonveg'];
     photo = json['photo'];
-    price = json['price'];
+
+    // Fix: Convert price to string
+    price = _convertToString(json['price']);
+
     categoryID = json['categoryID'];
     description = json['description'];
-    createdAt = json['createdAt'];
-    isAvailable = json['isAvailable'] ?? true;
+
+    // Handle createdAt field - support multiple formats
+    if (json['createdAt'] != null) {
+      if (json['createdAt'] is int) {
+        // If it's milliseconds since epoch
+        createdAt = Timestamp.fromMillisecondsSinceEpoch(json['createdAt']);
+      } else if (json['createdAt'] is Map) {
+        // If it's Firestore Timestamp format
+        final timestampData = json['createdAt'];
+        createdAt = Timestamp(
+          timestampData['seconds'] ?? 0,
+          timestampData['nanoseconds'] ?? 0,
+        );
+      } else if (json['createdAt'] is String) {
+        // If it's ISO string format
+        try {
+          final date = DateTime.parse(json['createdAt']);
+          createdAt = Timestamp.fromDate(date);
+        } catch (e) {
+          createdAt = null;
+        }
+      } else {
+        // If it's already a Timestamp (shouldn't happen in JSON)
+        createdAt = json['createdAt'];
+      }
+    }
   }
+
+// Helper method to convert various types to boolean
+  bool _convertToBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) {
+      return value.toLowerCase() == 'true' || value == '1';
+    }
+    return false;
+  }
+
+// NEW: Helper method to convert various types to string
+  String? _convertToString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    if (value is double) return value.toString();
+    return value.toString();
+  }
+
+// Helper method to convert various types to boolean
+
+
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -117,7 +178,45 @@ class ProductModel {
     data['price'] = price;
     data['categoryID'] = categoryID;
     data['description'] = description;
-    data['createdAt'] = createdAt;
+
+    // Convert Timestamp to milliseconds since epoch for JSON serialization
+    data['createdAt'] = createdAt?.millisecondsSinceEpoch;
+
+    data['isAvailable'] = isAvailable;
+    return data;
+  }
+
+  // Helper method to convert to Firestore-friendly map (if needed for Firestore operations)
+  Map<String, dynamic> toFirestore() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['fats'] = fats;
+    data['vendorID'] = vendorID;
+    data['veg'] = veg;
+    data['publish'] = publish;
+    data['addOnsTitle'] = addOnsTitle;
+    data['addOnsPrice'] = addOnsPrice;
+    data['calories'] = calories;
+    data['proteins'] = proteins;
+    data['reviewsSum'] = reviewsSum;
+    data['takeawayOption'] = takeawayOption;
+    data['name'] = name;
+    data['reviewAttributes'] = reviewAttributes;
+    data['product_specification'] = productSpecification;
+    if (itemAttribute != null) {
+      data['item_attribute'] = itemAttribute!.toJson();
+    }
+    data['id'] = id;
+    data['quantity'] = quantity;
+    data['grams'] = grams;
+    data['reviewsCount'] = reviewsCount;
+    data['disPrice'] = disPrice;
+    data['photos'] = photos;
+    data['nonveg'] = nonveg;
+    data['photo'] = photo;
+    data['price'] = price;
+    data['categoryID'] = categoryID;
+    data['description'] = description;
+    data['createdAt'] = createdAt; // Keep as Timestamp for Firestore
     data['isAvailable'] = isAvailable;
     return data;
   }
@@ -174,7 +273,6 @@ class Attributes {
     return data;
   }
 }
-
 class Variants {
   String? variantId;
   String? variantImage;
@@ -182,14 +280,28 @@ class Variants {
   String? variantQuantity;
   String? variantSku;
 
-  Variants({this.variantId, this.variantImage, this.variantPrice, this.variantQuantity, this.variantSku});
+  Variants({
+    this.variantId,
+    this.variantImage,
+    this.variantPrice,
+    this.variantQuantity,
+    this.variantSku,
+  });
 
   Variants.fromJson(Map<String, dynamic> json) {
-    variantId = json['variant_id'];
-    variantImage = json['variant_image'];
-    variantPrice = json['variant_price'] ?? '0';
-    variantQuantity = json['variant_quantity'] ?? '0';
-    variantSku = json['variant_sku'];
+    variantId = _convertToString(json['variant_id']);
+    variantImage = _convertToString(json['variant_image']);
+    variantPrice = _convertToString(json['variant_price']) ?? '0';
+    variantQuantity = _convertToString(json['variant_quantity']) ?? '0';
+    variantSku = _convertToString(json['variant_sku']);
+  }
+  // Helper method to convert various types to string
+  String? _convertToString(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    if (value is double) return value.toString();
+    return value.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -202,7 +314,6 @@ class Variants {
     return data;
   }
 }
-
 class ProductSpecificationModel {
   String? lable;
   String? value;
