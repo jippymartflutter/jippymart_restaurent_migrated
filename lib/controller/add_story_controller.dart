@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jippymart_restaurant/constant/collection_name.dart';
@@ -24,11 +26,11 @@ class AddStoryController extends GetxController {
   RxDouble videoDuration = 0.0.obs;
 
   getStory() async {
+    // Get story data
     await FireStoreUtils.getStory(Constant.userModel!.vendorID.toString()).then(
-      (value) {
+          (value) {
         if (value != null) {
           storyModel.value = value;
-
           thumbnailFile.add(storyModel.value.videoThumbnail);
           for (var element in storyModel.value.videoUrl) {
             mediaFiles.add(element);
@@ -36,14 +38,32 @@ class AddStoryController extends GetxController {
         }
       },
     );
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc('story')
-        .get()
-        .then((value) {
-      videoDuration.value =
-          double.parse(value.data()!['videoDuration'].toString());
-    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}settings/getStorySettings'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['success'] == true) {
+          final data = jsonResponse['data'];
+          videoDuration.value = double.parse(data['videoDuration'].toString());
+        } else {
+          print('API Error: ${jsonResponse['message']}');
+          videoDuration.value = 30.0; // default fallback
+        }
+      } else {
+        print('HTTP Error: ${response.statusCode}');
+        videoDuration.value = 30.0; // default fallback
+      }
+    } catch (e) {
+      print('Error fetching story settings: $e');
+      videoDuration.value = 30.0; // default fallback
+    }
     isLoading.value = false;
   }
 }

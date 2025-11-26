@@ -1,19 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
 import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/on_boarding_screen.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 class AppUpdateService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static bool _hasCheckedForUpdate = false; // Prevent multiple checks
+  static bool _hasCheckedForUpdate = false;
 
   /// Check if a version is older than another version
   static bool isVersionOlder(String current, String latest) {
@@ -163,27 +164,41 @@ class AppUpdateService {
     return platformUrl;
   }
 
-  /// Fetch latest version info from Firestore
+
   static Future<Map<String, dynamic>?> getLatestVersionInfo() async {
     try {
-      print('[UPDATE DEBUG] Fetching version info from Firestore...');
-      print('[UPDATE DEBUG] Collection: app_settings, Document: restaurant');
-      
-      DocumentSnapshot doc = await _firestore
-          .collection('app_settings')
-          .doc('restaurant')
-          .get();
+      print('[UPDATE DEBUG] Fetching version info from API...');
+      print('[UPDATE DEBUG] Endpoint: {{baseURL}}restaurant/version');
 
-      if (doc.exists) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        print('[UPDATE DEBUG] Firestore document found!');
-        print('[UPDATE DEBUG] Document data:');
-        data.forEach((key, value) {
-          print('[UPDATE DEBUG]   $key: "$value" (${value.runtimeType})');
-        });
-        return data;
+      final response = await http.get(
+        Uri.parse('{{baseURL}}restaurant/version'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('[UPDATE DEBUG] API response status: ${response.statusCode}');
+      print('[UPDATE DEBUG] API response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        if (responseData['success'] == true) {
+          print('[UPDATE DEBUG] API request successful!');
+          print('[UPDATE DEBUG] Version data:');
+
+          final Map<String, dynamic> data = responseData['data'];
+          data.forEach((key, value) {
+            print('[UPDATE DEBUG]   $key: "$value" (${value.runtimeType})');
+          });
+          return data;
+        } else {
+          print('[UPDATE DEBUG] API returned success: false');
+          print('[UPDATE DEBUG] Message: ${responseData['message']}');
+          return null;
+        }
       } else {
-        print('[UPDATE DEBUG] Firestore document does not exist!');
+        print('[UPDATE DEBUG] API request failed with status: ${response.statusCode}');
         return null;
       }
     } catch (e) {
@@ -191,7 +206,6 @@ class AppUpdateService {
       return null;
     }
   }
-
   /// Show update dialog
   static void showUpdateDialog({
     required String latestVersion,
@@ -387,14 +401,12 @@ class AppUpdateService {
 
   /// Check for app updates
   static Future<bool> checkForUpdate() async {
-    // Prevent multiple update checks in the same session
     if (_hasCheckedForUpdate) {
       print('[UPDATE DEBUG] Update check already performed this session - SKIPPING');
       return false;
     }
     
     _hasCheckedForUpdate = true; // Mark as checked
-    
     try {
       print('[UPDATE DEBUG] ==========================================');
       print('[UPDATE DEBUG] STARTING UPDATE CHECK');
@@ -404,7 +416,6 @@ class AppUpdateService {
       String currentVersion = await getCurrentVersion();
       String currentBuild = await getCurrentBuildNumber();
       print('[UPDATE DEBUG] Current version: $currentVersion (build: $currentBuild)');
-
       // Get latest version info from Firestore
       Map<String, dynamic>? versionInfo = await getLatestVersionInfo();
       
@@ -416,7 +427,7 @@ class AppUpdateService {
       // Get platform-specific version info
       String latestVersion = getPlatformVersion(versionInfo);
       String latestBuild = getPlatformBuildNumber(versionInfo);
-      bool forceUpdate = versionInfo['force_update'] ?? false;
+      bool forceUpdate = _parseBool(versionInfo['force_update']);
       String updateUrl = getPlatformUpdateUrl(versionInfo);
       String updateMessage = versionInfo['update_message'] ?? '';
 
@@ -474,6 +485,20 @@ class AppUpdateService {
       print('[UPDATE] Error checking for updates: $e');
       return false; // Allow navigation on error
     }
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
   }
 
   /// Navigate to main app after update dialog is dismissed

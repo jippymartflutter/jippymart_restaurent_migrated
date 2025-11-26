@@ -62,12 +62,10 @@ class AddRestaurantController extends GetxController {
   Rx<VendorModel> vendorModel = VendorModel().obs;
   Rx<DeliveryCharge> deliveryChargeModel = DeliveryCharge().obs;
   RxBool isSelfDelivery = false.obs;
-
   getRestaurant() async {
     try {
       String userId = await FireStoreUtils.getCurrentUid();
-      await FireStoreUtils.getUserProfile(userId)
-          .then((model) {
+      await FireStoreUtils.getUserProfile(userId).then((model) {
         if (model != null) {
           userModel.value = model;
         }
@@ -87,9 +85,9 @@ class AddRestaurantController extends GetxController {
       if (Constant.userModel?.vendorID != null &&
           Constant.userModel?.vendorID?.isNotEmpty == true) {
         await FireStoreUtils.getVendorById(
-                Constant.userModel!.vendorID.toString())
+            Constant.userModel!.vendorID.toString())
             .then(
-          (value) {
+              (value) {
             if (value != null) {
               vendorModel.value = value;
 
@@ -120,7 +118,7 @@ class AddRestaurantController extends GetxController {
               if (vendorModel.value.categoryID!.isNotEmpty) {
                 selectedCategories.value = vendorCategoryList
                     .where((category) =>
-                        vendorModel.value.categoryID!.contains(category.id))
+                    vendorModel.value.categoryID!.contains(category.id))
                     .toList();
               }
 
@@ -170,138 +168,160 @@ class AddRestaurantController extends GetxController {
   }
 
   saveDetails() async {
-    if (restaurantNameController.value.text.isEmpty) {
-      ShowToastDialog.showToast("Please enter restaurant name".tr);
-    } else if (restaurantDescriptionController.value.text.isEmpty) {
-      ShowToastDialog.showToast("Please enter Description".tr);
-    } else if (mobileNumberController.value.text.isEmpty) {
-      ShowToastDialog.showToast("Please enter phone number".tr);
-    } else if (addressController.value.text.isEmpty) {
-      ShowToastDialog.showToast("Please enter address".tr);
-    } else if (selectedZone.value.id == null) {
-      ShowToastDialog.showToast("Please select zone".tr);
-    } else if (selectedCategories.isEmpty) {
-      ShowToastDialog.showToast("Please select category".tr);
-    } else {
-      if (Constant.isPointInPolygon(
-          selectedLocation!, selectedZone.value.area!)) {
-        ShowToastDialog.showLoader("Please wait".tr);
-        filter();
-        DeliveryCharge deliveryChargeModel = DeliveryCharge(
-            vendorCanModify: true,
-            deliveryChargesPerKm: num.parse(chargePerKmController.value.text),
-            minimumDeliveryCharges:
-                num.parse(minDeliveryChargesController.value.text),
-            minimumDeliveryChargesWithinKm:
-                num.parse(minDeliveryChargesWithinKMController.value.text));
-
-        if (vendorModel.value.id == null) {
-          vendorModel.value = VendorModel();
-          vendorModel.value.createdAt = Timestamp.now();
-        }
-        for (int i = 0; i < images.length; i++) {
-          if (images[i].runtimeType == XFile) {
-            String url = await Constant.uploadUserImageToFireStorage(
-              File(images[i].path),
-              "profileImage/${FireStoreUtils.getCurrentUid()}",
-              File(images[i].path).path.split('/').last,
-            );
-            images.removeAt(i);
-            images.insert(i, url);
-          }
-        }
-
-        vendorModel.value.id = Constant.userModel?.vendorID;
-        vendorModel.value.author = Constant.userModel!.id;
-        vendorModel.value.authorName = Constant.userModel!.firstName;
-        vendorModel.value.authorProfilePic =
-            Constant.userModel!.profilePictureURL;
-
-        vendorModel.value.categoryID =
-            selectedCategories.map((e) => e.id ?? '').toList();
-        vendorModel.value.categoryTitle =
-            selectedCategories.map((e) => e.title ?? '').toList();
-        vendorModel.value.g = G(
-            geohash: Geoflutterfire()
-                .point(
-                    latitude: selectedLocation!.latitude,
-                    longitude: selectedLocation!.longitude)
-                .hash,
-            geopoint: GeoPoint(
-                selectedLocation!.latitude, selectedLocation!.longitude));
-        vendorModel.value.description =
-            restaurantDescriptionController.value.text;
-        vendorModel.value.phonenumber = mobileNumberController.value.text;
-        vendorModel.value.filters = Filters.fromJson(filters);
-        vendorModel.value.location = addressController.value.text;
-        vendorModel.value.latitude = selectedLocation!.latitude;
-        vendorModel.value.longitude = selectedLocation!.longitude;
-        vendorModel.value.photos = images;
-        if (images.isNotEmpty) {
-          vendorModel.value.photo = images.first;
-        } else {
-          vendorModel.value.photo = null;
-        }
-
-        vendorModel.value.deliveryCharge = deliveryChargeModel;
-        vendorModel.value.title = restaurantNameController.value.text;
-        vendorModel.value.zoneId = selectedZone.value.id;
-        vendorModel.value.isSelfDelivery = isSelfDelivery.value;
-
-        if (Constant.adminCommission!.isEnabled == true ||
-            Constant.isSubscriptionModelApplied == true) {
-          vendorModel.value.subscriptionPlanId =
-              userModel.value.subscriptionPlanId;
-          vendorModel.value.subscriptionPlan = userModel.value.subscriptionPlan;
-          vendorModel.value.subscriptionExpiryDate =
-              userModel.value.subscriptionExpiryDate;
-          vendorModel.value.subscriptionTotalOrders =
-              userModel.value.subscriptionPlan?.orderLimit;
-        }
-
-        if (Constant.userModel!.vendorID!.isNotEmpty) {
-          await FireStoreUtils.updateVendor(vendorModel.value).then((value) {
-            ShowToastDialog.closeLoader();
-            ShowToastDialog.showToast(
-                "Restaurant details save successfully".tr);
-          });
-        } else {
-          vendorModel.value.adminCommission = Constant.adminCommission;
-          vendorModel.value.workingHours = [
-            WorkingHours(
-                day: 'Monday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Tuesday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Wednesday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Thursday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Friday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Saturday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')]),
-            WorkingHours(
-                day: 'Sunday'.tr,
-                timeslot: [Timeslot(from: '00:00', to: '23:59')])
-          ];
-
-          await FireStoreUtils.firebaseCreateNewVendor(vendorModel.value)
-              .then((value) {
-            ShowToastDialog.closeLoader();
-            ShowToastDialog.showToast(
-                "Restaurant details save successfully".tr);
-          });
-        }
-      } else {
+    try {
+      if (restaurantNameController.value.text.isEmpty) {
+        ShowToastDialog.showToast("Please enter restaurant name".tr);
+      } else if (restaurantDescriptionController.value.text.isEmpty) {
+        ShowToastDialog.showToast("Please enter Description".tr);
+      } else if (mobileNumberController.value.text.isEmpty) {
+        ShowToastDialog.showToast("Please enter phone number".tr);
+      } else if (addressController.value.text.isEmpty) {
+        ShowToastDialog.showToast("Please enter address".tr);
+      } else if (selectedZone.value.id == null) {
+        ShowToastDialog.showToast("Please select zone".tr);
+      } else if (selectedCategories.isEmpty) {
+        ShowToastDialog.showToast("Please select category".tr);
+      } else if (isEnableDeliverySettings.value &&
+          (chargePerKmController.value.text.isEmpty ||
+              minDeliveryChargesController.value.text.isEmpty ||
+              minDeliveryChargesWithinKMController.value.text.isEmpty)) {
         ShowToastDialog.showToast(
-            "The chosen area is outside the selected zone.".tr);
+            "Please enter all delivery charge details".tr);
+        return;
+      } else {
+        if (Constant.isPointInPolygon(
+            selectedLocation!, selectedZone.value.area!)) {
+          ShowToastDialog.showLoader("Please wait".tr);
+          filter();
+          // Safe number parsing with default values
+          DeliveryCharge deliveryChargeModel = DeliveryCharge(
+            vendorCanModify: true,
+            deliveryChargesPerKm: _parseNumber(
+                chargePerKmController.value.text) ?? 0.0,
+            minimumDeliveryCharges: _parseNumber(
+                minDeliveryChargesController.value.text) ?? 0.0,
+            minimumDeliveryChargesWithinKm: _parseNumber(
+                minDeliveryChargesWithinKMController.value.text) ?? 0.0,
+          );
+          if (vendorModel.value.id == null) {
+            vendorModel.value = VendorModel();
+            vendorModel.value.createdAt = Timestamp.now();
+          }
+          for (int i = 0; i < images.length; i++) {
+            if (images[i].runtimeType == XFile) {
+              String url = await Constant.uploadUserImageToFireStorage(
+                File(images[i].path),
+                "profileImage/${FireStoreUtils.getCurrentUid()}",
+                File(images[i].path).path
+                    .split('/')
+                    .last,
+              );
+              images.removeAt(i);
+              images.insert(i, url);
+            }
+          }
+          vendorModel.value.id = Constant.userModel?.vendorID;
+          vendorModel.value.author = Constant.userModel!.id;
+          vendorModel.value.authorName = Constant.userModel!.firstName;
+          vendorModel.value.authorProfilePic =
+              Constant.userModel!.profilePictureURL;
+
+          vendorModel.value.categoryID =
+              selectedCategories.map((e) => e.id ?? '').toList();
+          vendorModel.value.categoryTitle =
+              selectedCategories.map((e) => e.title ?? '').toList();
+          vendorModel.value.g = G(
+              geohash: Geoflutterfire()
+                  .point(
+                  latitude: selectedLocation!.latitude,
+                  longitude: selectedLocation!.longitude)
+                  .hash,
+              geopoint: GeoPoint(
+                  selectedLocation!.latitude, selectedLocation!.longitude));
+          vendorModel.value.description =
+              restaurantDescriptionController.value.text;
+          vendorModel.value.phonenumber = mobileNumberController.value.text;
+          vendorModel.value.filters = Filters.fromJson(filters);
+          vendorModel.value.location = addressController.value.text;
+          vendorModel.value.latitude = selectedLocation!.latitude;
+          vendorModel.value.longitude = selectedLocation!.longitude;
+          vendorModel.value.photos = images;
+          if (images.isNotEmpty) {
+            vendorModel.value.photo = images.first;
+          } else {
+            vendorModel.value.photo = null;
+          }
+          vendorModel.value.deliveryCharge = deliveryChargeModel;
+          vendorModel.value.title = restaurantNameController.value.text;
+          vendorModel.value.zoneId = selectedZone.value.id;
+          vendorModel.value.isSelfDelivery = isSelfDelivery.value;
+          if (Constant.adminCommission!.isEnabled == true ||
+              Constant.isSubscriptionModelApplied == true) {
+            vendorModel.value.subscriptionPlanId =
+                userModel.value.subscriptionPlanId;
+            vendorModel.value.subscriptionPlan =
+                userModel.value.subscriptionPlan;
+            vendorModel.value.subscriptionExpiryDate =
+                userModel.value.subscriptionExpiryDate;
+            vendorModel.value.subscriptionTotalOrders =
+                userModel.value.subscriptionPlan?.orderLimit;
+          }
+          if (Constant.userModel!.vendorID!.isNotEmpty) {
+            await FireStoreUtils.updateVendor(vendorModel.value).then((value) {
+              ShowToastDialog.closeLoader();
+              ShowToastDialog.showToast(
+                  "Restaurant details save successfully".tr);
+            });
+          } else {
+            vendorModel.value.adminCommission = Constant.adminCommission;
+            vendorModel.value.workingHours = [
+              WorkingHours(
+                  day: 'Monday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Tuesday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Wednesday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Thursday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Friday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Saturday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')]),
+              WorkingHours(
+                  day: 'Sunday'.tr,
+                  timeslot: [Timeslot(from: '00:00', to: '23:59')])
+            ];
+            await FireStoreUtils.firebaseCreateNewVendor(vendorModel.value)
+                .then((value) {
+              ShowToastDialog.closeLoader();
+              ShowToastDialog.showToast(
+                  "Restaurant details save successfully".tr);
+            });
+          }
+        } else {
+          ShowToastDialog.showToast(
+              "The chosen area is outside the selected zone.".tr);
+        }
       }
+    }catch(e){
+      ShowToastDialog.closeLoader();
+      print("saveDetails $e ");
+    }
+  }
+
+  // Helper method for safe number parsing
+  num? _parseNumber(String value) {
+    if (value.isEmpty) return null;
+    try {
+      return num.parse(value);
+    } catch (e) {
+      return null;
     }
   }
 

@@ -1,5 +1,6 @@
+import 'dart:convert' show json;
 import 'dart:io';
-
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -205,62 +206,138 @@ class WalletController extends GetxController {
   }
 
   getPaymentMethod() async {
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc("razorpaySettings")
-        .get()
-        .then((user) {
-      try {
-        razorPayModel.value = RazorPayModel.fromJson(user.data() ?? {});
-      } catch (e) {
-        debugPrint(
-            'FireStoreUtils.getUserByID failed to parse user object ${user.id}');
-      }
-    });
+    try {
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}settings/payment'),
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any required headers like authorization if needed
+        },
+      );
 
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc("paypalSettings")
-        .get()
-        .then((paypalData) {
-      try {
-        paypalDataModel.value = PayPalModel.fromJson(paypalData.data() ?? {});
-      } catch (error) {
-        debugPrint(error.toString());
-      }
-    });
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> paymentData = data['data'];
 
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc("stripeSettings")
-        .get()
-        .then((paypalData) {
-      try {
-        stripeSettingData.value = StripeModel.fromJson(paypalData.data() ?? {});
-      } catch (error) {
-        debugPrint(error.toString());
-      }
-    });
+        // Parse RazorPay settings
+        if (paymentData.containsKey('razorpaySettings')) {
+          try {
+            razorPayModel.value = RazorPayModel.fromJson(paymentData['razorpaySettings']);
+          } catch (e) {
+            debugPrint('Failed to parse razorpaySettings: $e');
+          }
+        }
 
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc("flutterWave")
-        .get()
-        .then((paypalData) {
-      try {
-        flutterWaveSettingData.value =
-            FlutterWaveModel.fromJson(paypalData.data() ?? {});
-      } catch (error) {
-        debugPrint(error.toString());
+        // Parse PayPal settings
+        if (paymentData.containsKey('paypalSettings')) {
+          try {
+            paypalDataModel.value = PayPalModel.fromJson(paymentData['paypalSettings']);
+          } catch (e) {
+            debugPrint('Failed to parse paypalSettings: $e');
+          }
+        }
+
+        // Parse Stripe settings
+        if (paymentData.containsKey('stripeSettings')) {
+          try {
+            stripeSettingData.value = StripeModel.fromJson(paymentData['stripeSettings']);
+          } catch (e) {
+            debugPrint('Failed to parse stripeSettings: $e');
+          }
+        }
+
+        // Parse FlutterWave settings
+        if (paymentData.containsKey('flutterWave')) {
+          try {
+            flutterWaveSettingData.value = FlutterWaveModel.fromJson(paymentData['flutterWave']);
+          } catch (e) {
+            debugPrint('Failed to parse flutterWave: $e');
+          }
+        }
+
+        // Handle withdraw method - you might need to adjust this based on your API
+        // If you have a separate endpoint for withdraw methods, call it here
+        // Otherwise, if it's included in the payment response, parse it accordingly
+        await _handleWithdrawMethod();
+
+      } else {
+        debugPrint('Failed to load payment methods: ${response.statusCode}');
       }
-    });
+    } catch (e) {
+      debugPrint('Error in getPaymentMethod: $e');
+    }
+  }
+
+// Helper method for withdraw method (adjust based on your API)
+  _handleWithdrawMethod() async {
 
     await FireStoreUtils.getWithdrawMethod().then(
-      (value) {
+          (value) {
         if (value != null) {
           withdrawMethodModel.value = value;
         }
       },
     );
+    // Or if withdraw method is included in the payment response, parse it here
+    // For now, I'll leave this as a placeholder since I don't see withdraw method in your response
   }
+  // getPaymentMethod() async {
+  //   await FireStoreUtils.fireStore
+  //       .collection(CollectionName.settings)
+  //       .doc("razorpaySettings")
+  //       .get()
+  //       .then((user) {
+  //     try {
+  //       razorPayModel.value = RazorPayModel.fromJson(user.data() ?? {});
+  //     } catch (e) {
+  //       debugPrint(
+  //           'FireStoreUtils.getUserByID failed to parse user object ${user.id}');
+  //     }
+  //   });
+  //
+  //   await FireStoreUtils.fireStore
+  //       .collection(CollectionName.settings)
+  //       .doc("paypalSettings")
+  //       .get()
+  //       .then((paypalData) {
+  //     try {
+  //       paypalDataModel.value = PayPalModel.fromJson(paypalData.data() ?? {});
+  //     } catch (error) {
+  //       debugPrint(error.toString());
+  //     }
+  //   });
+  //
+  //   await FireStoreUtils.fireStore
+  //       .collection(CollectionName.settings)
+  //       .doc("stripeSettings")
+  //       .get()
+  //       .then((paypalData) {
+  //     try {
+  //       stripeSettingData.value = StripeModel.fromJson(paypalData.data() ?? {});
+  //     } catch (error) {
+  //       debugPrint(error.toString());
+  //     }
+  //   });
+  //
+  //   await FireStoreUtils.fireStore
+  //       .collection(CollectionName.settings)
+  //       .doc("flutterWave")
+  //       .get()
+  //       .then((paypalData) {
+  //     try {
+  //       flutterWaveSettingData.value =
+  //           FlutterWaveModel.fromJson(paypalData.data() ?? {});
+  //     } catch (error) {
+  //       debugPrint(error.toString());
+  //     }
+  //   });
+  //
+  //   await FireStoreUtils.getWithdrawMethod().then(
+  //     (value) {
+  //       if (value != null) {
+  //         withdrawMethodModel.value = value;
+  //       }
+  //     },
+  //   );
+  // }
 }

@@ -10,7 +10,9 @@ import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
 import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:get/get.dart';
 class HomeController extends GetxController {
   RxBool isLoading = true.obs;
 
@@ -133,55 +135,77 @@ class HomeController extends GetxController {
   //     },
   //   );
   // }
-  getOrder() async {
-    print('🔄 Setting up order listener for vendor: ${Constant.userModel?.vendorID}');
-    FireStoreUtils.fireStore
-        .collection(CollectionName.restaurantOrders)
-        .where('vendorID', isEqualTo: Constant.userModel?.vendorID)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .listen(
-      (event) async {
-        print('📦 Received ${event.docs.length} orders from Firebase');
-        allOrderList.clear();
-        // First, collect all orders
-        for (var element in event.docs) {
-          OrderModel orderModel = OrderModel.fromJson(element.data());
-          orderModel.id = element.id; // Ensure document ID is set
-          allOrderList.add(orderModel);
-          print('📋 Order ${orderModel.id}: Status = "${orderModel.status}"');
+
+
+  Future<void> getOrder() async {
+    print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
+    try {
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          List<OrderModel> allOrderTemp = [];
+
+          for (var element in jsonResponse['data']) {
+            OrderModel orderModel = OrderModel.fromJson(element);
+            orderModel.id = element['id']; // Ensure ID is set
+            allOrderTemp.add(orderModel);
+            print('📋 Order ${orderModel.id}: Status = "${orderModel.status}"');
+          }
+
+          // Update reactive lists
+          allOrderList.clear();
+          allOrderList.addAll(allOrderTemp);
+
+          newOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderPlaced || p0.status?.toLowerCase() == "pending")
+              .toList();
+
+          acceptedOrderList.value = allOrderList
+              .where((p0) =>
+          p0.status == Constant.orderAccepted ||
+              p0.status == Constant.driverPending ||
+              p0.status == Constant.driverRejected ||
+              p0.status == Constant.orderShipped ||
+              p0.status == Constant.orderInTransit)
+              .toList();
+
+          completedOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderCompleted)
+              .toList();
+
+          rejectedOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderRejected)
+              .toList();
+
+          cancelledOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderCancelled)
+              .toList();
+
+          print('✅ Filtered orders - New: ${newOrderList.length}, Accepted: ${acceptedOrderList.length}, Completed: ${completedOrderList.length}, Rejected: ${rejectedOrderList.length}, Cancelled: ${cancelledOrderList.length}');
+          update();
+          if (newOrderList.isNotEmpty) {
+            print('🔔 Playing notification sound for new orders');
+            await AudioPlayerService.playSound(true);
+          }
+        } else {
+          print('⚠️ API returned success=false');
         }
-        // Then filter them into different categories
-        newOrderList.value = allOrderList
-            .where((p0) => p0.status == Constant.orderPlaced || p0.status == "pending")
-            .toList();
-        log(newOrderList.length.toString(),name: "  resturantopen ");
-        acceptedOrderList.value = allOrderList
-            .where((p0) =>
-                p0.status == Constant.orderAccepted ||
-                p0.status == Constant.driverPending ||
-                p0.status == Constant.driverRejected ||
-                p0.status == Constant.orderShipped ||
-                p0.status == Constant.orderInTransit)
-            .toList();
-        completedOrderList.value = allOrderList
-            .where((p0) => p0.status == Constant.orderCompleted)
-            .toList();
-        rejectedOrderList.value = allOrderList
-            .where((p0) => p0.status == Constant.orderRejected)
-            .toList();
-        cancelledOrderList.value = allOrderList
-            .where((p0) => p0.status == Constant.orderCancelled)
-            .toList();
-        print('✅ Filtered orders - New: ${newOrderList.length}, Accepted: ${acceptedOrderList.length}, Completed: ${completedOrderList.length}, Rejected: ${rejectedOrderList.length}, Cancelled: ${cancelledOrderList.length}');
-        update();
-        if (newOrderList.isNotEmpty == true) {
-          print('🔔 Playing notification sound for new orders');
-          await AudioPlayerService.playSound(true);
-        }
-      },
-    );
+      } else {
+        print('❌ Failed to fetch orders: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error fetching orders: $e');
+    }
   }
+
 
   // Refresh method for pull-to-refresh functionality
   Future<void> refreshApp() async {

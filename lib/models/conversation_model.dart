@@ -10,6 +10,7 @@ class ConversationModel {
   String? videoThumbnail;
   Url? url;
   Timestamp? createdAt;
+  String? chatId; // Added missing field
 
   ConversationModel({
     this.id,
@@ -21,23 +22,67 @@ class ConversationModel {
     this.videoThumbnail,
     this.url,
     this.createdAt,
+    this.chatId, // Added missing field
   });
+
+  factory ConversationModel.fromJsonApi(Map<String, dynamic> json) {
+    // Handle createdAt conversion from String to Timestamp
+    Timestamp? createdAt;
+    if (json['createdAt'] != null) {
+      if (json['createdAt'] is String) {
+        // Convert ISO string to DateTime then to Timestamp
+        try {
+          final dateTime = DateTime.parse(json['createdAt']).toLocal();
+          createdAt = Timestamp.fromDate(dateTime);
+        } catch (e) {
+          createdAt = Timestamp.now();
+        }
+      } else if (json['createdAt'] is Timestamp) {
+        createdAt = json['createdAt'];
+      }
+    }
+
+    // Handle URL parsing safely
+    Url? url;
+    if (json['url'] != null && json['url'] != 'null') {
+      if (json['url'] is Map<String, dynamic>) {
+        url = Url.fromJson(json['url']);
+      } else if (json['url'] is String) {
+        // If URL is just a string, create a basic Url object
+        url = Url(url: json['url'], mime: _getMimeTypeFromUrl(json['url']));
+      }
+    }
+
+    return ConversationModel(
+      id: json['id']?.toString(),
+      message: json['message']?.toString(),
+      senderId: json['senderId']?.toString(),
+      receiverId: json['receiverId']?.toString(),
+      createdAt: createdAt ?? Timestamp.now(),
+      url: url,
+      orderId: json['orderId']?.toString(),
+      messageType: json['messageType']?.toString(),
+      videoThumbnail: json['videoThumbnail']?.toString(),
+      chatId: json['chat_id']?.toString(),
+    );
+  }
 
   factory ConversationModel.fromJson(Map<String, dynamic> parsedJson) {
     return ConversationModel(
-      id: parsedJson['id'] ?? '',
-      senderId: parsedJson['senderId'] ?? '',
-      receiverId: parsedJson['receiverId'] ?? '',
-      orderId: parsedJson['orderId'] ?? '',
-      message: parsedJson['message'] ?? '',
-      messageType: parsedJson['messageType'] ?? '',
-      videoThumbnail: parsedJson['videoThumbnail'] ?? '',
-      url: parsedJson.containsKey('url')
-          ? parsedJson['url'] != null
-              ? Url.fromJson(parsedJson['url'])
-              : null
-          : Url(),
+      id: parsedJson['id']?.toString() ?? '',
+      senderId: parsedJson['senderId']?.toString() ?? '',
+      receiverId: parsedJson['receiverId']?.toString() ?? '',
+      orderId: parsedJson['orderId']?.toString() ?? '',
+      message: parsedJson['message']?.toString() ?? '',
+      messageType: parsedJson['messageType']?.toString() ?? '',
+      videoThumbnail: parsedJson['videoThumbnail']?.toString() ?? '',
+      url: parsedJson.containsKey('url') && parsedJson['url'] != null
+          ? Url.fromJson(parsedJson['url'] is Map<String, dynamic>
+          ? parsedJson['url']
+          : {'url': parsedJson['url']?.toString() ?? ''})
+          : null,
       createdAt: parsedJson['createdAt'] ?? Timestamp.now(),
+      chatId: parsedJson['chat_id']?.toString(),
     );
   }
 
@@ -52,24 +97,49 @@ class ConversationModel {
       'videoThumbnail': videoThumbnail,
       'url': url?.toJson(),
       'createdAt': createdAt,
+      'chat_id': chatId,
     };
+  }
+
+  // Helper method to determine mime type from URL
+  static String _getMimeTypeFromUrl(String url) {
+    if (url.toLowerCase().contains('.jpg') ||
+        url.toLowerCase().contains('.jpeg') ||
+        url.toLowerCase().contains('.png') ||
+        url.toLowerCase().contains('.gif')) {
+      return 'image';
+    } else if (url.toLowerCase().contains('.mp4') ||
+        url.toLowerCase().contains('.mov') ||
+        url.toLowerCase().contains('.avi')) {
+      return 'video';
+    } else if (url.toLowerCase().contains('.mp3') ||
+        url.toLowerCase().contains('.wav')) {
+      return 'audio';
+    }
+    return 'unknown';
   }
 }
 
 class Url {
   String mime;
-
   String url;
-
   String? videoThumbnail;
 
   Url({this.mime = '', this.url = '', this.videoThumbnail});
 
   factory Url.fromJson(Map<dynamic, dynamic> parsedJson) {
-    return Url(mime: parsedJson['mime'] ?? '', url: parsedJson['url'] ?? '', videoThumbnail: parsedJson['videoThumbnail'] ?? '');
+    return Url(
+        mime: parsedJson['mime']?.toString() ?? '',
+        url: parsedJson['url']?.toString() ?? '',
+        videoThumbnail: parsedJson['videoThumbnail']?.toString()
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'mime': mime, 'url': url, 'videoThumbnail': videoThumbnail};
+    return {
+      'mime': mime,
+      'url': url,
+      'videoThumbnail': videoThumbnail
+    };
   }
 }

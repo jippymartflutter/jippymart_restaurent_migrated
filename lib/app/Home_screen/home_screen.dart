@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:bottom_picker/resources/extensions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -1137,10 +1139,11 @@ class HomeScreen extends StatelessWidget {
                                       paymentStatus: "success",
                                       note: "Order Refund success",
                                       transactionUser: "user");
-                              await FireStoreUtils.fireStore
-                                  .collection(CollectionName.wallet)
-                                  .doc(historyModel.id)
-                                  .set(historyModel.toJson());
+                              await FireStoreUtils.setWalletTransaction(historyModel);
+                              // await FireStoreUtils.fireStore
+                              //     .collection(CollectionName.wallet)
+                              //     .doc(historyModel.id)
+                              //     .set(historyModel.toJson());
                               await FireStoreUtils.updateUserWallet(
                                   amount: finalAmount.toString(),
                                   userId: orderModel.author!.firebaseId.toString()
@@ -1839,11 +1842,11 @@ class HomeScreen extends StatelessWidget {
                                       paymentStatus: "success",
                                       note: "Order Refund success",
                                       transactionUser: "user");
-
-                              await FireStoreUtils.fireStore
-                                  .collection(CollectionName.wallet)
-                                  .doc(historyModel.id)
-                                  .set(historyModel.toJson());
+                              await FireStoreUtils.setWalletTransaction(historyModel);
+                              // await FireStoreUtils.fireStore
+                              //     .collection(CollectionName.wallet)
+                              //     .doc(historyModel.id)
+                              //     .set(historyModel.toJson());
                               await FireStoreUtils.updateUserWallet(
                                   amount: finalAmount.toString(),
                                   userId: orderModel.author!.id.toString());
@@ -1893,15 +1896,16 @@ class HomeScreen extends StatelessWidget {
                                     paymentStatus: "success",
                                     note: "Order Amount Refund",
                                     transactionUser: "vendor");
-
-                            await FireStoreUtils.fireStore
-                                .collection(CollectionName.wallet)
-                                .doc(historyTaxModel.id)
-                                .set(historyTaxModel.toJson());
-                            await FireStoreUtils.fireStore
-                                .collection(CollectionName.wallet)
-                                .doc(historyModel.id)
-                                .set(historyModel.toJson());
+                            await FireStoreUtils.setWalletTransaction(historyTaxModel);
+                            // await FireStoreUtils.fireStore
+                            //     .collection(CollectionName.wallet)
+                            //     .doc(historyTaxModel.id)
+                            //     .set(historyTaxModel.toJson());
+                            await FireStoreUtils.setWalletTransaction(historyModel);
+                            // await FireStoreUtils.fireStore
+                            //     .collection(CollectionName.wallet)
+                            //     .doc(historyModel.id)
+                            //     .set(historyModel.toJson());
                             double finalAmountdata = finalAmount + taxAmount;
                             await FireStoreUtils.updateUserWallet(
                                 amount: (-finalAmountdata).toString(),
@@ -2549,15 +2553,15 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      Get.to(AddDriverScreen())?.then((value) async {
-                        if (value == true) {
-                          Get.back();
-                          ShowToastDialog.showToastDuration(
-                              "Please ensure that the deliveryman is signed in and has an active status to assign the delivery."
-                                  .tr,
-                              duration: Duration(seconds: 4));
-                        }
-                      });
+                      // Get.to(AddDriverScreen())?.then((value) async {
+                      //   if (value == true) {
+                      //     Get.back();
+                      //     ShowToastDialog.showToastDuration(
+                      //         "Please ensure that the deliveryman is signed in and has an active status to assign the delivery."
+                      //             .tr,
+                      //         duration: Duration(seconds: 4));
+                      //   }
+                      // });
                     },
                   ),
                 ],
@@ -2956,127 +2960,235 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(
                         width: 10,
                       ),
+//                       Expanded(
+//                         child: RoundedButtonFill(
+//                           title: "Shipped order".tr,
+//                           color: AppThemeData.secondary300,
+//                           textColor: AppThemeData.grey50,
+//                           onPress: () async {
+//                             if (controller.estimatedTimeController.value.text
+//                                 .isNotEmpty) {
+//                               if ((Constant.isSubscriptionModelApplied ==
+//                                           true ||
+//                                       Constant.adminCommission?.isEnabled ==
+//                                           true) &&
+//                                   controller
+//                                           .vendermodel.value.subscriptionPlan !=
+//                                       null) {
+//                                 if (controller.vendermodel.value
+//                                             .subscriptionTotalOrders !=
+//                                         '-1' &&
+//                                     controller.vendermodel.value
+//                                             .subscriptionTotalOrders !=
+//                                         null) {
+//                                   controller.vendermodel.value
+//                                       .subscriptionTotalOrders = (int.parse(
+//                                               controller.vendermodel.value
+//                                                   .subscriptionTotalOrders!) -
+//                                           1)
+//                                       .toString();
+//                                   await FireStoreUtils.updateVendor(
+//                                       controller.vendermodel.value);
+//                                 }
+//                               }
+//                               if (Constant.isSelfDeliveryFeature == true &&
+//                                   controller.vendermodel.value.isSelfDelivery ==
+//                                       true &&
+//                                   orderModel.takeAway == false) {
+//                                 ShowToastDialog.showLoader('Please wait...'.tr);
+//                                 await controller.getAllDriverList();
+//                                 ShowToastDialog.closeLoader();
+//                                 orderModel.estimatedTimeToPrepare = controller
+//                                     .estimatedTimeController.value.text;
+//                                 Get.back();
+//                                 showDialog(
+//                                   // ignore: use_build_context_synchronously
+//                                   context: context,
+//                                   builder: (BuildContext context) {
+//                                     return showListOfDeliverymenDialog(
+//                                         controller, themeChange, orderModel);
+//                                   },
+//                                 );
+//                               } else {
+//                                 ShowToastDialog.showLoader('Please wait...'.tr);
+//                                 orderModel.estimatedTimeToPrepare = controller
+//                                     .estimatedTimeController.value.text;
+//                                 orderModel.status = Constant.orderAccepted;
+//                                 await AudioPlayerService.playSound(false);
+//                                 await FireStoreUtils.updateOrder(orderModel);
+//                                 await FireStoreUtils.restaurantVendorWalletSet(
+//                                     orderModel);
+//
+//                                 ///this for Driver
+// // Broadcast order to drivers within admin-set radius
+//                                 double radius =
+//                                     Constant.driverSearchRadius ?? 5.0;
+//                                 if (Constant.driverSearchRadius == null) {
+//                                   var doc = await FirebaseFirestore.instance
+//                                       .collection('settings')
+//                                       .doc('DriverNearBy')
+//                                       .get();
+//                                   if (doc.exists &&
+//                                       doc.data() != null &&
+//                                       doc.data()!.containsKey('radius')) {
+//                                     radius = double.tryParse(
+//                                             doc['radius'].toString()) ??
+//                                         5.0;
+//                                     Constant.driverSearchRadius = radius;
+//                                   }
+//                                 }
+//                                 final double restaurantLat =
+//                                     controller.vendermodel.value.latitude ??
+//                                         0.0;
+//                                 final double restaurantLng =
+//                                     controller.vendermodel.value.longitude ??
+//                                         0.0;
+//                                 List<UserModel> allDrivers =
+//                                     await FireStoreUtils.getAvalibleDrivers();
+//                                 List<UserModel> eligibleDrivers =
+//                                     allDrivers.where((driver) {
+//                                   if (driver.location == null ||
+//                                       driver.location!.latitude == null ||
+//                                       driver.location!.longitude == null)
+//                                     return false;
+//                                   final double driverLat =
+//                                       driver.location!.latitude!;
+//                                   final double driverLng =
+//                                       driver.location!.longitude!;
+//                                   double distance = Geolocator.distanceBetween(
+//                                           restaurantLat,
+//                                           restaurantLng,
+//                                           driverLat,
+//                                           driverLng) /
+//                                       1000; // km
+//                                   return distance <= radius;
+//                                 }).toList();
+//                                 for (var driver in eligibleDrivers) {
+//                                   driver.orderRequestData ??= [];
+//                                   if (!driver.orderRequestData!
+//                                       .contains(orderModel.id)) {
+//                                     driver.orderRequestData!.add(orderModel.id);
+//                                     await FireStoreUtils.updateDriverUser(
+//                                         driver);
+//                                   }
+//                                 }
+//                                 SendNotification.sendFcmMessage(
+//                                     Constant.restaurantAccepted,
+//                                     orderModel.author!.fcmToken.toString(), {},);
+//                                 ShowToastDialog.closeLoader();
+//                                 Get.back();
+//                               }
+//                             } else {
+//                               ShowToastDialog.showToast(
+//                                   "Please enter estimated time".tr);
+//                             }
+//                           },
+//                         ),
+//                       ),
                       Expanded(
                         child: RoundedButtonFill(
                           title: "Shipped order".tr,
                           color: AppThemeData.secondary300,
                           textColor: AppThemeData.grey50,
                           onPress: () async {
-                            if (controller.estimatedTimeController.value.text
-                                .isNotEmpty) {
-                              if ((Constant.isSubscriptionModelApplied ==
-                                          true ||
-                                      Constant.adminCommission?.isEnabled ==
-                                          true) &&
-                                  controller
-                                          .vendermodel.value.subscriptionPlan !=
-                                      null) {
-                                if (controller.vendermodel.value
-                                            .subscriptionTotalOrders !=
-                                        '-1' &&
-                                    controller.vendermodel.value
-                                            .subscriptionTotalOrders !=
-                                        null) {
-                                  controller.vendermodel.value
-                                      .subscriptionTotalOrders = (int.parse(
-                                              controller.vendermodel.value
-                                                  .subscriptionTotalOrders!) -
-                                          1)
-                                      .toString();
-                                  await FireStoreUtils.updateVendor(
-                                      controller.vendermodel.value);
+                            if (controller.estimatedTimeController.value.text.isNotEmpty) {
+                              if ((Constant.isSubscriptionModelApplied == true ||
+                                  Constant.adminCommission?.isEnabled == true) &&
+                                  controller.vendermodel.value.subscriptionPlan != null) {
+                                if (controller.vendermodel.value.subscriptionTotalOrders != '-1' &&
+                                    controller.vendermodel.value.subscriptionTotalOrders != null) {
+                                  controller.vendermodel.value.subscriptionTotalOrders = (int.parse(
+                                      controller.vendermodel.value.subscriptionTotalOrders!) -
+                                      1).toString();
+                                  await FireStoreUtils.updateVendor(controller.vendermodel.value);
                                 }
                               }
                               if (Constant.isSelfDeliveryFeature == true &&
-                                  controller.vendermodel.value.isSelfDelivery ==
-                                      true &&
+                                  controller.vendermodel.value.isSelfDelivery == true &&
                                   orderModel.takeAway == false) {
                                 ShowToastDialog.showLoader('Please wait...'.tr);
                                 await controller.getAllDriverList();
                                 ShowToastDialog.closeLoader();
-                                orderModel.estimatedTimeToPrepare = controller
-                                    .estimatedTimeController.value.text;
+                                orderModel.estimatedTimeToPrepare = controller.estimatedTimeController.value.text;
                                 Get.back();
                                 showDialog(
-                                  // ignore: use_build_context_synchronously
                                   context: context,
                                   builder: (BuildContext context) {
-                                    return showListOfDeliverymenDialog(
-                                        controller, themeChange, orderModel);
+                                    return showListOfDeliverymenDialog(controller, themeChange, orderModel);
                                   },
                                 );
                               } else {
                                 ShowToastDialog.showLoader('Please wait...'.tr);
-                                orderModel.estimatedTimeToPrepare = controller
-                                    .estimatedTimeController.value.text;
+                                orderModel.estimatedTimeToPrepare = controller.estimatedTimeController.value.text;
                                 orderModel.status = Constant.orderAccepted;
                                 await AudioPlayerService.playSound(false);
                                 await FireStoreUtils.updateOrder(orderModel);
-                                await FireStoreUtils.restaurantVendorWalletSet(
-                                    orderModel);
+                                await FireStoreUtils.restaurantVendorWalletSet(orderModel);
 
                                 ///this for Driver
-// Broadcast order to drivers within admin-set radius
-                                double radius =
-                                    Constant.driverSearchRadius ?? 5.0;
+                                // Broadcast order to drivers within admin-set radius
+                                double radius = Constant.driverSearchRadius ?? 5.0;
                                 if (Constant.driverSearchRadius == null) {
-                                  var doc = await FirebaseFirestore.instance
-                                      .collection('settings')
-                                      .doc('DriverNearBy')
-                                      .get();
-                                  if (doc.exists &&
-                                      doc.data() != null &&
-                                      doc.data()!.containsKey('radius')) {
-                                    radius = double.tryParse(
-                                            doc['radius'].toString()) ??
-                                        5.0;
+                                  // Replace Firebase call with API call
+                                  try {
+                                    final response = await http.get(
+                                      Uri.parse('${Constant.baseUrl}restaurant/GetDriverNearBy'),
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        // Add authorization header if needed
+                                        // 'Authorization': 'Bearer $token',
+                                      },
+                                    );
+
+                                    if (response.statusCode == 200) {
+                                      final data = json.decode(response.body);
+                                      if (data['success'] == true) {
+                                        radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 5.0;
+                                        Constant.driverSearchRadius = radius;
+                                      }
+                                    } else {
+                                      // Fallback to default radius if API call fails
+                                      radius = 5.0;
+                                      Constant.driverSearchRadius = radius;
+                                    }
+                                  } catch (e) {
+                                    print('Error fetching driver radius: $e');
+                                    // Fallback to default radius if API call fails
+                                    radius = 5.0;
                                     Constant.driverSearchRadius = radius;
                                   }
                                 }
-                                final double restaurantLat =
-                                    controller.vendermodel.value.latitude ??
-                                        0.0;
-                                final double restaurantLng =
-                                    controller.vendermodel.value.longitude ??
-                                        0.0;
-                                List<UserModel> allDrivers =
-                                    await FireStoreUtils.getAvalibleDrivers();
-                                List<UserModel> eligibleDrivers =
-                                    allDrivers.where((driver) {
+                                final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
+                                final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
+                                List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
+                                List<UserModel> eligibleDrivers = allDrivers.where((driver) {
                                   if (driver.location == null ||
                                       driver.location!.latitude == null ||
-                                      driver.location!.longitude == null)
-                                    return false;
-                                  final double driverLat =
-                                      driver.location!.latitude!;
-                                  final double driverLng =
-                                      driver.location!.longitude!;
+                                      driver.location!.longitude == null) return false;
+                                  final double driverLat = driver.location!.latitude!;
+                                  final double driverLng = driver.location!.longitude!;
                                   double distance = Geolocator.distanceBetween(
-                                          restaurantLat,
-                                          restaurantLng,
-                                          driverLat,
-                                          driverLng) /
+                                      restaurantLat, restaurantLng, driverLat, driverLng) /
                                       1000; // km
                                   return distance <= radius;
                                 }).toList();
                                 for (var driver in eligibleDrivers) {
                                   driver.orderRequestData ??= [];
-                                  if (!driver.orderRequestData!
-                                      .contains(orderModel.id)) {
+                                  if (!driver.orderRequestData!.contains(orderModel.id)) {
                                     driver.orderRequestData!.add(orderModel.id);
-                                    await FireStoreUtils.updateDriverUser(
-                                        driver);
+                                    await FireStoreUtils.updateDriverUser(driver);
                                   }
                                 }
                                 SendNotification.sendFcmMessage(
-                                    Constant.restaurantAccepted,
-                                    orderModel.author!.fcmToken.toString(), {},);
+                                  Constant.restaurantAccepted,
+                                  orderModel.author!.fcmToken.toString(),
+                                  {},
+                                );
                                 ShowToastDialog.closeLoader();
                                 Get.back();
                               }
                             } else {
-                              ShowToastDialog.showToast(
-                                  "Please enter estimated time".tr);
+                              ShowToastDialog.showToast("Please enter estimated time".tr);
                             }
                           },
                         ),

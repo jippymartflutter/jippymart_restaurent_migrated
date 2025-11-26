@@ -23,19 +23,20 @@ class DashBoardController extends GetxController {
   }
 
   setPage() {
-    pageList.value = Constant.isDineInEnable &&
-            Constant.userModel?.subscriptionPlan?.features?.dineIn != false
-        ? [
+    pageList.value =
+    // = Constant.isDineInEnable &&
+    //         Constant.userModel?.subscriptionPlan?.features?.dineIn != false
+    //     ? [
+    //         const HomeScreen(),
+    //         const DineInOrderScreen(),
+    //         const ProductListScreen(),
+    // //  const WalletScreen(),
+    //         const ProfileScreen(),
+    //       ]
+    //     :
+    [
             const HomeScreen(),
-            const DineInOrderScreen(),
             const ProductListScreen(),
-    //  const WalletScreen(),
-            const ProfileScreen(),
-          ]
-        : [
-            const HomeScreen(),
-            const ProductListScreen(),
-      //const WalletScreen(),
             const ProfileScreen(),
           ];
   }

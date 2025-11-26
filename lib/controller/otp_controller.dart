@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
@@ -29,22 +28,5 @@ class OtpController extends GetxController {
     update();
   }
 
-  Future<bool> sendOTP() async {
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: countryCode.value + phoneNumber.value,
-      verificationCompleted: (PhoneAuthCredential credential) {},
-      verificationFailed: (FirebaseAuthException e) {},
-      codeSent: (String verificationId0, int? resendToken0) async {
-        verificationId.value = verificationId0;
-        resendToken.value = resendToken0!;
-        ShowToastDialog.showToast("OTP sent".tr);
-      },
-      timeout: const Duration(seconds: 25),
-      forceResendingToken: resendToken.value,
-      codeAutoRetrievalTimeout: (String verificationId0) {
-        verificationId0 = verificationId.value;
-      },
-    );
-    return true;
-  }
+
 }

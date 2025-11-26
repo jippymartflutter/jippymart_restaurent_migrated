@@ -119,13 +119,10 @@ class AddProductController extends GetxController {
     discountedPriceController.value.dispose();
     super.dispose();
   }
-
   getArgument() async {
     if (Constant.userModel!.vendorID != null &&
         Constant.userModel!.vendorID!.isNotEmpty) {
-      await FireStoreUtils.getVendorById(
-              Constant.userModel!.vendorID.toString())
-          .then((value) {
+      await FireStoreUtils.getVendorById(Constant.userModel!.vendorID.toString()).then((value) {
         if (value != null) {
           vendorModel.value = value;
         }
@@ -143,21 +140,12 @@ class AddProductController extends GetxController {
         attributesList.value = value;
       }
     });
-
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.vendorProducts)
-        .where('vendorID', isEqualTo: Constant.userModel!.vendorID)
-        .where('createdAt',
-            isGreaterThan: Constant.userModel?.subscriptionPlan?.createdAt)
-        .get()
-        .then((value) {
-      for (var element in value.docs) {
-        ProductModel productModel = ProductModel.fromJson(element.data());
-        productList.add(productModel);
+    await FireStoreUtils.getProduct().then((value) {
+      if (value != null) {
+        productList.value = value;
         log("ProductList :: ${productList.length}");
       }
     });
-
     dynamic argumentData = Get.arguments;
     if (argumentData != null) {
       productModel.value = argumentData['productModel'];
@@ -183,6 +171,7 @@ class AddProductController extends GetxController {
       isPureVeg.value = productModel.value.veg ?? true;
       isNonVeg.value = productModel.value.nonveg ?? false;
       takeAway.value = productModel.value.takeawayOption ?? false;
+
       if (productModel.value.productSpecification != null) {
         productModel.value.productSpecification!.forEach((key, value) {
           specificationList
@@ -205,7 +194,7 @@ class AddProductController extends GetxController {
         addonsList.add(ProductSpecificationModel(
             lable: element,
             value: productModel.value.addOnsPrice![
-                productModel.value.addOnsTitle!.indexOf(element)]));
+            productModel.value.addOnsTitle!.indexOf(element)]));
       }
 
       for (var element in vendorCategoryList) {
@@ -217,6 +206,102 @@ class AddProductController extends GetxController {
 
     isLoading.value = false;
   }
+  // getArgument() async {
+  //   if (Constant.userModel!.vendorID != null &&
+  //       Constant.userModel!.vendorID!.isNotEmpty) {
+  //     await FireStoreUtils.getVendorById(
+  //             Constant.userModel!.vendorID.toString())
+  //         .then((value) {
+  //       if (value != null) {
+  //         vendorModel.value = value;
+  //       }
+  //     });
+  //   }
+  //
+  //   await FireStoreUtils.getVendorCategoryById().then((value) {
+  //     if (value != null) {
+  //       vendorCategoryList.value = value;
+  //     }
+  //   });
+  //
+  //   await FireStoreUtils.getAttributes().then((value) {
+  //     if (value != null) {
+  //       attributesList.value = value;
+  //     }
+  //   });
+  //   await FireStoreUtils.fireStore
+  //       .collection(CollectionName.vendorProducts)
+  //       .where('vendorID', isEqualTo: Constant.userModel!.vendorID)
+  //       .where('createdAt',
+  //           isGreaterThan: Constant.userModel?.subscriptionPlan?.createdAt)
+  //       .get()
+  //       .then((value) {
+  //     for (var element in value.docs) {
+  //       ProductModel productModel = ProductModel.fromJson(element.data());
+  //       productList.add(productModel);
+  //       log("ProductList :: ${productList.length}");
+  //     }
+  //   });
+  //
+  //   dynamic argumentData = Get.arguments;
+  //   if (argumentData != null) {
+  //     productModel.value = argumentData['productModel'];
+  //
+  //     for (var element in productModel.value.photos!) {
+  //       images.add(element);
+  //     }
+  //
+  //     isPublish.value = productModel.value.publish ?? false;
+  //     productTitleController.value.text = productModel.value.name.toString();
+  //     productDescriptionController.value.text =
+  //         productModel.value.description.toString();
+  //     regularPriceController.value.text = productModel.value.price.toString();
+  //     discountedPriceController.value.text =
+  //         productModel.value.disPrice.toString();
+  //     productQuantityController.value.text =
+  //         productModel.value.quantity.toString();
+  //
+  //     caloriesController.value.text = productModel.value.calories.toString();
+  //     gramsController.value.text = productModel.value.grams.toString();
+  //     fatsController.value.text = productModel.value.fats.toString();
+  //     proteinController.value.text = productModel.value.proteins.toString();
+  //     isPureVeg.value = productModel.value.veg ?? true;
+  //     isNonVeg.value = productModel.value.nonveg ?? false;
+  //     takeAway.value = productModel.value.takeawayOption ?? false;
+  //     if (productModel.value.productSpecification != null) {
+  //       productModel.value.productSpecification!.forEach((key, value) {
+  //         specificationList
+  //             .add(ProductSpecificationModel(lable: key, value: value));
+  //       });
+  //     }
+  //
+  //     itemAttributes.value =
+  //         productModel.value.itemAttribute ?? ItemAttribute();
+  //
+  //     if (productModel.value.itemAttribute != null) {
+  //       for (var element in productModel.value.itemAttribute!.attributes!) {
+  //         AttributesModel attributesModel = attributesList
+  //             .firstWhere((product) => product.id == element.attributeId);
+  //         selectedAttributesList.add(attributesModel);
+  //       }
+  //     }
+  //
+  //     for (var element in productModel.value.addOnsTitle!) {
+  //       addonsList.add(ProductSpecificationModel(
+  //           lable: element,
+  //           value: productModel.value.addOnsPrice![
+  //               productModel.value.addOnsTitle!.indexOf(element)]));
+  //     }
+  //
+  //     for (var element in vendorCategoryList) {
+  //       if (element.id == productModel.value.categoryID) {
+  //         selectedProductCategory.value = element;
+  //       }
+  //     }
+  //   }
+  //
+  //   isLoading.value = false;
+  // }
 
   Map<String, dynamic> specification = {};
 

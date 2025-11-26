@@ -50,11 +50,6 @@ class DriverListScreen extends StatelessWidget {
                     : InkWell(
                         splashColor: Colors.transparent,
                         onTap: () {
-                          Get.to(const AddDriverScreen())?.then((value) {
-                            if (value == true) {
-                              controller.getAllDriverList();
-                            }
-                          });
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -256,20 +251,7 @@ class DriverListScreen extends StatelessWidget {
                                     const SizedBox(
                                       height: 20,
                                     ),
-                                    RoundedButtonFill(
-                                        title: "Add Delivery Man".tr,
-                                        width: 55,
-                                        height: 5.5,
-                                        color: AppThemeData.secondary300,
-                                        textColor: AppThemeData.grey50,
-                                        onPress: () async {
-                                          Get.to(const AddDriverScreen())
-                                              ?.then((value) {
-                                            if (value == true) {
-                                              controller.getAllDriverList();
-                                            }
-                                          });
-                                        }),
+
                                   ],
                                 ),
                               )
@@ -282,18 +264,7 @@ class DriverListScreen extends StatelessWidget {
                                   itemBuilder: (context, index) {
                                     return InkWell(
                                       onTap: () {
-                                        Get.to(const AddDriverScreen(),
-                                                arguments: {
-                                              "driverModel": controller
-                                                  .driverUserList[index]
-                                            })!
-                                            .then(
-                                          (value) {
-                                            if (value == true) {
-                                              controller.getAllDriverList();
-                                            }
-                                          },
-                                        );
+
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(

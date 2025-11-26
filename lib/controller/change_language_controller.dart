@@ -6,6 +6,9 @@ import 'package:jippymart_restaurant/utils/preferences.dart';
 
 import '../constant/collection_name.dart';
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 class ChangeLanguageController extends GetxController {
   Rx<LanguageModel> selectedLanguage = LanguageModel().obs;
   RxList<LanguageModel> languageList = <LanguageModel>[].obs;
@@ -20,31 +23,35 @@ class ChangeLanguageController extends GetxController {
   }
 
   getLanguage() async {
-    await FireStoreUtils.fireStore
-        .collection(CollectionName.settings)
-        .doc("languages")
-        .get()
-        .then((event) {
-      if (event.exists) {
-        List languageListTemp = event.data()!["list"];
-        for (var element in languageListTemp) {
-          LanguageModel languageModel = LanguageModel.fromJson(element);
-          languageList.add(languageModel);
-        }
+    try {
+      final response = await http.get(Uri.parse("${Constant.baseUrl}settings/languages"));
 
-        if (Preferences.getString(Preferences.languageCodeKey)
-            .toString()
-            .isNotEmpty) {
-          LanguageModel pref = Constant.getLanguage();
-          for (var element in languageList) {
-            if (element.slug == pref.slug) {
-              selectedLanguage.value = element;
+      if (response.statusCode == 200) {
+        var jsonData = jsonDecode(response.body);
+        if (jsonData["success"] == true) {
+          List languageListTemp = jsonData["data"];
+          languageList.clear();
+          for (var element in languageListTemp) {
+            LanguageModel languageModel = LanguageModel.fromJson(element);
+            languageList.add(languageModel);
+          }
+          /// Set selected language from local preference
+          String prefCode = Preferences.getString(Preferences.languageCodeKey).toString();
+          if (prefCode.isNotEmpty) {
+            LanguageModel pref = Constant.getLanguage();
+            for (var element in languageList) {
+              if (element.slug == pref.slug) {
+                selectedLanguage.value = element;
+              }
             }
           }
         }
       }
-    });
+    } catch (e) {
+      print("Error fetching languages: $e");
+    }
 
     isLoading.value = false;
   }
+
 }

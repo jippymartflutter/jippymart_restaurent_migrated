@@ -1,19 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jippymart_restaurant/app/auth_screen/otp_screen.dart';
-import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 
 class PhoneNumberController extends GetxController {
   Rx<TextEditingController> phoneNUmberEditingController =
       TextEditingController().obs;
   Rx<TextEditingController> countryCodeEditingController =
       TextEditingController().obs;
-
   @override
   void onInit() {
     super.onInit();
-    // Set default country code to India
     countryCodeEditingController.value.text = '+91';
   }
 

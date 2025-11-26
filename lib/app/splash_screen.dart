@@ -3,6 +3,7 @@ import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
 import 'package:jippymart_restaurant/app/on_boarding_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
+import 'package:jippymart_restaurant/controller/login_controller.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/utils/const/color_const.dart';
 import 'package:jippymart_restaurant/utils/const/image_const.dart';
@@ -10,7 +11,6 @@ import 'package:jippymart_restaurant/utils/const/text_style_const.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/service/app_update_service.dart';
@@ -28,6 +28,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
     super.initState();
     _initializeVideo();
   }
+  final loginController = Get.put(LoginController());
 
   void _initializeVideo() async {
     try {
@@ -90,7 +91,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                     duration: const Duration(milliseconds: 1200),
                   );
                 } else {
-                  await FirebaseAuth.instance.signOut();
+                  loginController.clearUserData();
                   Get.offAll(
                     () => const LoginScreen(),
                     transition: Transition.fadeIn,
@@ -98,7 +99,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                   );
                 }
               } else {
-                await FirebaseAuth.instance.signOut();
+                loginController.clearUserData();
                 Get.offAll(
                   () => const LoginScreen(),
                   transition: Transition.fadeIn,
@@ -108,7 +109,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
             }
           });
         } else {
-          await FirebaseAuth.instance.signOut();
+          loginController.clearUserData();
           Get.offAll(
             () => const LoginScreen(),
             transition: Transition.fadeIn,

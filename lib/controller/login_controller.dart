@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/auth_screen/signup_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/app_not_access_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
@@ -9,9 +10,9 @@ import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_p
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
+import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -100,12 +101,12 @@ class LoginController extends GetxController {
                 Get.offAll(const AppNotAccessScreen());
               }
             } else {
-              await _clearUserData();
+              await clearUserData();
               ShowToastDialog.showToast(
                   "This user is disable please contact to administrator".tr);
             }
           } else {
-            await _clearUserData();
+            await clearUserData();
           }
         }
       } else {
@@ -167,9 +168,18 @@ class LoginController extends GetxController {
       return null;
     }
   }
-
+void logoutFunction()async{
+  await AudioPlayerService
+      .playSound(false);
+  Constant.userModel!.fcmToken = "";
+  await FireStoreUtils.updateUser(
+      Constant.userModel!);
+  Constant.userModel = null;
+  clearUserData();
+  Get.offAll(const LoginScreen());
+}
 // Helper method to clear user data on logout/error
-  Future<void> _clearUserData() async {
+  Future<void> clearUserData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('firebase_id');
     await prefs.remove('email');
@@ -185,6 +195,7 @@ class LoginController extends GetxController {
     await prefs.remove('zone_id');
     await prefs.remove('is_document_verify');
     await prefs.setBool('is_logged_in', false);
+
   }
   // loginWithEmailAndPassword() async {
   //   ShowToastDialog.showLoader("Please wait.".tr);
@@ -256,7 +267,6 @@ class LoginController extends GetxController {
   // }
 
 }
-
 
    Future<Map<String, dynamic>> getUserData() async {
     final prefs = await SharedPreferences.getInstance();

@@ -19,12 +19,8 @@ Future<void> firebaseMessageBackgroundHandle(RemoteMessage message) async {
   final notificationService = NotificationService();
   await notificationService.initInfo();
 }
-
 class NotificationService {
-  ///NEW FUNCTIONS
-  ///
   NotificationHandler notificationHandler = NotificationHandler();
-
   //////////////
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();

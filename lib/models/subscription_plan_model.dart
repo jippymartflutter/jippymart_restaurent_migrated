@@ -16,30 +16,31 @@ class SubscriptionPlanModel {
   String? type;
   List<String>? planPoints;
 
-  SubscriptionPlanModel(
-      {this.createdAt,
-      this.description,
-      this.expiryDay,
-      this.features,
-      this.id,
-      this.isEnable,
-      this.itemLimit,
-      this.orderLimit,
-      this.name,
-      this.price,
-      this.place,
-      this.image,
-      this.type,
-      this.planPoints});
+  SubscriptionPlanModel({
+    this.createdAt,
+    this.description,
+    this.expiryDay,
+    this.features,
+    this.id,
+    this.isEnable,
+    this.itemLimit,
+    this.orderLimit,
+    this.name,
+    this.price,
+    this.place,
+    this.image,
+    this.type,
+    this.planPoints,
+  });
 
   factory SubscriptionPlanModel.fromJson(Map<String, dynamic> json) {
     return SubscriptionPlanModel(
-      createdAt: json['createdAt'],
+      createdAt: _parseTimestamp(json['createdAt']),
       description: json['description'],
       expiryDay: json['expiryDay'],
       features: json['features'] == null ? null : Features.fromJson(json['features']),
       id: json['id'],
-      isEnable: json['isEnable'],
+      isEnable: _parseBool(json['isEnable']),
       itemLimit: json['itemLimit'],
       orderLimit: json['orderLimit'],
       name: json['name'],
@@ -49,6 +50,39 @@ class SubscriptionPlanModel {
       type: json['type'],
       planPoints: json['plan_points'] == null ? [] : List<String>.from(json['plan_points']),
     );
+  }
+
+  static Timestamp? _parseTimestamp(dynamic timestamp) {
+    if (timestamp == null) return null;
+    if (timestamp is Timestamp) return timestamp;
+    if (timestamp is String) {
+      // Try to parse string to DateTime then to Timestamp
+      try {
+        final dateTime = DateTime.parse(timestamp);
+        return Timestamp.fromDate(dateTime);
+      } catch (e) {
+        return null;
+      }
+    }
+    if (timestamp is Map && timestamp['_seconds'] != null && timestamp['_nanoseconds'] != null) {
+      // Handle Firestore timestamp format
+      return Timestamp(timestamp['_seconds'], timestamp['_nanoseconds']);
+    }
+    return null;
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
   }
 
   Map<String, dynamic> toJson() {
@@ -66,7 +100,7 @@ class SubscriptionPlanModel {
       'place': place.toString(),
       'image': image.toString(),
       'type': type,
-      'plan_points': planPoints
+      'plan_points': planPoints,
     };
   }
 }
@@ -84,17 +118,15 @@ class Features {
     this.restaurantMobileApp,
   });
 
-  // Factory constructor to create an instance from JSON
   factory Features.fromJson(Map<String, dynamic> json) {
     return Features(
-      chat: json['chat'] ?? false,
-      dineIn: json['dineIn'] ?? false,
-      qrCodeGenerate: json['qrCodeGenerate'] ?? false,
-      restaurantMobileApp: json['restaurantMobileApp'] ?? false,
+      chat: SubscriptionPlanModel._parseBool(json['chat']),
+      dineIn: SubscriptionPlanModel._parseBool(json['dineIn']),
+      qrCodeGenerate: SubscriptionPlanModel._parseBool(json['qrCodeGenerate']),
+      restaurantMobileApp: SubscriptionPlanModel._parseBool(json['restaurantMobileApp']),
     );
   }
 
-  // Method to convert an instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'chat': chat,

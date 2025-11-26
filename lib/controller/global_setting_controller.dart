@@ -1,9 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/models/currency_model.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../constant/collection_name.dart';
 
@@ -17,26 +18,38 @@ class GlobalSettingController extends GetxController {
   }
 
   getCurrentCurrency() async {
-    FireStoreUtils.fireStore
-        .collection(CollectionName.currencies)
-        .where("isActive", isEqualTo: true)
-        .snapshots()
-        .listen((event) {
-      if (event.docs.isNotEmpty) {
-        Constant.currencyModel =
-            CurrencyModel.fromJson(event.docs.first.data());
+    try {
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}settings/getActiveCurrency'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
+          Constant.currencyModel = CurrencyModel.fromJson(jsonResponse['data']);
+        } else {
+          _setDefaultCurrency();
+        }
       } else {
-        Constant.currencyModel = CurrencyModel(
-            id: "",
-            code: "USD",
-            decimalDigits: 2,
-            enable: true,
-            name: "US Dollar",
-            symbol: "\$",
-            symbolAtRight: false);
+        _setDefaultCurrency();
       }
-    });
+    } catch (e) {
+      _setDefaultCurrency();
+    }
     await FireStoreUtils().getSettings();
+  }
+  _setDefaultCurrency() {
+    Constant.currencyModel = CurrencyModel(
+      id: "664d8fc37be19",
+      code: "INR",
+      decimalDigits: 2,
+      enable: true,
+      name: "Indian Rupee",
+      symbol: "₹",
+      symbolAtRight: false,
+    );
   }
 
   NotificationService notificationService = NotificationService();
@@ -45,16 +58,14 @@ class GlobalSettingController extends GetxController {
     notificationService.initInfo().then((value) async {
       String userId = await FireStoreUtils.getCurrentUid();
       String token = await NotificationService.getToken();
-      if (FirebaseAuth.instance.currentUser != null) {
-        await FireStoreUtils.getUserProfile(userId)
-            .then((value) {
-          if (value != null) {
-            UserModel driverUserModel = value;
-            driverUserModel.fcmToken = token;
-            FireStoreUtils.updateUser(driverUserModel);
-          }
+      await FireStoreUtils.getUserProfile(userId)
+          .then((value) {
+        if (value != null) {
+          UserModel driverUserModel = value;
+          driverUserModel.fcmToken = token;
+          FireStoreUtils.updateUser(driverUserModel);
+        }
+      });
         });
-      }
-    });
   }
 }

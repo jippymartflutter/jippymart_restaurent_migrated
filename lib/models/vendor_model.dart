@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/models/admin_commission.dart';
 import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
@@ -52,115 +54,252 @@ class VendorModel {
 
   VendorModel(
       {this.author,
-      this.dineInActive,
-      this.openDineTime,
-      this.categoryID,
-      this.id,
-      this.categoryPhoto,
-      this.restaurantMenuPhotos,
-      this.workingHours,
-      this.location,
-      this.fcmToken,
-      this.g,
-      this.hidephotos,
-      this.reststatus,
-      this.filters,
-      this.reviewsCount,
-      this.photo,
-      this.description,
-      this.walletAmount,
-      this.closeDineTime,
-      this.zoneId,
-      this.createdAt,
-      this.longitude,
-      this.enabledDiveInFuture,
-      this.restaurantCost,
-      this.deliveryCharge,
-      this.adminCommission,
-      this.authorProfilePic,
-      this.authorName,
-      this.phonenumber,
-      this.specialDiscount,
-      this.specialDiscountEnable,
-      this.coordinates,
-      this.reviewsSum,
-      this.photos,
-      this.title,
-      this.categoryTitle,
-      this.latitude,
-      this.subscriptionPlanId,
-      this.subscriptionExpiryDate,
-      this.subscriptionPlan,
-      this.subscriptionTotalOrders,
-      this.isSelfDelivery,
-      this.cuisineID,
-      this.cuisineTitle,
-      this.isOpen});
+        this.dineInActive,
+        this.openDineTime,
+        this.categoryID,
+        this.id,
+        this.categoryPhoto,
+        this.restaurantMenuPhotos,
+        this.workingHours,
+        this.location,
+        this.fcmToken,
+        this.g,
+        this.hidephotos,
+        this.reststatus,
+        this.filters,
+        this.reviewsCount,
+        this.photo,
+        this.description,
+        this.walletAmount,
+        this.closeDineTime,
+        this.zoneId,
+        this.createdAt,
+        this.longitude,
+        this.enabledDiveInFuture,
+        this.restaurantCost,
+        this.deliveryCharge,
+        this.adminCommission,
+        this.authorProfilePic,
+        this.authorName,
+        this.phonenumber,
+        this.specialDiscount,
+        this.specialDiscountEnable,
+        this.coordinates,
+        this.reviewsSum,
+        this.photos,
+        this.title,
+        this.categoryTitle,
+        this.latitude,
+        this.subscriptionPlanId,
+        this.subscriptionExpiryDate,
+        this.subscriptionPlan,
+        this.subscriptionTotalOrders,
+        this.isSelfDelivery,
+        this.cuisineID,
+        this.cuisineTitle,
+        this.isOpen});
 
   VendorModel.fromJson(Map<String, dynamic> json) {
     author = json['author'];
     dineInActive = json['dine_in_active'];
     openDineTime = json['openDineTime'];
-    categoryID = json['categoryID'] is String ? [] : json['categoryID'] ?? [];
+
+    // Handle categoryID - it might be a string or array
+    categoryID = _parseJsonFieldToList(json['categoryID']) ?? [];
+
     id = json['id'];
     categoryPhoto = json['categoryPhoto'];
-    restaurantMenuPhotos = json['restaurantMenuPhotos'] ?? [];
-    if (json['workingHours'] != null) {
+
+    // Handle restaurantMenuPhotos - it might be a string or array
+    restaurantMenuPhotos = _parseJsonFieldToList(json['restaurantMenuPhotos']) ?? [];
+
+    // Handle workingHours - it might be a string or array
+    if (json['workingHours'] is String) {
+      try {
+        List<dynamic> workingHoursData = jsonDecode(json['workingHours']);
+        workingHours = <WorkingHours>[];
+        for (var v in workingHoursData) {
+          workingHours!.add(WorkingHours.fromJson(v));
+        }
+      } catch (e) {
+        workingHours = [];
+      }
+    } else if (json['workingHours'] != null) {
       workingHours = <WorkingHours>[];
-      json['workingHours'].forEach((v) {
+      for (var v in json['workingHours']) {
         workingHours!.add(WorkingHours.fromJson(v));
-      });
+      }
     }
+
     location = json['location'];
     fcmToken = json['fcmToken'];
-    g = json['g'] != null ? G.fromJson(json['g']) : null;
-    hidephotos = json['hidephotos'];
-    reststatus = json['reststatus'];
-    filters =
-        json['filters'] != null ? Filters.fromJson(json['filters']) : null;
+
+    // Handle g field - it might be a string or object
+    if (json['g'] is String) {
+      try {
+        g = G.fromJson(jsonDecode(json['g']));
+      } catch (e) {
+        g = null;
+      }
+    } else {
+      g = json['g'] != null ? G.fromJson(json['g']) : null;
+    }
+
+    hidephotos = _parseToBool(json['hidephotos']);
+
+    // Handle reststatus - it might be int (1/0) or bool
+    reststatus = _parseToBool(json['reststatus']);
+
+    // Handle filters - it might be a string or object
+    if (json['filters'] is String) {
+      try {
+        filters = Filters.fromJson(jsonDecode(json['filters']));
+      } catch (e) {
+        filters = null;
+      }
+    } else {
+      filters = json['filters'] != null ? Filters.fromJson(json['filters']) : null;
+    }
+
     reviewsCount = json['reviewsCount'] ?? 0.0;
     photo = json['photo'];
     description = json['description'];
     walletAmount = json['walletAmount'];
     closeDineTime = json['closeDineTime'];
     zoneId = json['zoneId'];
-    createdAt = json['createdAt'];
-    longitude = double.parse(json['longitude'].toString());
-    enabledDiveInFuture = json['enabledDiveInFuture'];
+
+    // Handle createdAt - it might be a string or Timestamp
+    if (json['createdAt'] is String) {
+      try {
+        DateTime dateTime = DateTime.parse(json['createdAt']);
+        createdAt = Timestamp.fromDate(dateTime);
+      } catch (e) {
+        createdAt = null;
+      }
+    } else {
+      createdAt = json['createdAt'];
+    }
+
+    longitude = _parseToDouble(json['longitude']);
+    enabledDiveInFuture = _parseToBool(json['enabledDiveInFuture']);
     restaurantCost = json['restaurantCost']?.toString();
-    deliveryCharge = json['DeliveryCharge'] != null
-        ? DeliveryCharge.fromJson(json['DeliveryCharge'])
-        : null;
-    adminCommission = json['adminCommission'] != null
-        ? AdminCommission.fromJson(json['adminCommission'])
-        : null;
+
+    // Handle deliveryCharge - it might be a string or object
+    if (json['DeliveryCharge'] is String) {
+      try {
+        deliveryCharge = DeliveryCharge.fromJson(jsonDecode(json['DeliveryCharge']));
+      } catch (e) {
+        deliveryCharge = null;
+      }
+    } else {
+      // Handle deliveryCharge - it might be a string, object, or now an integer
+      if (json['DeliveryCharge'] is Map) {
+        // It's a JSON object (old format)
+        deliveryCharge = DeliveryCharge.fromJson(json['DeliveryCharge']);
+      } else if (json['DeliveryCharge'] is String) {
+        // It's a stringified JSON (alternative format)
+        try {
+          deliveryCharge = DeliveryCharge.fromJson(jsonDecode(json['DeliveryCharge']));
+        } catch (e) {
+          deliveryCharge = null;
+        }
+      } else if (json['DeliveryCharge'] is num) {
+        // It's now a numeric value from the database
+        // Create a DeliveryCharge object with the numeric value as minimum delivery charges
+        deliveryCharge = DeliveryCharge(
+          minimumDeliveryCharges: json['DeliveryCharge'],
+          minimumDeliveryChargesWithinKm: 0,
+          deliveryChargesPerKm: 0,
+          vendorCanModify: true,
+        );
+      } else {
+        deliveryCharge = null;
+      }
+    }
+    // Handle adminCommission - it might be a string or object
+    if (json['adminCommission'] is String) {
+      try {
+        adminCommission = AdminCommission.fromJson(jsonDecode(json['adminCommission']));
+      } catch (e) {
+        adminCommission = null;
+      }
+    } else {
+      adminCommission = json['adminCommission'] != null
+          ? AdminCommission.fromJson(json['adminCommission'])
+          : null;
+    }
+
     authorProfilePic = json['authorProfilePic'];
     authorName = json['authorName'];
     phonenumber = json['phonenumber'];
+
     if (json['specialDiscount'] != null) {
       specialDiscount = <SpecialDiscount>[];
-      json['specialDiscount'].forEach((v) {
+      for (var v in json['specialDiscount']) {
         specialDiscount!.add(SpecialDiscount.fromJson(v));
-      });
+      }
     }
-    specialDiscountEnable = json['specialDiscountEnable'];
+
+    specialDiscountEnable = _parseToBool(json['specialDiscountEnable']);
     coordinates = json['coordinates'];
     reviewsSum = json['reviewsSum'] ?? 0.0;
-    photos = json['photos'] ?? [];
+
+    // Handle photos - it might be a string or array
+    photos = _parseJsonFieldToList(json['photos']) ?? [];
+
     title = json['title'];
-    categoryTitle =
-        json['categoryTitle'] is String ? [] : json['categoryTitle'] ?? [];
-    latitude = double.parse(json['latitude'].toString());
+
+    // Handle categoryTitle - it might be a string or array
+    categoryTitle = _parseJsonFieldToList(json['categoryTitle']) ?? [];
+
+    latitude = _parseToDouble(json['latitude']);
+
     subscriptionPlanId = json['subscriptionPlanId'];
-    subscriptionExpiryDate = json['subscriptionExpiryDate'];
-    subscriptionPlan = json['subscription_plan'] != null
-        ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
-        : null;
+
+    // Handle subscriptionExpiryDate - it might be a string or Timestamp
+    if (json['subscriptionExpiryDate'] is String) {
+      try {
+        DateTime dateTime = DateTime.parse(json['subscriptionExpiryDate']);
+        subscriptionExpiryDate = Timestamp.fromDate(dateTime);
+      } catch (e) {
+        subscriptionExpiryDate = null;
+      }
+    } else {
+      subscriptionExpiryDate = json['subscriptionExpiryDate'];
+    }
+
+    // Handle subscription_plan - it might be a string or object
+    if (json['subscription_plan'] is String) {
+      try {
+        subscriptionPlan = SubscriptionPlanModel.fromJson(jsonDecode(json['subscription_plan']));
+      } catch (e) {
+        subscriptionPlan = null;
+      }
+    } else {
+      subscriptionPlan = json['subscription_plan'] != null
+          ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
+          : null;
+    }
+
     subscriptionTotalOrders = json['subscriptionTotalOrders'];
-    isSelfDelivery = json['isSelfDelivery'] ?? false;
+    isSelfDelivery = _parseToBool(json['isSelfDelivery']) ?? false;
     cuisineID = json['cuisineID'];
     cuisineTitle = json['cuisineTitle'];
-    isOpen = json['isOpen'];
+
+    // Handle isOpen - it might be int (1/0) or bool
+    isOpen = _parseToBool(json['isOpen']);
+  }
+
+// Add this helper method to VendorModel class for boolean parsing
+  static bool? _parseToBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) {
+      if (value.toLowerCase() == 'true' || value == '1') return true;
+      if (value.toLowerCase() == 'false' || value == '0') return false;
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -195,12 +334,19 @@ class VendorModel {
     data['walletAmount'] = walletAmount;
     data['closeDineTime'] = closeDineTime;
     data['zoneId'] = zoneId;
-    data['createdAt'] = createdAt;
+
+    // Handle createdAt - convert Timestamp to ISO string
+    if (createdAt != null) {
+      data['createdAt'] = createdAt!.toDate().toIso8601String();
+    } else {
+      data['createdAt'] = null;
+    }
+
     data['longitude'] = longitude;
     data['enabledDiveInFuture'] = enabledDiveInFuture;
     data['restaurantCost'] = restaurantCost;
     if (deliveryCharge != null) {
-      data['DeliveryCharge'] = deliveryCharge!.toJson();
+      data['DeliveryCharge'] = deliveryCharge!.minimumDeliveryCharges ?? 0;
     }
     if (adminCommission != null) {
       data['adminCommission'] = adminCommission!.toJson();
@@ -209,8 +355,7 @@ class VendorModel {
     data['authorName'] = authorName;
     data['phonenumber'] = phonenumber;
     if (specialDiscount != null) {
-      data['specialDiscount'] =
-          specialDiscount!.map((v) => v.toJson()).toList();
+      data['specialDiscount'] = specialDiscount!.map((v) => v.toJson()).toList();
     }
     data['specialDiscountEnable'] = specialDiscountEnable;
     data['coordinates'] = coordinates;
@@ -225,6 +370,47 @@ class VendorModel {
     data['isOpen'] = isOpen;
     return data;
   }
+
+  // Helper method to parse JSON fields that might be stringified
+  static dynamic _parseJsonField(dynamic field) {
+    if (field is String) {
+      try {
+        return jsonDecode(field);
+      } catch (e) {
+        return field;
+      }
+    }
+    return field;
+  }
+
+  // Helper method to parse JSON fields to List
+  static List<dynamic>? _parseJsonFieldToList(dynamic field) {
+    if (field is String) {
+      try {
+        return jsonDecode(field);
+      } catch (e) {
+        return [];
+      }
+    } else if (field is List) {
+      return field;
+    }
+    return null;
+  }
+
+  // Helper method to safely parse to double
+  static double _parseToDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return 0.0;
+      }
+    }
+    return 0.0;
+  }
 }
 
 class WorkingHours {
@@ -237,9 +423,21 @@ class WorkingHours {
     day = json['day'];
     if (json['timeslot'] != null) {
       timeslot = <Timeslot>[];
-      json['timeslot'].forEach((v) {
-        timeslot!.add(Timeslot.fromJson(v));
-      });
+      // Handle timeslot - it might be a string or array
+      if (json['timeslot'] is String) {
+        try {
+          List<dynamic> timeslotData = jsonDecode(json['timeslot']);
+          for (var v in timeslotData) {
+            timeslot!.add(Timeslot.fromJson(v));
+          }
+        } catch (e) {
+          timeslot = [];
+        }
+      } else {
+        for (var v in json['timeslot']) {
+          timeslot!.add(Timeslot.fromJson(v));
+        }
+      }
     }
   }
 
@@ -280,14 +478,51 @@ class G {
 
   G.fromJson(Map<String, dynamic> json) {
     geohash = json['geohash'];
-    geopoint = json['geopoint'];
+    // Handle geopoint - it might be a map with latitude/longitude
+    if (json['geopoint'] != null) {
+      if (json['geopoint'] is Map) {
+        Map<String, dynamic> geoMap = json['geopoint'];
+        double? lat = _parseDouble(geoMap['latitude'] ?? geoMap['_latitude']);
+        double? lng = _parseDouble(geoMap['longitude'] ?? geoMap['_longitude']);
+        if (lat != null && lng != null) {
+          geopoint = GeoPoint(lat, lng);
+        } else {
+          geopoint = null;
+        }
+      } else {
+        geopoint = null;
+      }
+    } else {
+      geopoint = null;
+    }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['geohash'] = geohash;
-    data['geopoint'] = geopoint;
+    if (geopoint != null) {
+      data['geopoint'] = {
+        'latitude': geopoint!.latitude,
+        'longitude': geopoint!.longitude,
+        '_latitude': geopoint!.latitude,
+        '_longitude': geopoint!.longitude,
+      };
+    }
     return data;
+  }
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      try {
+        return double.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 }
 
@@ -303,13 +538,13 @@ class Filters {
 
   Filters(
       {this.goodForLunch,
-      this.outdoorSeating,
-      this.liveMusic,
-      this.vegetarianFriendly,
-      this.goodForDinner,
-      this.goodForBreakfast,
-      this.freeWiFi,
-      this.takesReservations});
+        this.outdoorSeating,
+        this.liveMusic,
+        this.vegetarianFriendly,
+        this.goodForDinner,
+        this.goodForBreakfast,
+        this.freeWiFi,
+        this.takesReservations});
 
   Filters.fromJson(Map<String, dynamic> json) {
     goodForLunch = json['Good for Lunch'];
@@ -344,14 +579,14 @@ class DeliveryCharge {
 
   DeliveryCharge(
       {this.minimumDeliveryChargesWithinKm,
-      this.minimumDeliveryCharges,
-      this.deliveryChargesPerKm,
-      this.vendorCanModify});
+        this.minimumDeliveryCharges,
+        this.deliveryChargesPerKm,
+        this.vendorCanModify});
 
   DeliveryCharge.fromJson(Map<String, dynamic> json) {
-    minimumDeliveryChargesWithinKm = json['minimum_delivery_charges_within_km'];
-    minimumDeliveryCharges = json['minimum_delivery_charges'];
-    deliveryChargesPerKm = json['delivery_charges_per_km'];
+    minimumDeliveryChargesWithinKm = _parseNum(json['minimum_delivery_charges_within_km']);
+    minimumDeliveryCharges = _parseNum(json['minimum_delivery_charges']);
+    deliveryChargesPerKm = _parseNum(json['delivery_charges_per_km']);
     vendorCanModify = json['vendor_can_modify'];
   }
 
@@ -362,6 +597,19 @@ class DeliveryCharge {
     data['delivery_charges_per_km'] = deliveryChargesPerKm;
     data['vendor_can_modify'] = vendorCanModify;
     return data;
+  }
+
+  static num? _parseNum(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value;
+    if (value is String) {
+      try {
+        return num.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 }
 
@@ -375,9 +623,21 @@ class SpecialDiscount {
     day = json['day'];
     if (json['timeslot'] != null) {
       timeslot = <SpecialDiscountTimeslot>[];
-      json['timeslot'].forEach((v) {
-        timeslot!.add(SpecialDiscountTimeslot.fromJson(v));
-      });
+      // Handle timeslot - it might be a string or array
+      if (json['timeslot'] is String) {
+        try {
+          List<dynamic> timeslotData = jsonDecode(json['timeslot']);
+          for (var v in timeslotData) {
+            timeslot!.add(SpecialDiscountTimeslot.fromJson(v));
+          }
+        } catch (e) {
+          timeslot = [];
+        }
+      } else {
+        for (var v in json['timeslot']) {
+          timeslot!.add(SpecialDiscountTimeslot.fromJson(v));
+        }
+      }
     }
   }
 

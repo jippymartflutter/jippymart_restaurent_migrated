@@ -22,7 +22,6 @@
         "duration_picker",
         "esc_pos_utils",
         "firebase_app_check",
-        "firebase_auth",
         "firebase_core",
         "firebase_database",
         "firebase_messaging",
@@ -782,18 +781,6 @@
         "firebase_core_platform_interface",
         "firebase_messaging_platform_interface",
         "firebase_messaging_web",
-        "flutter",
-        "meta"
-      ]
-    },
-    {
-      "name": "firebase_auth",
-      "version": "5.7.0",
-      "dependencies": [
-        "firebase_auth_platform_interface",
-        "firebase_auth_web",
-        "firebase_core",
-        "firebase_core_platform_interface",
         "flutter",
         "meta"
       ]
@@ -2042,32 +2029,6 @@
       "version": "4.6.10",
       "dependencies": [
         "_flutterfire_internals",
-        "firebase_core",
-        "flutter",
-        "meta",
-        "plugin_platform_interface"
-      ]
-    },
-    {
-      "name": "firebase_auth_web",
-      "version": "5.15.3",
-      "dependencies": [
-        "firebase_auth_platform_interface",
-        "firebase_core",
-        "firebase_core_web",
-        "flutter",
-        "flutter_web_plugins",
-        "http_parser",
-        "meta",
-        "web"
-      ]
-    },
-    {
-      "name": "firebase_auth_platform_interface",
-      "version": "7.7.3",
-      "dependencies": [
-        "_flutterfire_internals",
-        "collection",
         "firebase_core",
         "flutter",
         "meta",

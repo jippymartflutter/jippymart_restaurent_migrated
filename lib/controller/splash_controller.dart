@@ -8,10 +8,11 @@ import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/controller/app_update_controller.dart';
+
+import 'login_controller.dart' show LoginController;
 
 class SplashController extends GetxController {
   bool isRedirecting = false;
@@ -41,6 +42,7 @@ class SplashController extends GetxController {
     });
     super.onInit();
   }
+  final loginController = Get.find<LoginController>(); // Finds existing instance
 
   redirectScreen() async {
     print('🔄 redirectScreen started');
@@ -75,14 +77,14 @@ class SplashController extends GetxController {
 
       bool isLogin = await FireStoreUtils.isLogin();
       if (!isLogin) {
-        await FirebaseAuth.instance.signOut();
+        loginController.clearUserData();
         Get.offAll(() => const LoginScreen());
         return;
       }
       String userId = await FireStoreUtils.getCurrentUid();
       final userProfile = await FireStoreUtils.getUserProfile(userId);
       if (userProfile == null) {
-        await FirebaseAuth.instance.signOut();
+        loginController.clearUserData();
         Get.offAll(() => const LoginScreen());
         return;
       }
@@ -90,13 +92,13 @@ class SplashController extends GetxController {
       Constant.userModel = userProfile;
       
       if (Constant.userModel?.role != Constant.userRoleVendor) {
-        await FirebaseAuth.instance.signOut();
+        loginController.clearUserData();
         Get.offAll(() => const LoginScreen());
         return;
       }
 
       if (Constant.userModel?.active != true) {
-        await FirebaseAuth.instance.signOut();
+        loginController.clearUserData();
         Get.offAll(() => const LoginScreen());
         return;
       }
@@ -137,7 +139,7 @@ class SplashController extends GetxController {
     } catch (e) {
       print('Error in redirectScreen: $e');
       ShowToastDialog.showToast('An error occurred. Please try again.');
-      await FirebaseAuth.instance.signOut();
+      loginController.clearUserData();
       Get.offAll(() => const LoginScreen());
     } finally {
       isRedirecting = false;

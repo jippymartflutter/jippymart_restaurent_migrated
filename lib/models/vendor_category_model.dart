@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class VendorCategoryModel {
   List<dynamic>? reviewAttributes;
   String? photo;
@@ -6,15 +8,24 @@ class VendorCategoryModel {
   String? title;
   bool? isActive;
 
-  VendorCategoryModel({this.reviewAttributes, this.photo, this.description, this.id, this.title, this.isActive});
+  VendorCategoryModel({
+    this.reviewAttributes,
+    this.photo,
+    this.description,
+    this.id,
+    this.title,
+    this.isActive,
+  });
 
   VendorCategoryModel.fromJson(Map<String, dynamic> json) {
-    reviewAttributes = json['review_attributes'] ?? [];
+    reviewAttributes = json['review_attributes'] is String
+        ? jsonDecode(json['review_attributes'])
+        : (json['review_attributes'] ?? []);
     photo = json['photo'] ?? "";
     description = json['description'] ?? '';
-    id = json['id'] ?? "";
+    id = json['id']?.toString() ?? "";
     title = json['title'] ?? "";
-    isActive = json['isActive'] ?? true;
+    isActive = json['isActive'] == 1 || json['isActive'] == true;
   }
 
   Map<String, dynamic> toJson() {

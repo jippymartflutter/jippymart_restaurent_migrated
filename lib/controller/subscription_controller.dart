@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
-import 'package:jippymart_restaurant/controller/stripe_failed_model.dart';
 import 'package:jippymart_restaurant/models/payment_model/flutter_wave_model.dart';
 import 'package:jippymart_restaurant/models/payment_model/getPaytmTxtToken.dart';
 import 'package:jippymart_restaurant/models/payment_model/mercado_pago_model.dart';
@@ -39,43 +38,69 @@ import 'package:jippymart_restaurant/payment/paystack/pay_stack_url_model.dart';
 import 'package:jippymart_restaurant/payment/paystack/paystack_url_genrater.dart';
 import 'package:jippymart_restaurant/payment/xenditModel.dart';
 import 'package:jippymart_restaurant/payment/xenditScreen.dart';
-import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 // import 'package:flutter_paypal/flutter_paypal.dart';
 import 'dart:math' as maths;
 import 'package:http/http.dart' as http;
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 class SubscriptionController extends GetxController {
   RxList<SubscriptionPlanModel> subscriptionPlanList =
       <SubscriptionPlanModel>[].obs;
   Rx<SubscriptionPlanModel> selectedSubscriptionPlan =
       SubscriptionPlanModel().obs;
   RxBool isLoading = true.obs;
-
   @override
   void onInit() {
     getInitPlanSettings();
     super.onInit();
   }
-
   getInitPlanSettings() async {
     String userId = await FireStoreUtils.getCurrentUid();
     userModel.value =
-        await FireStoreUtils.getUserProfile(userId) ??
-            UserModel();
-
-    await FirebaseFirestore.instance
-        .collection(CollectionName.settings)
-        .doc('restaurant')
-        .get()
-        .then((value) {
-      Constant.autoApproveRestaurant = value.data()!['auto_approve_restaurant'];
-      Constant.isSubscriptionModelApplied = value.data()!['subscription_model'];
-    });
-
+        await FireStoreUtils.getUserProfile(userId) ?? UserModel();
+    try {
+      final response = await http.get(Uri.parse('${Constant.baseUrl}restaurant/settings/restaurant'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> res = json.decode(response.body);
+        if (res['success'] == true && res['data'] != null) {
+          final data = res['data'];
+          Constant.autoApproveRestaurant = data['auto_approve_restaurant'] ?? false;
+          Constant.isSubscriptionModelApplied = data['subscription_model'] ?? false;
+        } else {
+          print('⚠️ API returned success=false or data=null');
+        }
+      } else {
+        print('❌ Failed to fetch settings: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error fetching settings: $e');
+    }
     await getSubscriptionPlanList();
     getPaymentSettings();
   }
+
+  // getInitPlanSettings() async {
+  //   String userId = await FireStoreUtils.getCurrentUid();
+  //   userModel.value =
+  //       await FireStoreUtils.getUserProfile(userId) ??
+  //           UserModel();
+  //   await FirebaseFirestore.instance
+  //       .collection(CollectionName.settings)
+  //       .doc('restaurant')
+  //       .get()
+  //       .then((value) {
+  //     final data = value.data();
+  //     if (data != null) {
+  //       Constant.autoApproveRestaurant =
+  //           _parseFirestoreBool(data['auto_approve_restaurant']);
+  //       Constant.isSubscriptionModelApplied =
+  //           _parseFirestoreBool(data['subscription_model']);
+  //     }
+  //   });
+  //   await getSubscriptionPlanList();
+  //   getPaymentSettings();
+  // }
 
   Future<void> getSubscriptionPlanList() async {
     isLoading.value = true;
@@ -90,7 +115,6 @@ class SubscriptionController extends GetxController {
         },
       );
     }
-
     if (Constant.isSubscriptionModelApplied) {
       await FireStoreUtils.getAllSubscriptionPlans().then(
         (value) {
@@ -103,15 +127,17 @@ class SubscriptionController extends GetxController {
       );
     }
     if (userModel.value.subscriptionPlanId == null) {
-      selectedSubscriptionPlan.value = subscriptionPlanList.first;
+      if (subscriptionPlanList.isNotEmpty) {
+        selectedSubscriptionPlan.value = subscriptionPlanList.first;
+      } else {
+        ShowToastDialog.showToast(
+            "No subscription plans are currently available.".tr);
+      }
     }
     isLoading.value = false;
   }
-
   Rx<UserModel> userModel = UserModel().obs;
-
   RxString selectedPaymentMethod = ''.obs;
-
   Rx<WalletSettingModel> walletSettingModel = WalletSettingModel().obs;
   Rx<PayFastModel> payFastModel = PayFastModel().obs;
   Rx<MercadoPagoModel> mercadoPagoModel = MercadoPagoModel().obs;
@@ -171,6 +197,20 @@ class SubscriptionController extends GetxController {
       selectedPaymentMethod.value = PaymentGateway.wallet.name;
     }
     isLoading.value = false;
+  }
+
+  bool _parseFirestoreBool(dynamic value) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.toLowerCase();
+      return normalized == 'true' || normalized == '1';
+    }
+    return false;
   }
 
   void handlePaymentSuccess(PaymentSuccessResponse response) {

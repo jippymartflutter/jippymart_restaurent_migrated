@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:in_app_review/in_app_review.dart';
+import 'package:jippymart_restaurant/controller/login_controller.dart';
 import 'package:jippymart_restaurant/utils/const/color_const.dart';
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/app/add_advertisement_screen/advertisement_list_screen.dart';
@@ -45,6 +45,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final loginController = Get.find<LoginController>(); // Finds existing instance
     return GetX(
         init: ProfileController(),
         builder: (controller) {
@@ -1135,15 +1136,16 @@ class ProfileScreen extends StatelessWidget {
                                             positiveString: "Log out".tr,
                                             negativeString: "Cancel".tr,
                                             positiveClick: () async {
-                                              await AudioPlayerService
-                                                  .playSound(false);
-                                              Constant.userModel!.fcmToken = "";
-                                              await FireStoreUtils.updateUser(
-                                                  Constant.userModel!);
-                                              Constant.userModel = null;
-                                              await FirebaseAuth.instance
-                                                  .signOut();
-                                              Get.offAll(const LoginScreen());
+                                              loginController.logoutFunction();
+                                              // await AudioPlayerService
+                                              //     .playSound(false);
+                                              // Constant.userModel!.fcmToken = "";
+                                              // await FireStoreUtils.updateUser(
+                                              //     Constant.userModel!);
+                                              // Constant.userModel = null;
+                                              // await FirebaseAuth.instance
+                                              //     .signOut();
+                                              // Get.offAll(const LoginScreen());
                                             },
                                             negativeClick: () {
                                               Get.back();
@@ -1182,18 +1184,18 @@ class ProfileScreen extends StatelessWidget {
                                               "Please wait".tr);
                                           await controller
                                               .deleteUserFromServer();
-                                          await FireStoreUtils.deleteUser()
+                                          await FireStoreUtils().deleteUser()
                                               .then((value) {
-                                            ShowToastDialog.closeLoader();
-                                            if (value == true) {
-                                              ShowToastDialog.showToast(
-                                                  "Account deleted successfully"
-                                                      .tr);
-                                              Get.offAll(const LoginScreen());
-                                            } else {
-                                              ShowToastDialog.showToast(
-                                                  "Contact Administrator".tr);
-                                            }
+                                            // ShowToastDialog.closeLoader();
+                                            // if (value == true) {
+                                            //   ShowToastDialog.showToast(
+                                            //       "Account deleted successfully"
+                                            //           .tr);
+                                            //   Get.offAll(const LoginScreen());
+                                            // } else {
+                                            //   ShowToastDialog.showToast(
+                                            //       "Contact Administrator".tr);
+                                            // }
                                           });
                                         },
                                         negativeClick: () {

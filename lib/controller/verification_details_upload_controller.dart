@@ -82,7 +82,6 @@ class DetailsUploadController extends GetxController {
           "driverDocument/${FireStoreUtils.getCurrentUid()}",
           frontImageFileName);
     }
-
     if (backImage.value.isNotEmpty &&
         Constant().hasValidUrl(backImage.value) == false) {
       backImage.value = await Constant.uploadUserImageToFireStorage(
@@ -94,7 +93,6 @@ class DetailsUploadController extends GetxController {
     documents.value.backImage = backImage.value;
     documents.value.documentId = documentModel.value.id;
     documents.value.status = "uploaded";
-
     await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
       if (value) {
         ShowToastDialog.closeLoader();

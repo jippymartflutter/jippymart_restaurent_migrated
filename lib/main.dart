@@ -51,20 +51,15 @@ Future<void> initializeFirebase() async {
       print('Firebase is already initialized');
       return;
     }
-
     // Initialize Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('Firebase initialized successfully');
-
-    // Initialize Firebase App Check with debug provider for development
     await FirebaseAppCheck.instance.activate(
       // Use debug provider for development
       androidProvider: AndroidProvider.debug,
       appleProvider: AppleProvider.debug,
-      // Comment out web provider for now since we're on Android
-      // webProvider: ReCaptchaV3Provider('recaptcha-v3-site-key'),
     );
     print('Firebase App Check initialized successfully');
   } catch (e) {

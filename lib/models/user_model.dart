@@ -78,17 +78,20 @@ class UserModel {
     firstName = json['firstName'];
     firebaseId = json['firebase_id'];
     lastName = json['lastName'];
-    profilePictureURL = json['profilePictureURL'];
+    profilePictureURL = json['profilePictureURL'] ?? json['profile_pic'];
     fcmToken = json['fcmToken'];
     countryCode = json['countryCode'];
     phoneNumber = json['phoneNumber'];
     walletAmount = json['wallet_amount'] != null
         ? double.parse(json['wallet_amount'].toString())
         : 0;
-    createdAt = json['createdAt'];
-    active = json['active'];
-    isActive = json['isActive'];
-    isDocumentVerify = json['isDocumentVerify'] ?? false;
+    createdAt = json['createdAt'] ?? json['_created_at'];
+
+    // Handle boolean conversions safely
+    active = _parseBool(json['active']);
+    isActive = _parseBool(json['isActive']);
+    isDocumentVerify = _parseBool(json['isDocumentVerify']);
+
     role = json['role'] ?? 'user';
     location = json['location'] != null
         ? UserLocation.fromJson(json['location'])
@@ -96,12 +99,14 @@ class UserModel {
     userBankDetails = json['userBankDetails'] != null
         ? UserBankDetails.fromJson(json['userBankDetails'])
         : null;
+
     if (json['shippingAddress'] != null) {
       shippingAddress = <ShippingAddress>[];
       json['shippingAddress'].forEach((v) {
         shippingAddress!.add(ShippingAddress.fromJson(v));
       });
     }
+
     carName = json['carName'];
     carNumber = json['carNumber'];
     carPictureURL = json['carPictureURL'];
@@ -116,6 +121,19 @@ class UserModel {
     subscriptionPlan = json['subscription_plan'] != null
         ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
         : null;
+  }
+
+// Helper method to safely parse boolean values from various types
+  bool _parseBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is String) {
+      return value.toLowerCase() == 'true' || value == '1';
+    }
+    if (value is int) {
+      return value == 1;
+    }
+    return false;
   }
 
   Map<String, dynamic> toJson() {

@@ -1,12 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/app/chat_screens/chat_screen.dart';
-import 'package:jippymart_restaurant/constant/collection_name.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
-import 'package:jippymart_restaurant/models/advertisement_model.dart';
 import 'package:jippymart_restaurant/models/inbox_model.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
@@ -14,177 +13,124 @@ import 'package:jippymart_restaurant/themes/responsive.dart';
 import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/network_image_widget.dart';
-import 'package:jippymart_restaurant/widget/firebase_pagination/src/firestore_pagination.dart';
-import 'package:jippymart_restaurant/widget/firebase_pagination/src/models/view_type.dart';
 
 class AdminInboxScreen extends StatelessWidget {
   const AdminInboxScreen({super.key});
 
+  Future<List<InboxModel>> _fetchInbox() async {
+    String restaurantId = await FireStoreUtils.getCurrentUid();
+    final url = Uri.parse("${Constant.baseUrl}restaurant/chat/admin?restaurantId=$restaurantId");
+    final response = await http.get(url, headers: {"Content-Type": "application/json"});
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      List data = jsonData['data'];
+      return data.map((e) => InboxModel.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to load inbox");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
+        title: Text("Admin Chat Inbox".tr),
         backgroundColor: themeChange.getThem()
             ? AppThemeData.surfaceDark
             : AppThemeData.surface,
-        centerTitle: false,
-        titleSpacing: 0,
-        title: Text(
-          "Admin Chat Inbox".tr,
-          textAlign: TextAlign.start,
-          style: TextStyle(
-            fontFamily: AppThemeData.medium,
-            fontSize: 16,
-            color: themeChange.getThem()
-                ? AppThemeData.grey50
-                : AppThemeData.grey900,
-          ),
-        ),
       ),
-      body: FirestorePagination(
-        //item builder type is compulsory.
-        physics: const BouncingScrollPhysics(),
-        itemBuilder: (context, documentSnapshots, index) {
-          final data = documentSnapshots[index].data() as Map<String, dynamic>?;
-          InboxModel inboxModel = InboxModel.fromJson(data!);
-          return InkWell(
-            onTap: () async {
-              ShowToastDialog.showLoader("Please wait".tr);
-              VendorModel? vendorModel = await FireStoreUtils.getVendorById(
-                  Constant.userModel!.vendorID.toString());
-              ShowToastDialog.closeLoader();
+      body: FutureBuilder<List<InboxModel>>(
+        future: _fetchInbox(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Constant.loader();
+          }
 
-              Get.to(const ChatScreen(), arguments: {
-                "customerName": 'Admin',
-                "restaurantName": vendorModel!.title,
-                "orderId": inboxModel.orderId,
-                "restaurantId": Constant.userModel?.id,
-                "customerId": 'admin',
-                "customerProfileImage": '',
-                "restaurantProfileImage": vendorModel.photo,
-                "token": Constant.userModel?.fcmToken,
-                "chatType": 'admin',
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-              child: Container(
-                decoration: ShapeDecoration(
-                  color: themeChange.getThem()
-                      ? AppThemeData.grey900
-                      : AppThemeData.grey50,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
+          final items = snapshot.data!;
+          if (items.isEmpty) {
+            return Constant.showEmptyView(message: "No Conversation found".tr);
+          }
+
+          return ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final inboxModel = items[index];
+
+              return InkWell(
+                onTap: () async {
+                  ShowToastDialog.showLoader("Please wait".tr);
+                  VendorModel? vendorModel = await FireStoreUtils.getVendorById(
+                      Constant.userModel!.vendorID.toString());
+                  ShowToastDialog.closeLoader();
+
+                  Get.to(const ChatScreen(), arguments: {
+                    "customerName": 'Admin',
+                    "restaurantName": vendorModel!.title,
+                    "orderId": inboxModel.orderId,
+                    "restaurantId": Constant.userModel?.id,
+                    "customerId": 'admin',
+                    "customerProfileImage": inboxModel.customerProfileImage ?? "",
+                    "restaurantProfileImage": vendorModel.photo,
+                    "token": Constant.userModel?.fcmToken,
+                    "chatType": 'admin',
+                  });
+                },
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: FutureBuilder(
-                      future: FireStoreUtils.getAdvertisementById(
-                          advertisementId: inboxModel.orderId!),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          AdvertisementModel advertisementModel =
-                              snapshot.data!;
-                          return Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius:
-                                    const BorderRadius.all(Radius.circular(10)),
-                                child: NetworkImageWidget(
-                                  imageUrl: advertisementModel.profileImage
-                                      .toString(),
-                                  fit: BoxFit.cover,
-                                  height: Responsive.height(6, context),
-                                  width: Responsive.width(12, context),
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 10,
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            "${advertisementModel.title}",
-                                            textAlign: TextAlign.start,
-                                            style: TextStyle(
-                                              fontFamily: AppThemeData.semiBold,
-                                              fontSize: 16,
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.grey100
-                                                  : AppThemeData.grey800,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          Constant.timestampToDate(
-                                              inboxModel.createdAt!),
-                                          textAlign: TextAlign.start,
-                                          style: TextStyle(
-                                            fontFamily: AppThemeData.regular,
-                                            fontSize: 16,
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey400
-                                                : AppThemeData.grey500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 5,
-                                    ),
-                                    Text(
-                                      "${inboxModel.lastMessage}",
-                                      textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontFamily: AppThemeData.medium,
-                                        fontSize: 14,
-                                        color: themeChange.getThem()
-                                            ? AppThemeData.grey200
-                                            : AppThemeData.grey700,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Text(
-                            "",
-                            textAlign: TextAlign.start,
-                            style: TextStyle(
-                              fontFamily: AppThemeData.semiBold,
-                              fontSize: 14,
-                              color: themeChange.getThem()
-                                  ? AppThemeData.grey400
-                                  : AppThemeData.grey500,
-                            ),
-                          );
-                        }
-                      }),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: themeChange.getThem()
+                          ? AppThemeData.grey900
+                          : AppThemeData.grey100,
+                    ),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: NetworkImageWidget(
+                          imageUrl: inboxModel.restaurantProfileImage.toString(),
+                          height: Responsive.height(6, context),
+                          width: Responsive.width(12, context),
+                        ),
+                      ),
+                      title: Text(
+                        inboxModel.restaurantName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: themeChange.getThem()
+                              ? AppThemeData.grey100
+                              : AppThemeData.grey800,
+                        ),
+                      ),
+                      subtitle: Text(
+                        inboxModel.lastMessage ?? '',
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: themeChange.getThem()
+                              ? AppThemeData.grey300
+                              : AppThemeData.grey600,
+                        ),
+                      ),
+                      trailing: Text(
+                        Constant.timestampToDate(inboxModel.createdAt!),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: themeChange.getThem()
+                              ? AppThemeData.grey400
+                              : AppThemeData.grey500,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
-        shrinkWrap: true,
-        onEmpty: Constant.showEmptyView(message: "No Conversion found".tr),
-        // orderBy is compulsory to enable pagination
-        query: FirebaseFirestore.instance
-            .collection(CollectionName.chatAdmin)
-            .where("restaurantId", isEqualTo: FireStoreUtils.getCurrentUid())
-            .orderBy('createdAt', descending: true),
-        //Change types customerId
-        initialLoader: Constant.loader(),
-        // to fetch real-time data
-        isLive: true,
-        viewType: ViewType.list,
       ),
     );
   }
