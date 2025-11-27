@@ -27,22 +27,63 @@ class CartProductModel {
     this.extras,
   });
 
-  CartProductModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    categoryId = json['category_id'];
-    name = json['name'];
-    photo = json['photo'];
-    price = json['price']?? '0.0';
-    discountPrice = json['discountPrice'] ?? '0.0';
-    vendorID = json['vendorID'];
-    quantity = json['quantity'];
-    extrasPrice = json['extras_price'];
-    extras = json['extras'];
-    variantInfo = json['variant_info'] != null
-        ? "_Map<String, dynamic>" == json['variant_info'].runtimeType.toString()
-            ? VariantInfo.fromJson(json['variant_info'])
-            : VariantInfo.fromJson(jsonDecode(json['variant_info']))
-        : null;
+  factory CartProductModel.fromJson(Map<String, dynamic> json) {
+    try {
+      return CartProductModel(
+        id: json['id']?.toString(),
+        categoryId: json['category_id']?.toString(),
+        name: json['name']?.toString(),
+        photo: json['photo']?.toString(),
+        price: json['price']?.toString() ?? '0.0',
+        discountPrice: json['discountPrice']?.toString() ?? '0.0',
+        vendorID: json['vendorID']?.toString(),
+        quantity: _parseInt(json['quantity']),
+        extrasPrice: json['extras_price']?.toString() ?? '0.0',
+        extras: json['extras'] is List ? json['extras'] : [],
+        variantInfo: _parseVariantInfo(json['variant_info']),
+      );
+    } catch (e) {
+      print('❌ Error parsing CartProductModel: $e');
+      print('Problematic product data: $json');
+      // Return a default product instead of failing completely
+      return CartProductModel(
+        id: json['id']?.toString() ?? 'unknown',
+        name: json['name']?.toString() ?? 'Unknown Product',
+        price: '0.0',
+        discountPrice: '0.0',
+        quantity: 1,
+        extrasPrice: '0.0',
+        extras: [],
+      );
+    }
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 1;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? 1;
+    if (value is num) return value.toInt();
+    return 1;
+  }
+
+  static VariantInfo? _parseVariantInfo(dynamic variantData) {
+    if (variantData == null) return null;
+
+    try {
+      if (variantData is Map<String, dynamic>) {
+        return VariantInfo.fromJson(variantData);
+      } else if (variantData is String) {
+        // Try to parse as JSON string
+        final decoded = jsonDecode(variantData);
+        if (decoded is Map<String, dynamic>) {
+          return VariantInfo.fromJson(decoded);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('❌ Error parsing variant info: $e');
+      return null;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -57,7 +98,9 @@ class CartProductModel {
     data['quantity'] = quantity;
     data['extras_price'] = extrasPrice;
     data['extras'] = extras;
-    data['variant_info'] = variantInfo != null ? jsonEncode(variantInfo!.toJson()) : null; // Handle null value
+    if (variantInfo != null) {
+      data['variant_info'] = variantInfo!.toJson();
+    }
     return data;
   }
 }
@@ -69,14 +112,27 @@ class VariantInfo {
   String? variantImage;
   Map<String, dynamic>? variantOptions;
 
-  VariantInfo({this.variantId, this.variantPrice, this.variantSku, this.variantImage, this.variantOptions});
+  VariantInfo({
+    this.variantId,
+    this.variantPrice,
+    this.variantSku,
+    this.variantImage,
+    this.variantOptions,
+  });
 
-  VariantInfo.fromJson(Map<String, dynamic> json) {
-    variantId = json['variant_id'] ?? '';
-    variantPrice = json['variant_price'] ?? '';
-    variantSku = json['variant_sku'] ?? '';
-    variantImage = json['variant_image'] ?? '';
-    variantOptions = json['variant_options'] ?? {};
+  factory VariantInfo.fromJson(Map<String, dynamic> json) {
+    try {
+      return VariantInfo(
+        variantId: json['variant_id']?.toString() ?? '',
+        variantPrice: json['variant_price']?.toString() ?? '',
+        variantSku: json['variant_sku']?.toString() ?? '',
+        variantImage: json['variant_image']?.toString() ?? '',
+        variantOptions: json['variant_options'] is Map ? Map<String, dynamic>.from(json['variant_options']) : {},
+      );
+    } catch (e) {
+      print('❌ Error parsing VariantInfo: $e');
+      return VariantInfo();
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -85,7 +141,7 @@ class VariantInfo {
     data['variant_price'] = variantPrice;
     data['variant_sku'] = variantSku;
     data['variant_image'] = variantImage;
-    data['variant_options'] = variantOptions;
+    data['variant_options'] = variantOptions ?? {};
     return data;
   }
 }

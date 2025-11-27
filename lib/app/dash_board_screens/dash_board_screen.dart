@@ -76,19 +76,15 @@ class DashBoardScreen extends StatelessWidget {
                               controller.updateRestStatus(val);
                             }
                           },
-                          // activeColor: Color(0xFFE74C3C),
                           thumbColor: MaterialStatePropertyAll(Colors.white),
                           trackColor: MaterialStateProperty.resolveWith<Color>((states) {
                             if (states.contains(MaterialState.selected)) {
-                              return Color(0xFF138D75); // ON
+                              return Color(0xFF138D75);
                             }
-                            return Color(0xFFC0392B); // OFF
+                            return Color(0xFFC0392B);
                           }),
                         )),
                       ),
-                      // Expanded(
-                      //   child: controller.pageList[controller.selectedIndex.value],
-                      // ),
                       Expanded(
                         child: Obx(() => IndexedStack(
                           index: controller.selectedIndex.value,

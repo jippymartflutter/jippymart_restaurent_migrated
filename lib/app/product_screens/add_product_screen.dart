@@ -346,729 +346,729 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             hintText: 'Enter short description here....'.tr,
                             maxLine: 5,
                           ),
-                          Text(
-                            "Attributes and Prices".tr,
-                            style: TextStyle(
-                                color: themeChange.getThem()
-                                    ? AppThemeData.grey50
-                                    : AppThemeData.grey900,
-                                fontFamily: AppThemeData.medium,
-                                fontSize: 18),
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Attributes".tr,
-                                style: TextStyle(
-                                  fontFamily: AppThemeData.semiBold,
-                                  fontSize: 14,
-                                  color: themeChange.getThem()
-                                      ? AppThemeData.grey100
-                                      : AppThemeData.grey800,
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              DropdownSearch<AttributesModel>.multiSelection(
-                                items: controller.attributesList,
-                                key: controller.myKey1,
-                                dropdownButtonProps: DropdownButtonProps(
-                                  focusColor: AppThemeData.secondary300,
-                                  color: AppThemeData.secondary300,
-                                  icon: const Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: AppThemeData.grey800,
-                                  ),
-                                ),
-                                dropdownDecoratorProps: DropDownDecoratorProps(
-                                  dropdownSearchDecoration: InputDecoration(
-                                      contentPadding: const EdgeInsets.only(
-                                          left: 8, right: 8),
-                                      disabledBorder: UnderlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey900
-                                                : AppThemeData.grey50,
-                                            width: 1),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.secondary300
-                                                : AppThemeData.secondary300,
-                                            width: 1),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey900
-                                                : AppThemeData.grey50,
-                                            width: 1),
-                                      ),
-                                      errorBorder: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey900
-                                                : AppThemeData.grey50,
-                                            width: 1),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: const BorderRadius.all(
-                                            Radius.circular(10)),
-                                        borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey900
-                                                : AppThemeData.grey50,
-                                            width: 1),
-                                      ),
-                                      filled: true,
-                                      hintStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: themeChange.getThem()
-                                            ? AppThemeData.grey50
-                                            : AppThemeData.grey900,
-                                        fontFamily: AppThemeData.medium,
-                                      ),
-                                      fillColor: themeChange.getThem()
-                                          ? AppThemeData.grey900
-                                          : AppThemeData.grey50,
-                                      hintText: 'Select Attributes'.tr),
-                                ),
-                                compareFn: (i1, i2) => i1.title == i2.title,
-                                popupProps: PopupPropsMultiSelection.menu(
-                                  fit: FlexFit.tight,
-                                  showSelectedItems: true,
-                                  listViewProps: const ListViewProps(
-                                      physics: BouncingScrollPhysics(),
-                                      padding: EdgeInsets.only(left: 20)),
-                                  itemBuilder: (context, item, isSelected) {
-                                    return ListTile(
-                                      selectedColor: AppThemeData.secondary300,
-                                      selected: isSelected,
-                                      title: Text(
-                                        item.title.toString(),
-                                        style: TextStyle(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey50
-                                                : AppThemeData.grey900,
-                                            fontFamily: AppThemeData.medium,
-                                            fontSize: 18),
-                                      ),
-                                      onTap: () {
-                                        controller.myKey1.currentState
-                                            ?.popupValidate([item]);
-                                      },
-                                    );
-                                  },
-                                ),
-                                itemAsString: (AttributesModel u) =>
-                                    u.title.toString(),
-                                selectedItems:
-                                    controller.selectedAttributesList,
-                                onSaved: (data) {},
-                                onChanged: (data) {
-                                  if (controller
-                                          .itemAttributes.value!.attributes !=
-                                      null) {
-                                    controller.selectedAttributesList.clear();
-                                    controller.itemAttributes.value!.attributes!
-                                        .clear();
-                                    controller.itemAttributes.value!.variants!
-                                        .clear();
-                                  } else {
-                                    controller.itemAttributes.value =
-                                        ItemAttribute(
-                                            attributes: [], variants: []);
-                                  }
-                                  controller.selectedAttributesList
-                                      .addAll(data);
-
-                                  for (var element
-                                      in controller.selectedAttributesList) {
-                                    controller
-                                        .addAttribute(element.id.toString());
-                                  }
-                                  setState(() {});
-                                },
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              controller.itemAttributes.value!.attributes ==
-                                          null ||
-                                      controller.itemAttributes.value!
-                                          .attributes!.isEmpty
-                                  ? Container()
-                                  : Container(
-                                      decoration: ShapeDecoration(
-                                        color: themeChange.getThem()
-                                            ? AppThemeData.grey900
-                                            : AppThemeData.grey50,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 10),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "Attributes Value".tr,
-                                              style: TextStyle(
-                                                color: themeChange.getThem()
-                                                    ? AppThemeData.grey50
-                                                    : AppThemeData.grey900,
-                                                fontFamily:
-                                                    AppThemeData.semiBold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              height: 5,
-                                            ),
-                                            ListView.builder(
-                                              itemCount: controller
-                                                  .itemAttributes
-                                                  .value!
-                                                  .attributes!
-                                                  .length,
-                                              shrinkWrap: true,
-                                              padding: EdgeInsets.zero,
-                                              physics:
-                                                  const NeverScrollableScrollPhysics(),
-                                              itemBuilder: (context, index) {
-                                                String title = "";
-                                                for (var element in controller
-                                                    .attributesList) {
-                                                  if (controller
-                                                          .itemAttributes
-                                                          .value!
-                                                          .attributes![index]
-                                                          .attributeId ==
-                                                      element.id) {
-                                                    title = element.title
-                                                        .toString();
-                                                  }
-                                                }
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              title,
-                                                              style: TextStyle(
-                                                                color: themeChange.getThem()
-                                                                    ? AppThemeData
-                                                                        .grey200
-                                                                    : AppThemeData
-                                                                        .grey700,
-                                                                fontFamily:
-                                                                    AppThemeData
-                                                                        .medium,
-                                                                fontSize: 16,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () {
-                                                              showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (BuildContext
-                                                                        context) {
-                                                                  return addAttributeValueDialog(
-                                                                      controller,
-                                                                      themeChange,
-                                                                      index,
-                                                                      controller
-                                                                          .itemAttributes
-                                                                          .value!
-                                                                          .attributes![
-                                                                              index]
-                                                                          .attributeId
-                                                                          .toString());
-                                                                },
-                                                              );
-                                                            },
-                                                            child: Icon(
-                                                              Icons.add,
-                                                              color: AppThemeData
-                                                                  .secondary300,
-                                                            ),
-                                                          )
-                                                        ],
-                                                      ),
-                                                      Wrap(
-                                                        spacing: 4.0,
-                                                        runSpacing: 4.0,
-                                                        children: List.generate(
-                                                          controller
-                                                              .itemAttributes
-                                                              .value!
-                                                              .attributes![
-                                                                  index]
-                                                              .attributeOptions!
-                                                              .length,
-                                                          (i) {
-                                                            return InkWell(
-                                                                onTap: () {
-                                                                  controller
-                                                                      .itemAttributes
-                                                                      .value!
-                                                                      .attributes![
-                                                                          index]
-                                                                      .attributeOptions!
-                                                                      .removeAt(
-                                                                          i);
-
-                                                                  List<List<dynamic>>
-                                                                      listArary =
-                                                                      [];
-                                                                  for (int i =
-                                                                          0;
-                                                                      i <
-                                                                          controller
-                                                                              .itemAttributes
-                                                                              .value!
-                                                                              .attributes!
-                                                                              .length;
-                                                                      i++) {
-                                                                    if (controller
-                                                                        .itemAttributes
-                                                                        .value!
-                                                                        .attributes![
-                                                                            i]
-                                                                        .attributeOptions!
-                                                                        .isNotEmpty) {
-                                                                      listArary.add(controller
-                                                                          .itemAttributes
-                                                                          .value!
-                                                                          .attributes![
-                                                                              i]
-                                                                          .attributeOptions!);
-                                                                    }
-                                                                  }
-
-                                                                  if (listArary
-                                                                      .isNotEmpty) {
-                                                                    List<Variants>?
-                                                                        variantsTemp =
-                                                                        [];
-                                                                    List<dynamic>
-                                                                        list =
-                                                                        getCombination(
-                                                                            listArary);
-                                                                    for (var element
-                                                                        in list) {
-                                                                      bool productIsInList = controller
-                                                                          .itemAttributes
-                                                                          .value!
-                                                                          .variants!
-                                                                          .any((product) =>
-                                                                              product.variantSku ==
-                                                                              element);
-                                                                      if (productIsInList) {
-                                                                        Variants variant = controller
-                                                                            .itemAttributes
-                                                                            .value!
-                                                                            .variants!
-                                                                            .firstWhere((product) =>
-                                                                                product.variantSku ==
-                                                                                element);
-                                                                        Variants variantsModel = Variants(
-                                                                            variantSku:
-                                                                                variant.variantSku,
-                                                                            variantId: variant.variantId,
-                                                                            variantImage: variant.variantImage,
-                                                                            variantPrice: variant.variantPrice,
-                                                                            variantQuantity: variant.variantQuantity);
-                                                                        variantsTemp
-                                                                            .add(variantsModel);
-                                                                      }
-                                                                    }
-                                                                    controller
-                                                                        .itemAttributes
-                                                                        .value!
-                                                                        .variants!
-                                                                        .clear();
-                                                                    controller
-                                                                        .itemAttributes
-                                                                        .value!
-                                                                        .variants!
-                                                                        .addAll(
-                                                                            variantsTemp);
-                                                                  } else {
-                                                                    controller
-                                                                        .itemAttributes
-                                                                        .value!
-                                                                        .variants!
-                                                                        .clear();
-                                                                  }
-                                                                  controller
-                                                                      .update();
-                                                                  setState(
-                                                                      () {});
-                                                                },
-                                                                child: Padding(
-                                                                  padding: const EdgeInsets
-                                                                      .symmetric(
-                                                                      vertical:
-                                                                          10),
-                                                                  child: _buildChip(
-                                                                      themeChange,
-                                                                      controller
-                                                                          .itemAttributes
-                                                                          .value!
-                                                                          .attributes![
-                                                                              index]
-                                                                          .attributeOptions![i],
-                                                                      index,
-                                                                      i),
-                                                                ));
-                                                          },
-                                                        ).toList(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                            SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child:
-                                                  controller
-                                                          .itemAttributes
-                                                          .value!
-                                                          .variants!
-                                                          .isEmpty
-                                                      ? const SizedBox()
-                                                      : ClipRRect(
-                                                          borderRadius:
-                                                              const BorderRadius
-                                                                  .only(
-                                                                  topLeft: Radius
-                                                                      .circular(
-                                                                          12),
-                                                                  topRight: Radius
-                                                                      .circular(
-                                                                          12)),
-                                                          child: DataTable(
-                                                              horizontalMargin:
-                                                                  20,
-                                                              columnSpacing: 30,
-                                                              dataRowMaxHeight:
-                                                                  70,
-                                                              border:
-                                                                  TableBorder
-                                                                      .all(
-                                                                color: themeChange.getThem()
-                                                                    ? AppThemeData
-                                                                        .grey700
-                                                                    : AppThemeData
-                                                                        .grey200,
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12),
-                                                              ),
-                                                              headingRowColor: WidgetStateColor.resolveWith(
-                                                                  (states) => themeChange
-                                                                          .getThem()
-                                                                      ? AppThemeData
-                                                                          .surfaceDark
-                                                                      : AppThemeData
-                                                                          .surface),
-                                                              columns: [
-                                                                DataColumn(
-                                                                  label:
-                                                                      SizedBox(
-                                                                    width: Responsive
-                                                                        .width(
-                                                                            20,
-                                                                            context),
-                                                                    child: Text(
-                                                                      "Variant"
-                                                                          .tr,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            AppThemeData.medium,
-                                                                        fontSize:
-                                                                            14,
-                                                                        color: themeChange.getThem()
-                                                                            ? AppThemeData.grey300
-                                                                            : AppThemeData.grey600,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                DataColumn(
-                                                                  label:
-                                                                      SizedBox(
-                                                                    width: Responsive
-                                                                        .width(
-                                                                            20,
-                                                                            context),
-                                                                    child: Text(
-                                                                      "Price"
-                                                                          .tr,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            AppThemeData.medium,
-                                                                        fontSize:
-                                                                            14,
-                                                                        color: themeChange.getThem()
-                                                                            ? AppThemeData.grey300
-                                                                            : AppThemeData.grey600,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                DataColumn(
-                                                                  label:
-                                                                      SizedBox(
-                                                                    width: Responsive
-                                                                        .width(
-                                                                            20,
-                                                                            context),
-                                                                    child: Text(
-                                                                      "Quantity"
-                                                                          .tr,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            AppThemeData.medium,
-                                                                        fontSize:
-                                                                            14,
-                                                                        color: themeChange.getThem()
-                                                                            ? AppThemeData.grey300
-                                                                            : AppThemeData.grey600,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                DataColumn(
-                                                                  label:
-                                                                      SizedBox(
-                                                                    width: Responsive
-                                                                        .width(
-                                                                            20,
-                                                                            context),
-                                                                    child: Text(
-                                                                      "Image"
-                                                                          .tr,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            AppThemeData.medium,
-                                                                        fontSize:
-                                                                            14,
-                                                                        color: themeChange.getThem()
-                                                                            ? AppThemeData.grey300
-                                                                            : AppThemeData.grey600,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                              rows: controller
-                                                                  .itemAttributes
-                                                                  .value!
-                                                                  .variants!
-                                                                  .map(
-                                                                    (e) =>
-                                                                        DataRow(
-                                                                      cells: [
-                                                                        DataCell(
-                                                                          Text(
-                                                                            e.variantSku.toString(),
-                                                                            style:
-                                                                                TextStyle(
-                                                                              fontFamily: AppThemeData.semiBold,
-                                                                              color: themeChange.getThem() ? AppThemeData.grey100 : AppThemeData.grey800,
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        DataCell(
-                                                                          TextFormField(
-                                                                            initialValue:
-                                                                                e.variantPrice,
-                                                                            textCapitalization:
-                                                                                TextCapitalization.sentences,
-                                                                            textInputAction:
-                                                                                TextInputAction.done,
-                                                                            inputFormatters: [
-                                                                              FilteringTextInputFormatter.allow(RegExp('[0-9-.]')),
-                                                                            ],
-                                                                            keyboardType:
-                                                                                TextInputType.text,
-                                                                            onChanged:
-                                                                                (value) {
-                                                                              e.variantPrice = value;
-                                                                            },
-                                                                            style: TextStyle(
-                                                                                fontSize: 14,
-                                                                                color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                                                                fontFamily: AppThemeData.medium),
-                                                                            decoration:
-                                                                                InputDecoration(
-                                                                              errorStyle: const TextStyle(color: Colors.red),
-                                                                              filled: true,
-                                                                              enabled: true,
-                                                                              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                                                                              fillColor: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
-                                                                              disabledBorder: UnderlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              focusedBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.secondary300 : AppThemeData.secondary300, width: 1),
-                                                                              ),
-                                                                              enabledBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              errorBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              border: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              hintText: "Price".tr,
-                                                                              prefix: Padding(
-                                                                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                                                                child: Text(
-                                                                                  "${Constant.currencyModel!.symbol}".tr,
-                                                                                  style: TextStyle(color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400, fontFamily: AppThemeData.semiBold, fontSize: 18),
-                                                                                ),
-                                                                              ),
-                                                                              hintStyle: TextStyle(
-                                                                                fontSize: 14,
-                                                                                color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400,
-                                                                                fontFamily: AppThemeData.regular,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        DataCell(
-                                                                          TextFormField(
-                                                                            initialValue:
-                                                                                e.variantQuantity,
-                                                                            textInputAction:
-                                                                                TextInputAction.done,
-                                                                            inputFormatters: [
-                                                                              FilteringTextInputFormatter.allow(RegExp('[0-9-.]')),
-                                                                            ],
-                                                                            keyboardType:
-                                                                                TextInputType.text,
-                                                                            onChanged:
-                                                                                (value) {
-                                                                              e.variantQuantity = value;
-                                                                            },
-                                                                            style: TextStyle(
-                                                                                fontSize: 14,
-                                                                                color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                                                                fontFamily: AppThemeData.medium),
-                                                                            decoration:
-                                                                                InputDecoration(
-                                                                              errorStyle: const TextStyle(color: Colors.red),
-                                                                              filled: true,
-                                                                              enabled: true,
-                                                                              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                                                                              fillColor: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
-                                                                              disabledBorder: UnderlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              focusedBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.secondary300 : AppThemeData.secondary300, width: 1),
-                                                                              ),
-                                                                              enabledBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              errorBorder: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              border: OutlineInputBorder(
-                                                                                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
-                                                                              ),
-                                                                              hintText: "Quantity".tr,
-                                                                              hintStyle: TextStyle(
-                                                                                fontSize: 14,
-                                                                                color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400,
-                                                                                fontFamily: AppThemeData.regular,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        DataCell(e.variantImage != null &&
-                                                                                e.variantImage!.isNotEmpty
-                                                                            ? InkWell(
-                                                                                onTap: () {
-                                                                                  int index = controller.itemAttributes.value!.variants!.indexWhere((element) => element.variantId == e.variantId);
-                                                                                  onCameraClick(context, index, controller);
-                                                                                },
-                                                                                child: ClipRRect(
-                                                                                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                                                  child: NetworkImageWidget(
-                                                                                    height: 50,
-                                                                                    width: 60,
-                                                                                    fit: BoxFit.cover,
-                                                                                    imageUrl: e.variantImage.toString(),
-                                                                                  ),
-                                                                                ),
-                                                                              )
-                                                                            : InkWell(
-                                                                                onTap: () {
-                                                                                  int index = controller.itemAttributes.value!.variants!.indexWhere((element) => element.variantId == e.variantId);
-                                                                                  onCameraClick(context, index, controller);
-                                                                                },
-                                                                                child: SvgPicture.asset("assets/icons/ic_folder_upload.svg"))),
-                                                                      ],
-                                                                    ),
-                                                                  )
-                                                                  .toList()),
-                                                        ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                            ],
-                          ),
+                          // Text(
+                          //   "Attributes and Prices".tr,
+                          //   style: TextStyle(
+                          //       color: themeChange.getThem()
+                          //           ? AppThemeData.grey50
+                          //           : AppThemeData.grey900,
+                          //       fontFamily: AppThemeData.medium,
+                          //       fontSize: 18),
+                          // ),
+                          // const SizedBox(
+                          //   height: 10,
+                          // ),
+                          // Column(
+                          //   crossAxisAlignment: CrossAxisAlignment.start,
+                          //   children: [
+                          //     Text(
+                          //       "Attributes".tr,
+                          //       style: TextStyle(
+                          //         fontFamily: AppThemeData.semiBold,
+                          //         fontSize: 14,
+                          //         color: themeChange.getThem()
+                          //             ? AppThemeData.grey100
+                          //             : AppThemeData.grey800,
+                          //       ),
+                          //     ),
+                          //     const SizedBox(
+                          //       height: 5,
+                          //     ),
+                          //     DropdownSearch<AttributesModel>.multiSelection(
+                          //       items: controller.attributesList,
+                          //       key: controller.myKey1,
+                          //       dropdownButtonProps: DropdownButtonProps(
+                          //         focusColor: AppThemeData.secondary300,
+                          //         color: AppThemeData.secondary300,
+                          //         icon: const Icon(
+                          //           Icons.keyboard_arrow_down,
+                          //           color: AppThemeData.grey800,
+                          //         ),
+                          //       ),
+                          //       dropdownDecoratorProps: DropDownDecoratorProps(
+                          //         dropdownSearchDecoration: InputDecoration(
+                          //             contentPadding: const EdgeInsets.only(
+                          //                 left: 8, right: 8),
+                          //             disabledBorder: UnderlineInputBorder(
+                          //               borderRadius: const BorderRadius.all(
+                          //                   Radius.circular(10)),
+                          //               borderSide: BorderSide(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.grey900
+                          //                       : AppThemeData.grey50,
+                          //                   width: 1),
+                          //             ),
+                          //             focusedBorder: OutlineInputBorder(
+                          //               borderRadius: const BorderRadius.all(
+                          //                   Radius.circular(10)),
+                          //               borderSide: BorderSide(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.secondary300
+                          //                       : AppThemeData.secondary300,
+                          //                   width: 1),
+                          //             ),
+                          //             enabledBorder: OutlineInputBorder(
+                          //               borderRadius: const BorderRadius.all(
+                          //                   Radius.circular(10)),
+                          //               borderSide: BorderSide(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.grey900
+                          //                       : AppThemeData.grey50,
+                          //                   width: 1),
+                          //             ),
+                          //             errorBorder: OutlineInputBorder(
+                          //               borderRadius: const BorderRadius.all(
+                          //                   Radius.circular(10)),
+                          //               borderSide: BorderSide(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.grey900
+                          //                       : AppThemeData.grey50,
+                          //                   width: 1),
+                          //             ),
+                          //             border: OutlineInputBorder(
+                          //               borderRadius: const BorderRadius.all(
+                          //                   Radius.circular(10)),
+                          //               borderSide: BorderSide(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.grey900
+                          //                       : AppThemeData.grey50,
+                          //                   width: 1),
+                          //             ),
+                          //             filled: true,
+                          //             hintStyle: TextStyle(
+                          //               fontSize: 14,
+                          //               color: themeChange.getThem()
+                          //                   ? AppThemeData.grey50
+                          //                   : AppThemeData.grey900,
+                          //               fontFamily: AppThemeData.medium,
+                          //             ),
+                          //             fillColor: themeChange.getThem()
+                          //                 ? AppThemeData.grey900
+                          //                 : AppThemeData.grey50,
+                          //             hintText: 'Select Attributes'.tr),
+                          //       ),
+                          //       compareFn: (i1, i2) => i1.title == i2.title,
+                          //       popupProps: PopupPropsMultiSelection.menu(
+                          //         fit: FlexFit.tight,
+                          //         showSelectedItems: true,
+                          //         listViewProps: const ListViewProps(
+                          //             physics: BouncingScrollPhysics(),
+                          //             padding: EdgeInsets.only(left: 20)),
+                          //         itemBuilder: (context, item, isSelected) {
+                          //           return ListTile(
+                          //             selectedColor: AppThemeData.secondary300,
+                          //             selected: isSelected,
+                          //             title: Text(
+                          //               item.title.toString(),
+                          //               style: TextStyle(
+                          //                   color: themeChange.getThem()
+                          //                       ? AppThemeData.grey50
+                          //                       : AppThemeData.grey900,
+                          //                   fontFamily: AppThemeData.medium,
+                          //                   fontSize: 18),
+                          //             ),
+                          //             onTap: () {
+                          //               controller.myKey1.currentState
+                          //                   ?.popupValidate([item]);
+                          //             },
+                          //           );
+                          //         },
+                          //       ),
+                          //       itemAsString: (AttributesModel u) =>
+                          //           u.title.toString(),
+                          //       selectedItems:
+                          //           controller.selectedAttributesList,
+                          //       onSaved: (data) {},
+                          //       onChanged: (data) {
+                          //         if (controller
+                          //                 .itemAttributes.value!.attributes !=
+                          //             null) {
+                          //           controller.selectedAttributesList.clear();
+                          //           controller.itemAttributes.value!.attributes!
+                          //               .clear();
+                          //           controller.itemAttributes.value!.variants!
+                          //               .clear();
+                          //         } else {
+                          //           controller.itemAttributes.value =
+                          //               ItemAttribute(
+                          //                   attributes: [], variants: []);
+                          //         }
+                          //         controller.selectedAttributesList
+                          //             .addAll(data);
+                          //
+                          //         for (var element
+                          //             in controller.selectedAttributesList) {
+                          //           controller
+                          //               .addAttribute(element.id.toString());
+                          //         }
+                          //         setState(() {});
+                          //       },
+                          //     ),
+                          //     const SizedBox(
+                          //       height: 10,
+                          //     ),
+                          //     controller.itemAttributes.value!.attributes ==
+                          //                 null ||
+                          //             controller.itemAttributes.value!
+                          //                 .attributes!.isEmpty
+                          //         ? Container()
+                          //         : Container(
+                          //             decoration: ShapeDecoration(
+                          //               color: themeChange.getThem()
+                          //                   ? AppThemeData.grey900
+                          //                   : AppThemeData.grey50,
+                          //               shape: RoundedRectangleBorder(
+                          //                 borderRadius:
+                          //                     BorderRadius.circular(12),
+                          //               ),
+                          //             ),
+                          //             child: Padding(
+                          //               padding: const EdgeInsets.symmetric(
+                          //                   horizontal: 10, vertical: 10),
+                          //               child: Column(
+                          //                 crossAxisAlignment:
+                          //                     CrossAxisAlignment.start,
+                          //                 children: [
+                          //                   Text(
+                          //                     "Attributes Value".tr,
+                          //                     style: TextStyle(
+                          //                       color: themeChange.getThem()
+                          //                           ? AppThemeData.grey50
+                          //                           : AppThemeData.grey900,
+                          //                       fontFamily:
+                          //                           AppThemeData.semiBold,
+                          //                       fontSize: 16,
+                          //                     ),
+                          //                   ),
+                          //                   const SizedBox(
+                          //                     height: 5,
+                          //                   ),
+                          //                   ListView.builder(
+                          //                     itemCount: controller
+                          //                         .itemAttributes
+                          //                         .value!
+                          //                         .attributes!
+                          //                         .length,
+                          //                     shrinkWrap: true,
+                          //                     padding: EdgeInsets.zero,
+                          //                     physics:
+                          //                         const NeverScrollableScrollPhysics(),
+                          //                     itemBuilder: (context, index) {
+                          //                       String title = "";
+                          //                       for (var element in controller
+                          //                           .attributesList) {
+                          //                         if (controller
+                          //                                 .itemAttributes
+                          //                                 .value!
+                          //                                 .attributes![index]
+                          //                                 .attributeId ==
+                          //                             element.id) {
+                          //                           title = element.title
+                          //                               .toString();
+                          //                         }
+                          //                       }
+                          //                       return Padding(
+                          //                         padding:
+                          //                             const EdgeInsets.all(8.0),
+                          //                         child: Column(
+                          //                           crossAxisAlignment:
+                          //                               CrossAxisAlignment
+                          //                                   .start,
+                          //                           children: [
+                          //                             Row(
+                          //                               children: [
+                          //                                 Expanded(
+                          //                                   child: Text(
+                          //                                     title,
+                          //                                     style: TextStyle(
+                          //                                       color: themeChange.getThem()
+                          //                                           ? AppThemeData
+                          //                                               .grey200
+                          //                                           : AppThemeData
+                          //                                               .grey700,
+                          //                                       fontFamily:
+                          //                                           AppThemeData
+                          //                                               .medium,
+                          //                                       fontSize: 16,
+                          //                                     ),
+                          //                                   ),
+                          //                                 ),
+                          //                                 InkWell(
+                          //                                   onTap: () {
+                          //                                     showDialog(
+                          //                                       context:
+                          //                                           context,
+                          //                                       builder:
+                          //                                           (BuildContext
+                          //                                               context) {
+                          //                                         return addAttributeValueDialog(
+                          //                                             controller,
+                          //                                             themeChange,
+                          //                                             index,
+                          //                                             controller
+                          //                                                 .itemAttributes
+                          //                                                 .value!
+                          //                                                 .attributes![
+                          //                                                     index]
+                          //                                                 .attributeId
+                          //                                                 .toString());
+                          //                                       },
+                          //                                     );
+                          //                                   },
+                          //                                   child: Icon(
+                          //                                     Icons.add,
+                          //                                     color: AppThemeData
+                          //                                         .secondary300,
+                          //                                   ),
+                          //                                 )
+                          //                               ],
+                          //                             ),
+                          //                             Wrap(
+                          //                               spacing: 4.0,
+                          //                               runSpacing: 4.0,
+                          //                               children: List.generate(
+                          //                                 controller
+                          //                                     .itemAttributes
+                          //                                     .value!
+                          //                                     .attributes![
+                          //                                         index]
+                          //                                     .attributeOptions!
+                          //                                     .length,
+                          //                                 (i) {
+                          //                                   return InkWell(
+                          //                                       onTap: () {
+                          //                                         controller
+                          //                                             .itemAttributes
+                          //                                             .value!
+                          //                                             .attributes![
+                          //                                                 index]
+                          //                                             .attributeOptions!
+                          //                                             .removeAt(
+                          //                                                 i);
+                          //
+                          //                                         List<List<dynamic>>
+                          //                                             listArary =
+                          //                                             [];
+                          //                                         for (int i =
+                          //                                                 0;
+                          //                                             i <
+                          //                                                 controller
+                          //                                                     .itemAttributes
+                          //                                                     .value!
+                          //                                                     .attributes!
+                          //                                                     .length;
+                          //                                             i++) {
+                          //                                           if (controller
+                          //                                               .itemAttributes
+                          //                                               .value!
+                          //                                               .attributes![
+                          //                                                   i]
+                          //                                               .attributeOptions!
+                          //                                               .isNotEmpty) {
+                          //                                             listArary.add(controller
+                          //                                                 .itemAttributes
+                          //                                                 .value!
+                          //                                                 .attributes![
+                          //                                                     i]
+                          //                                                 .attributeOptions!);
+                          //                                           }
+                          //                                         }
+                          //
+                          //                                         if (listArary
+                          //                                             .isNotEmpty) {
+                          //                                           List<Variants>?
+                          //                                               variantsTemp =
+                          //                                               [];
+                          //                                           List<dynamic>
+                          //                                               list =
+                          //                                               getCombination(
+                          //                                                   listArary);
+                          //                                           for (var element
+                          //                                               in list) {
+                          //                                             bool productIsInList = controller
+                          //                                                 .itemAttributes
+                          //                                                 .value!
+                          //                                                 .variants!
+                          //                                                 .any((product) =>
+                          //                                                     product.variantSku ==
+                          //                                                     element);
+                          //                                             if (productIsInList) {
+                          //                                               Variants variant = controller
+                          //                                                   .itemAttributes
+                          //                                                   .value!
+                          //                                                   .variants!
+                          //                                                   .firstWhere((product) =>
+                          //                                                       product.variantSku ==
+                          //                                                       element);
+                          //                                               Variants variantsModel = Variants(
+                          //                                                   variantSku:
+                          //                                                       variant.variantSku,
+                          //                                                   variantId: variant.variantId,
+                          //                                                   variantImage: variant.variantImage,
+                          //                                                   variantPrice: variant.variantPrice,
+                          //                                                   variantQuantity: variant.variantQuantity);
+                          //                                               variantsTemp
+                          //                                                   .add(variantsModel);
+                          //                                             }
+                          //                                           }
+                          //                                           controller
+                          //                                               .itemAttributes
+                          //                                               .value!
+                          //                                               .variants!
+                          //                                               .clear();
+                          //                                           controller
+                          //                                               .itemAttributes
+                          //                                               .value!
+                          //                                               .variants!
+                          //                                               .addAll(
+                          //                                                   variantsTemp);
+                          //                                         } else {
+                          //                                           controller
+                          //                                               .itemAttributes
+                          //                                               .value!
+                          //                                               .variants!
+                          //                                               .clear();
+                          //                                         }
+                          //                                         controller
+                          //                                             .update();
+                          //                                         setState(
+                          //                                             () {});
+                          //                                       },
+                          //                                       child: Padding(
+                          //                                         padding: const EdgeInsets
+                          //                                             .symmetric(
+                          //                                             vertical:
+                          //                                                 10),
+                          //                                         child: _buildChip(
+                          //                                             themeChange,
+                          //                                             controller
+                          //                                                 .itemAttributes
+                          //                                                 .value!
+                          //                                                 .attributes![
+                          //                                                     index]
+                          //                                                 .attributeOptions![i],
+                          //                                             index,
+                          //                                             i),
+                          //                                       ));
+                          //                                 },
+                          //                               ).toList(),
+                          //                             ),
+                          //                           ],
+                          //                         ),
+                          //                       );
+                          //                     },
+                          //                   ),
+                          //                   SingleChildScrollView(
+                          //                     scrollDirection: Axis.horizontal,
+                          //                     child:
+                          //                         controller
+                          //                                 .itemAttributes
+                          //                                 .value!
+                          //                                 .variants!
+                          //                                 .isEmpty
+                          //                             ? const SizedBox()
+                          //                             : ClipRRect(
+                          //                                 borderRadius:
+                          //                                     const BorderRadius
+                          //                                         .only(
+                          //                                         topLeft: Radius
+                          //                                             .circular(
+                          //                                                 12),
+                          //                                         topRight: Radius
+                          //                                             .circular(
+                          //                                                 12)),
+                          //                                 child: DataTable(
+                          //                                     horizontalMargin:
+                          //                                         20,
+                          //                                     columnSpacing: 30,
+                          //                                     dataRowMaxHeight:
+                          //                                         70,
+                          //                                     border:
+                          //                                         TableBorder
+                          //                                             .all(
+                          //                                       color: themeChange.getThem()
+                          //                                           ? AppThemeData
+                          //                                               .grey700
+                          //                                           : AppThemeData
+                          //                                               .grey200,
+                          //                                       borderRadius:
+                          //                                           BorderRadius
+                          //                                               .circular(
+                          //                                                   12),
+                          //                                     ),
+                          //                                     headingRowColor: WidgetStateColor.resolveWith(
+                          //                                         (states) => themeChange
+                          //                                                 .getThem()
+                          //                                             ? AppThemeData
+                          //                                                 .surfaceDark
+                          //                                             : AppThemeData
+                          //                                                 .surface),
+                          //                                     columns: [
+                          //                                       DataColumn(
+                          //                                         label:
+                          //                                             SizedBox(
+                          //                                           width: Responsive
+                          //                                               .width(
+                          //                                                   20,
+                          //                                                   context),
+                          //                                           child: Text(
+                          //                                             "Variant"
+                          //                                                 .tr,
+                          //                                             style:
+                          //                                                 TextStyle(
+                          //                                               fontFamily:
+                          //                                                   AppThemeData.medium,
+                          //                                               fontSize:
+                          //                                                   14,
+                          //                                               color: themeChange.getThem()
+                          //                                                   ? AppThemeData.grey300
+                          //                                                   : AppThemeData.grey600,
+                          //                                             ),
+                          //                                           ),
+                          //                                         ),
+                          //                                       ),
+                          //                                       DataColumn(
+                          //                                         label:
+                          //                                             SizedBox(
+                          //                                           width: Responsive
+                          //                                               .width(
+                          //                                                   20,
+                          //                                                   context),
+                          //                                           child: Text(
+                          //                                             "Price"
+                          //                                                 .tr,
+                          //                                             style:
+                          //                                                 TextStyle(
+                          //                                               fontFamily:
+                          //                                                   AppThemeData.medium,
+                          //                                               fontSize:
+                          //                                                   14,
+                          //                                               color: themeChange.getThem()
+                          //                                                   ? AppThemeData.grey300
+                          //                                                   : AppThemeData.grey600,
+                          //                                             ),
+                          //                                           ),
+                          //                                         ),
+                          //                                       ),
+                          //                                       DataColumn(
+                          //                                         label:
+                          //                                             SizedBox(
+                          //                                           width: Responsive
+                          //                                               .width(
+                          //                                                   20,
+                          //                                                   context),
+                          //                                           child: Text(
+                          //                                             "Quantity"
+                          //                                                 .tr,
+                          //                                             style:
+                          //                                                 TextStyle(
+                          //                                               fontFamily:
+                          //                                                   AppThemeData.medium,
+                          //                                               fontSize:
+                          //                                                   14,
+                          //                                               color: themeChange.getThem()
+                          //                                                   ? AppThemeData.grey300
+                          //                                                   : AppThemeData.grey600,
+                          //                                             ),
+                          //                                           ),
+                          //                                         ),
+                          //                                       ),
+                          //                                       DataColumn(
+                          //                                         label:
+                          //                                             SizedBox(
+                          //                                           width: Responsive
+                          //                                               .width(
+                          //                                                   20,
+                          //                                                   context),
+                          //                                           child: Text(
+                          //                                             "Image"
+                          //                                                 .tr,
+                          //                                             style:
+                          //                                                 TextStyle(
+                          //                                               fontFamily:
+                          //                                                   AppThemeData.medium,
+                          //                                               fontSize:
+                          //                                                   14,
+                          //                                               color: themeChange.getThem()
+                          //                                                   ? AppThemeData.grey300
+                          //                                                   : AppThemeData.grey600,
+                          //                                             ),
+                          //                                           ),
+                          //                                         ),
+                          //                                       ),
+                          //                                     ],
+                          //                                     rows: controller
+                          //                                         .itemAttributes
+                          //                                         .value!
+                          //                                         .variants!
+                          //                                         .map(
+                          //                                           (e) =>
+                          //                                               DataRow(
+                          //                                             cells: [
+                          //                                               DataCell(
+                          //                                                 Text(
+                          //                                                   e.variantSku.toString(),
+                          //                                                   style:
+                          //                                                       TextStyle(
+                          //                                                     fontFamily: AppThemeData.semiBold,
+                          //                                                     color: themeChange.getThem() ? AppThemeData.grey100 : AppThemeData.grey800,
+                          //                                                   ),
+                          //                                                 ),
+                          //                                               ),
+                          //                                               DataCell(
+                          //                                                 TextFormField(
+                          //                                                   initialValue:
+                          //                                                       e.variantPrice,
+                          //                                                   textCapitalization:
+                          //                                                       TextCapitalization.sentences,
+                          //                                                   textInputAction:
+                          //                                                       TextInputAction.done,
+                          //                                                   inputFormatters: [
+                          //                                                     FilteringTextInputFormatter.allow(RegExp('[0-9-.]')),
+                          //                                                   ],
+                          //                                                   keyboardType:
+                          //                                                       TextInputType.text,
+                          //                                                   onChanged:
+                          //                                                       (value) {
+                          //                                                     e.variantPrice = value;
+                          //                                                   },
+                          //                                                   style: TextStyle(
+                          //                                                       fontSize: 14,
+                          //                                                       color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+                          //                                                       fontFamily: AppThemeData.medium),
+                          //                                                   decoration:
+                          //                                                       InputDecoration(
+                          //                                                     errorStyle: const TextStyle(color: Colors.red),
+                          //                                                     filled: true,
+                          //                                                     enabled: true,
+                          //                                                     contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                          //                                                     fillColor: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
+                          //                                                     disabledBorder: UnderlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     focusedBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.secondary300 : AppThemeData.secondary300, width: 1),
+                          //                                                     ),
+                          //                                                     enabledBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     errorBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     border: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     hintText: "Price".tr,
+                          //                                                     prefix: Padding(
+                          //                                                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          //                                                       child: Text(
+                          //                                                         "${Constant.currencyModel!.symbol}".tr,
+                          //                                                         style: TextStyle(color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400, fontFamily: AppThemeData.semiBold, fontSize: 18),
+                          //                                                       ),
+                          //                                                     ),
+                          //                                                     hintStyle: TextStyle(
+                          //                                                       fontSize: 14,
+                          //                                                       color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400,
+                          //                                                       fontFamily: AppThemeData.regular,
+                          //                                                     ),
+                          //                                                   ),
+                          //                                                 ),
+                          //                                               ),
+                          //                                               DataCell(
+                          //                                                 TextFormField(
+                          //                                                   initialValue:
+                          //                                                       e.variantQuantity,
+                          //                                                   textInputAction:
+                          //                                                       TextInputAction.done,
+                          //                                                   inputFormatters: [
+                          //                                                     FilteringTextInputFormatter.allow(RegExp('[0-9-.]')),
+                          //                                                   ],
+                          //                                                   keyboardType:
+                          //                                                       TextInputType.text,
+                          //                                                   onChanged:
+                          //                                                       (value) {
+                          //                                                     e.variantQuantity = value;
+                          //                                                   },
+                          //                                                   style: TextStyle(
+                          //                                                       fontSize: 14,
+                          //                                                       color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+                          //                                                       fontFamily: AppThemeData.medium),
+                          //                                                   decoration:
+                          //                                                       InputDecoration(
+                          //                                                     errorStyle: const TextStyle(color: Colors.red),
+                          //                                                     filled: true,
+                          //                                                     enabled: true,
+                          //                                                     contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                          //                                                     fillColor: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
+                          //                                                     disabledBorder: UnderlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     focusedBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.secondary300 : AppThemeData.secondary300, width: 1),
+                          //                                                     ),
+                          //                                                     enabledBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     errorBorder: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     border: OutlineInputBorder(
+                          //                                                       borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                       borderSide: BorderSide(color: themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50, width: 1),
+                          //                                                     ),
+                          //                                                     hintText: "Quantity".tr,
+                          //                                                     hintStyle: TextStyle(
+                          //                                                       fontSize: 14,
+                          //                                                       color: themeChange.getThem() ? AppThemeData.grey600 : AppThemeData.grey400,
+                          //                                                       fontFamily: AppThemeData.regular,
+                          //                                                     ),
+                          //                                                   ),
+                          //                                                 ),
+                          //                                               ),
+                          //                                               DataCell(e.variantImage != null &&
+                          //                                                       e.variantImage!.isNotEmpty
+                          //                                                   ? InkWell(
+                          //                                                       onTap: () {
+                          //                                                         int index = controller.itemAttributes.value!.variants!.indexWhere((element) => element.variantId == e.variantId);
+                          //                                                         onCameraClick(context, index, controller);
+                          //                                                       },
+                          //                                                       child: ClipRRect(
+                          //                                                         borderRadius: const BorderRadius.all(Radius.circular(10)),
+                          //                                                         child: NetworkImageWidget(
+                          //                                                           height: 50,
+                          //                                                           width: 60,
+                          //                                                           fit: BoxFit.cover,
+                          //                                                           imageUrl: e.variantImage.toString(),
+                          //                                                         ),
+                          //                                                       ),
+                          //                                                     )
+                          //                                                   : InkWell(
+                          //                                                       onTap: () {
+                          //                                                         int index = controller.itemAttributes.value!.variants!.indexWhere((element) => element.variantId == e.variantId);
+                          //                                                         onCameraClick(context, index, controller);
+                          //                                                       },
+                          //                                                       child: SvgPicture.asset("assets/icons/ic_folder_upload.svg"))),
+                          //                                             ],
+                          //                                           ),
+                          //                                         )
+                          //                                         .toList()),
+                          //                               ),
+                          //                   ),
+                          //                 ],
+                          //               ),
+                          //             ),
+                          //           ),
+                          //   ],
+                          // ),
                           const SizedBox(
                             height: 10,
                           ),
@@ -1433,86 +1433,86 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           // const SizedBox(
                           //   height: 20,
                           // ),
-                          Text(
-                            "Specifications and Addons".tr,
-                            style: TextStyle(
-                                color: themeChange.getThem()
-                                    ? AppThemeData.grey50
-                                    : AppThemeData.grey900,
-                                fontFamily: AppThemeData.medium,
-                                fontSize: 18),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  "Specifications".tr,
-                                  style: TextStyle(
-                                      color: themeChange.getThem()
-                                          ? AppThemeData.grey50
-                                          : AppThemeData.grey900,
-                                      fontFamily: AppThemeData.medium,
-                                      fontSize: 16),
-                                ),
-                              ),
-                              InkWell(
-                                  onTap: () {
-                                    controller.specificationList.add(
-                                        ProductSpecificationModel(
-                                            lable: '', value: ''));
-                                  },
-                                  child: SvgPicture.asset(
-                                      "assets/icons/ic_add_one.svg"))
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero,
-                            itemCount: controller.specificationList.length,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFieldWidget(
-                                        initialValue: controller
-                                            .specificationList[index].lable,
-                                        title: 'Title'.tr,
-                                        hintText: 'Enter Title'.tr,
-                                        onchange: (value) {
-                                          controller.specificationList[index]
-                                              .lable = value;
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Expanded(
-                                      child: TextFieldWidget(
-                                        initialValue: controller
-                                            .specificationList[index].value,
-                                        title: 'Value'.tr,
-                                        hintText: 'Enter Value'.tr,
-                                        onchange: (value) {
-                                          controller.specificationList[index]
-                                              .value = value;
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                          // Text(
+                          //   "Specifications and Addons".tr,
+                          //   style: TextStyle(
+                          //       color: themeChange.getThem()
+                          //           ? AppThemeData.grey50
+                          //           : AppThemeData.grey900,
+                          //       fontFamily: AppThemeData.medium,
+                          //       fontSize: 18),
+                          // ),
+                          // const SizedBox(
+                          //   height: 20,
+                          // ),
+                          // Row(
+                          //   children: [
+                          //     Expanded(
+                          //       child: Text(
+                          //         "Specifications".tr,
+                          //         style: TextStyle(
+                          //             color: themeChange.getThem()
+                          //                 ? AppThemeData.grey50
+                          //                 : AppThemeData.grey900,
+                          //             fontFamily: AppThemeData.medium,
+                          //             fontSize: 16),
+                          //       ),
+                          //     ),
+                          //     InkWell(
+                          //         onTap: () {
+                          //           controller.specificationList.add(
+                          //               ProductSpecificationModel(
+                          //                   lable: '', value: ''));
+                          //         },
+                          //         child: SvgPicture.asset(
+                          //             "assets/icons/ic_add_one.svg"))
+                          //   ],
+                          // ),
+                          // const SizedBox(
+                          //   height: 10,
+                          // ),
+                          // ListView.builder(
+                          //   shrinkWrap: true,
+                          //   padding: EdgeInsets.zero,
+                          //   itemCount: controller.specificationList.length,
+                          //   physics: const NeverScrollableScrollPhysics(),
+                          //   itemBuilder: (context, index) {
+                          //     return Padding(
+                          //       padding: const EdgeInsets.all(8.0),
+                          //       child: Row(
+                          //         children: [
+                          //           Expanded(
+                          //             child: TextFieldWidget(
+                          //               initialValue: controller
+                          //                   .specificationList[index].lable,
+                          //               title: 'Title'.tr,
+                          //               hintText: 'Enter Title'.tr,
+                          //               onchange: (value) {
+                          //                 controller.specificationList[index]
+                          //                     .lable = value;
+                          //               },
+                          //             ),
+                          //           ),
+                          //           const SizedBox(
+                          //             width: 10,
+                          //           ),
+                          //           Expanded(
+                          //             child: TextFieldWidget(
+                          //               initialValue: controller
+                          //                   .specificationList[index].value,
+                          //               title: 'Value'.tr,
+                          //               hintText: 'Enter Value'.tr,
+                          //               onchange: (value) {
+                          //                 controller.specificationList[index]
+                          //                     .value = value;
+                          //               },
+                          //             ),
+                          //           ),
+                          //         ],
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
                           Row(
                             children: [
                               Expanded(

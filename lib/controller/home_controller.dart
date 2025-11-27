@@ -138,62 +138,80 @@ class HomeController extends GetxController {
 
 
   Future<void> getOrder() async {
+    String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
     print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
+
+    print('getOrder : ${url}');
     try {
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
       );
-
+      log('getOrder : ${response.body}');
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
-
         if (jsonResponse['success'] == true) {
           List<OrderModel> allOrderTemp = [];
-
+          int successCount = 0;
+          int errorCount = 0;
           for (var element in jsonResponse['data']) {
-            OrderModel orderModel = OrderModel.fromJson(element);
-            orderModel.id = element['id']; // Ensure ID is set
-            allOrderTemp.add(orderModel);
-            print('📋 Order ${orderModel.id}: Status = "${orderModel.status}"');
+            try {
+              print('🔄 Processing order: ${element['id']}');
+              OrderModel orderModel = OrderModel.fromJson(element);
+              orderModel.id = element['id']; // Ensure ID is set
+              allOrderTemp.add(orderModel);
+              successCount++;
+              print('✅ Successfully processed order ${orderModel.id}: Status = "${orderModel.status}"');
+            } catch (e, stackTrace) {
+              errorCount++;
+              print('❌ Error parsing order ${element['id']}: $e');
+              print('Stack trace: $stackTrace');
+              print('Problematic order data: $element');
+              // Continue with other orders even if one fails
+            }
           }
 
-          // Update reactive lists
-          allOrderList.clear();
-          allOrderList.addAll(allOrderTemp);
+          print('📊 Order processing summary: $successCount successful, $errorCount failed');
 
-          newOrderList.value = allOrderList
-              .where((p0) => p0.status == Constant.orderPlaced || p0.status?.toLowerCase() == "pending")
-              .toList();
+          // Update reactive lists only if we have successful orders
+          if (successCount > 0) {
+            allOrderList.clear();
+            allOrderList.addAll(allOrderTemp);
 
-          acceptedOrderList.value = allOrderList
-              .where((p0) =>
-          p0.status == Constant.orderAccepted ||
-              p0.status == Constant.driverPending ||
-              p0.status == Constant.driverRejected ||
-              p0.status == Constant.orderShipped ||
-              p0.status == Constant.orderInTransit)
-              .toList();
+            newOrderList.value = allOrderList
+                .where((p0) => p0.status == Constant.orderPlaced || p0.status?.toLowerCase() == "pending")
+                .toList();
 
-          completedOrderList.value = allOrderList
-              .where((p0) => p0.status == Constant.orderCompleted)
-              .toList();
+            acceptedOrderList.value = allOrderList
+                .where((p0) =>
+            p0.status == Constant.orderAccepted ||
+                p0.status == Constant.driverPending ||
+                p0.status == Constant.driverRejected ||
+                p0.status == Constant.orderShipped ||
+                p0.status == Constant.orderInTransit)
+                .toList();
 
-          rejectedOrderList.value = allOrderList
-              .where((p0) => p0.status == Constant.orderRejected)
-              .toList();
+            completedOrderList.value = allOrderList
+                .where((p0) => p0.status == Constant.orderCompleted)
+                .toList();
 
-          cancelledOrderList.value = allOrderList
-              .where((p0) => p0.status == Constant.orderCancelled)
-              .toList();
+            rejectedOrderList.value = allOrderList
+                .where((p0) => p0.status == Constant.orderRejected)
+                .toList();
 
-          print('✅ Filtered orders - New: ${newOrderList.length}, Accepted: ${acceptedOrderList.length}, Completed: ${completedOrderList.length}, Rejected: ${rejectedOrderList.length}, Cancelled: ${cancelledOrderList.length}');
-          update();
-          if (newOrderList.isNotEmpty) {
-            print('🔔 Playing notification sound for new orders');
-            await AudioPlayerService.playSound(true);
+            cancelledOrderList.value = allOrderList
+                .where((p0) => p0.status == Constant.orderCancelled)
+                .toList();
+            print('✅ Filtered orders - New: ${newOrderList.length}, Accepted: ${acceptedOrderList.length}, Completed: ${completedOrderList.length}, Rejected: ${rejectedOrderList.length}, Cancelled: ${cancelledOrderList.length}');
+            update();
+            if (newOrderList.isNotEmpty) {
+              print('🔔 Playing notification sound for new orders');
+              await AudioPlayerService.playSound(true);
+            }
+          } else {
+            print('⚠️ No orders were successfully processed');
           }
         } else {
           print('⚠️ API returned success=false');
@@ -201,8 +219,9 @@ class HomeController extends GetxController {
       } else {
         print('❌ Failed to fetch orders: ${response.statusCode}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ Error fetching orders: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 

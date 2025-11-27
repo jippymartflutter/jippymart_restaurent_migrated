@@ -1100,7 +1100,6 @@ class HomeScreen extends StatelessWidget {
                           textColor: AppThemeData.grey50,
                           height: 5,
                           onPress: () async {
-                             // AudioPlayerService.playSound(false);
                             ShowToastDialog.showLoader('Please wait...'.tr);
                             await AudioPlayerService.playSound(false);
                             orderModel.status = Constant.orderRejected;
@@ -1241,48 +1240,48 @@ class HomeScreen extends StatelessWidget {
                                     //   return;
                                     // }
 
-                                    if ((Constant.isSubscriptionModelApplied ==
-                                                true ||
-                                            Constant.adminCommission
-                                                    ?.isEnabled ==
-                                                true) &&
-                                        controller.vendermodel.value
-                                                .subscriptionPlan !=
-                                            null) {
-                                      if (controller.vendermodel.value
-                                                  .subscriptionTotalOrders ==
-                                              '0' ||
-                                          controller.vendermodel.value
-                                                  .subscriptionTotalOrders ==
-                                              null) {
-                                        ShowToastDialog.closeLoader();
-                                        ShowToastDialog.showToast(
-                                            "You have reached the maximum order capacity for your current plan. Upgrade your subscription to continue accepting orders seamlessly!."
-                                                .tr);
-                                        return;
-                                      }
-                                    }
-                                    if (orderModel.scheduleTime != null) {
-                                      if (DateTime.now().isAtSameMomentOrAfter(
-                                          Constant.checkScheduleTime(
-                                              scheduleDate: orderModel
-                                                  .scheduleTime!
-                                                  .toDate()))) {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return estimatedTimeDialog(
-                                                controller,
-                                                themeChange,
-                                                orderModel,
-                                                context);
-                                          },
-                                        );
-                                      } else {
-                                        ShowToastDialog.showToast(
-                                            "${"You can accept order on".tr} ${Constant.timestampToDateTime(Timestamp.fromDate(Constant.checkScheduleTime(scheduleDate: orderModel.scheduleTime!.toDate())))}.");
-                                      }
-                                    } else {
+                                    // if ((Constant.isSubscriptionModelApplied ==
+                                    //             true ||
+                                    //         Constant.adminCommission
+                                    //                 ?.isEnabled ==
+                                    //             true) &&
+                                    //     controller.vendermodel.value
+                                    //             .subscriptionPlan !=
+                                    //         null) {
+                                    //   if (controller.vendermodel.value
+                                    //               .subscriptionTotalOrders ==
+                                    //           '0' ||
+                                    //       controller.vendermodel.value
+                                    //               .subscriptionTotalOrders ==
+                                    //           null) {
+                                    //     ShowToastDialog.closeLoader();
+                                    //     ShowToastDialog.showToast(
+                                    //         "You have reached the maximum order capacity for your current plan. Upgrade your subscription to continue accepting orders seamlessly!."
+                                    //             .tr);
+                                    //     return;
+                                    //   }
+                                    // }
+                                    // if (orderModel.scheduleTime != null) {
+                                    //   if (DateTime.now().isAtSameMomentOrAfter(
+                                    //       Constant.checkScheduleTime(
+                                    //           scheduleDate: orderModel
+                                    //               .scheduleTime!
+                                    //               .toDate()))) {
+                                    //     showDialog(
+                                    //       context: context,
+                                    //       builder: (BuildContext context) {
+                                    //         return estimatedTimeDialog(
+                                    //             controller,
+                                    //             themeChange,
+                                    //             orderModel,
+                                    //             context);
+                                    //       },
+                                    //     );
+                                    //   } else {
+                                    //     ShowToastDialog.showToast(
+                                    //         "${"You can accept order on".tr} ${Constant.timestampToDateTime(Timestamp.fromDate(Constant.checkScheduleTime(scheduleDate: orderModel.scheduleTime!.toDate())))}.");
+                                    //   }
+                                    // } else {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
@@ -1290,7 +1289,7 @@ class HomeScreen extends StatelessWidget {
                                               themeChange, orderModel, context);
                                         },
                                       );
-                                    }
+                                    // }
                                   },
                                 ))
                     ],

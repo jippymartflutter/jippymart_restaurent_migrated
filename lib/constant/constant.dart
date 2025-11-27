@@ -31,7 +31,7 @@ import 'package:video_player/video_player.dart';
 
 class Constant {
   // static String baseUrl  = "http://192.168.0.122:8000/api/";
-  static String baseUrl  = "http://192.168.0.106:8001/api/";
+  static String baseUrl  = "http://192.168.0.106:8000/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
   static String userRoleVendor = 'vendor';

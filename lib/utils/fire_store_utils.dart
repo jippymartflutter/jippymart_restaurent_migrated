@@ -208,6 +208,7 @@ class FireStoreUtils {
   static Future<bool> updateUser(UserModel userModel) async {
     bool isUpdate = false;
     try {
+      print(" updateUser  ${ json.encode(userModel.toJson())}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
         headers: {
@@ -223,7 +224,7 @@ class FireStoreUtils {
         isUpdate = false;
       }
     } catch (error) {
-      log("Failed to update user: $error");
+      log("Failed to update users: $error");
       isUpdate = false;
     }
     return isUpdate;
@@ -654,17 +655,22 @@ class FireStoreUtils {
     }
     return orderList;
   }
-
   static Future<bool> updateOrder(OrderModel orderModel) async {
     bool isUpdate = false;
     try {
-      final response = await http.put(
+      log(" updateOrder ${orderModel.toJson()} ");
+
+      // Convert the entire model to JSON and handle any remaining Timestamps
+      Map<String, dynamic> orderJson = _convertTimestampsToJson(orderModel.toJson());
+
+      final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/orders/${orderModel.id}'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: json.encode(orderModel.toJson()),
+        body: json.encode(orderJson),
       );
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         isUpdate = true;
       } else {
@@ -677,6 +683,41 @@ class FireStoreUtils {
     }
     return isUpdate;
   }
+
+// Recursive method to convert any Timestamp objects to strings
+  static dynamic _convertTimestampsToJson(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate().toIso8601String();
+    } else if (value is Map<String, dynamic>) {
+      return value.map((key, value) => MapEntry(key, _convertTimestampsToJson(value)));
+    } else if (value is List) {
+      return value.map((e) => _convertTimestampsToJson(e)).toList();
+    }
+    return value;
+  }
+  // static Future<bool> updateOrder(OrderModel orderModel) async {
+  //   bool isUpdate = false;
+  //   // try {
+  //     log(" updateOrder ${orderModel.toJson()} ");
+  //     final response = await http.post(
+  //       Uri.parse('${Constant.baseUrl}restaurant/orders/${orderModel.id}'),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: json.encode(orderModel.toJson()),
+  //     );
+  //     if (response.statusCode >= 200 && response.statusCode < 300) {
+  //       isUpdate = true;
+  //     } else {
+  //       print("Failed to update order: ${response.statusCode} - ${response.body}");
+  //       isUpdate = false;
+  //     }
+  //   // } catch (error) {
+  //   //   print("Failed to update order: $error");
+  //     isUpdate = false;
+  //   // }
+  //   return isUpdate;
+  // }
 
   static Future restaurantVendorWalletSet(OrderModel orderModel) async {
     double subTotal = 0.0;
@@ -1866,7 +1907,7 @@ class FireStoreUtils {
       // Convert VendorModel to JSON and handle GeoPoint serialization
       Map<String, dynamic> requestBody = _convertVendorToJson(vendor);
 
-      print("firebaseCreateNewVendor  ${requestBody}");
+      log("firebaseCreateNewVendor  ${requestBody}");
 
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/vendors'),

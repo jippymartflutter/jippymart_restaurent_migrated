@@ -58,7 +58,6 @@ class ProductModel {
     this.createdAt,
     this.isAvailable,
   });
-
   ProductModel.fromJson(Map<String, dynamic> json) {
     fats = json['fats'];
     vendorID = json['vendorID'];
@@ -77,10 +76,35 @@ class ProductModel {
     reviewsSum = json['reviewsSum'] ?? 0.0;
     name = json['name'];
     reviewAttributes = json['reviewAttributes'];
-    productSpecification = json['product_specification'];
-    itemAttribute = json['item_attribute'] != null && json['item_attribute'] is Map
-        ? ItemAttribute.fromJson(json['item_attribute'])
-        : null;
+
+    // FIX: Handle product_specification that can be either List or Map
+    if (json['product_specification'] != null) {
+      if (json['product_specification'] is Map) {
+        productSpecification = Map<String, dynamic>.from(json['product_specification']);
+      } else if (json['product_specification'] is List) {
+        // If it's a list, convert to empty map or handle as needed
+        productSpecification = {};
+      } else {
+        productSpecification = {};
+      }
+    } else {
+      productSpecification = {};
+    }
+
+    // FIX: Handle item_attribute that can be either List or Map
+    if (json['item_attribute'] != null) {
+      if (json['item_attribute'] is Map) {
+        itemAttribute = ItemAttribute.fromJson(json['item_attribute']);
+      } else if (json['item_attribute'] is List) {
+        // If it's a list, create empty ItemAttribute
+        itemAttribute = ItemAttribute(attributes: [], variants: []);
+      } else {
+        itemAttribute = null;
+      }
+    } else {
+      itemAttribute = null;
+    }
+
     id = json['id'];
     quantity = json['quantity'];
     grams = json['grams'];
@@ -111,7 +135,6 @@ class ProductModel {
           timestampData['nanoseconds'] ?? 0,
         );
       } else if (json['createdAt'] is String) {
-        // If it's ISO string format
         try {
           final date = DateTime.parse(json['createdAt']);
           createdAt = Timestamp.fromDate(date);
@@ -119,11 +142,75 @@ class ProductModel {
           createdAt = null;
         }
       } else {
-        // If it's already a Timestamp (shouldn't happen in JSON)
         createdAt = json['createdAt'];
       }
     }
   }
+  // ProductModel.fromJson(Map<String, dynamic> json) {
+  //   fats = json['fats'];
+  //   vendorID = json['vendorID'];
+  //
+  //   // Handle boolean fields that might come as integers (0/1)
+  //   veg = _convertToBool(json['veg']);
+  //   publish = _convertToBool(json['publish']);
+  //   nonveg = _convertToBool(json['nonveg']);
+  //   takeawayOption = _convertToBool(json['takeawayOption']);
+  //   isAvailable = _convertToBool(json['isAvailable']);
+  //
+  //   addOnsTitle = json['addOnsTitle'] != null ? List<String>.from(json['addOnsTitle']) : [];
+  //   calories = json['calories'];
+  //   proteins = json['proteins'];
+  //   addOnsPrice = json['addOnsPrice'] != null ? List<String>.from(json['addOnsPrice']) : [];
+  //   reviewsSum = json['reviewsSum'] ?? 0.0;
+  //   name = json['name'];
+  //   reviewAttributes = json['reviewAttributes'];
+  //   productSpecification = json['product_specification'];
+  //   itemAttribute = json['item_attribute'] != null && json['item_attribute'] is Map
+  //       ? ItemAttribute.fromJson(json['item_attribute'])
+  //       : null;
+  //   id = json['id'];
+  //   quantity = json['quantity'];
+  //   grams = json['grams'];
+  //   reviewsCount = json['reviewsCount'] ?? 0.0;
+  //
+  //   // Fix: Convert disPrice to string
+  //   disPrice = _convertToString(json['disPrice']) ?? "0";
+  //
+  //   photos = json['photos'] ?? [];
+  //   photo = json['photo'];
+  //
+  //   // Fix: Convert price to string
+  //   price = _convertToString(json['price']);
+  //
+  //   categoryID = json['categoryID'];
+  //   description = json['description'];
+  //
+  //   // Handle createdAt field - support multiple formats
+  //   if (json['createdAt'] != null) {
+  //     if (json['createdAt'] is int) {
+  //       // If it's milliseconds since epoch
+  //       createdAt = Timestamp.fromMillisecondsSinceEpoch(json['createdAt']);
+  //     } else if (json['createdAt'] is Map) {
+  //       // If it's Firestore Timestamp format
+  //       final timestampData = json['createdAt'];
+  //       createdAt = Timestamp(
+  //         timestampData['seconds'] ?? 0,
+  //         timestampData['nanoseconds'] ?? 0,
+  //       );
+  //     } else if (json['createdAt'] is String) {
+  //       // If it's ISO string format
+  //       try {
+  //         final date = DateTime.parse(json['createdAt']);
+  //         createdAt = Timestamp.fromDate(date);
+  //       } catch (e) {
+  //         createdAt = null;
+  //       }
+  //     } else {
+  //       // If it's already a Timestamp (shouldn't happen in JSON)
+  //       createdAt = json['createdAt'];
+  //     }
+  //   }
+  // }
 
 // Helper method to convert various types to boolean
   bool _convertToBool(dynamic value) {
