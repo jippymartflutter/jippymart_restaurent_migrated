@@ -140,12 +140,14 @@ class AddProductController extends GetxController {
         attributesList.value = value;
       }
     });
+
     await FireStoreUtils.getProduct().then((value) {
       if (value != null) {
         productList.value = value;
         log("ProductList :: ${productList.length}");
       }
     });
+
     dynamic argumentData = Get.arguments;
     if (argumentData != null) {
       productModel.value = argumentData['productModel'];
@@ -189,12 +191,16 @@ class AddProductController extends GetxController {
           selectedAttributesList.add(attributesModel);
         }
       }
-
-      for (var element in productModel.value.addOnsTitle!) {
-        addonsList.add(ProductSpecificationModel(
-            lable: element,
-            value: productModel.value.addOnsPrice.toString()[
-            productModel.value.addOnsTitle!.indexOf(element)]));
+      // CORRECTED: Properly handle add-ons data
+      if (productModel.value.addOnsTitle != null && productModel.value.addOnsPrice != null) {
+        for (int i = 0; i < productModel.value.addOnsTitle!.length; i++) {
+          if (i < productModel.value.addOnsPrice!.length) {
+            addonsList.add(ProductSpecificationModel(
+              lable: productModel.value.addOnsTitle![i],
+              value: productModel.value.addOnsPrice![i].toString(), // Get individual price
+            ));
+          }
+        }
       }
 
       for (var element in vendorCategoryList) {

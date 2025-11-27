@@ -240,7 +240,7 @@ class LoginScreen extends StatelessWidget {
                                 fontFamily: AppThemeData.bold,
                                 fontWeight: FontWeight.w500,
                                 decoration: TextDecoration.underline,
-                                decorationColor: AppThemeData.secondary300)),
+                                decorationColor: AppThemeData.secondary300,),),
                       ],
                     ),
                   ),

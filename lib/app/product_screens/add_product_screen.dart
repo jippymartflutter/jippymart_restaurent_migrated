@@ -1632,7 +1632,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
                         onPress: () async {
                           print(
                               "========${Constant.userModel?.subscriptionPlan?.itemLimit.runtimeType}");
-
                           // if ((Constant.isSubscriptionModelApplied == true || Constant.adminCommission?.isEnabled == true) &&
                           //     Constant.userModel?.subscriptionPlan?.itemLimit != '-1' &&
                           //     int.parse(Constant.userModel?.subscriptionPlan?.itemLimit != null && Constant.userModel?.subscriptionPlan?.itemLimit.toString() != "null"

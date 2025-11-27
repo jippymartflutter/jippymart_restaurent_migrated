@@ -87,13 +87,13 @@ class LoginController extends GetxController {
               } else {
                 isPlanExpire = true;
               }
-
               if (userModel.subscriptionPlanId == null || isPlanExpire == true) {
                 if (Constant.adminCommission?.isEnabled == false &&
                     Constant.isSubscriptionModelApplied == false) {
                   Get.offAll(const DashBoardScreen());
                 } else {
-                  Get.offAll(const SubscriptionPlanScreen());
+                  Get.offAll(const DashBoardScreen());
+                  // Get.offAll(const SubscriptionPlanScreen());
                 }
               } else if (userModel.subscriptionPlan?.features?.restaurantMobileApp == true) {
                 Get.offAll(const DashBoardScreen());

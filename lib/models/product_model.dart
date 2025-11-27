@@ -70,10 +70,10 @@ class ProductModel {
     takeawayOption = _convertToBool(json['takeawayOption']);
     isAvailable = _convertToBool(json['isAvailable']);
 
-    addOnsTitle = json['addOnsTitle'];
+    addOnsTitle = json['addOnsTitle'] != null ? List<String>.from(json['addOnsTitle']) : [];
     calories = json['calories'];
     proteins = json['proteins'];
-    addOnsPrice = json['addOnsPrice'];
+    addOnsPrice = json['addOnsPrice'] != null ? List<String>.from(json['addOnsPrice']) : [];
     reviewsSum = json['reviewsSum'] ?? 0.0;
     name = json['name'];
     reviewAttributes = json['reviewAttributes'];

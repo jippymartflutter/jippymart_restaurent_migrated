@@ -31,21 +31,17 @@ import 'package:video_player/video_player.dart';
 
 class Constant {
   // static String baseUrl  = "http://192.168.0.122:8000/api/";
-  static String baseUrl  = "http://192.168.0.106:8000/api/";
+  static String baseUrl  = "http://192.168.0.106:8001/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
   static String userRoleVendor = 'vendor';
-
   static UserModel? userModel;
   static const globalUrl = "https://jippymart.in/";
   static const commissionSubscriptionID = "J0RwvxCWhZzQQD7Kc2Ll";
-
   static bool isZoneAvailable = false;
   static ZoneModel? selectedZone;
-
   static String mapAPIKey = "";
   static String placeHolderImage = "";
-
   static String senderId = 'jippymart-27c08'; // <-- Set to your Firebase project ID
   static String jsonNotificationFileURL = 'https://storage.googleapis.com/app_notification/jippymart-27c08-7191b6fdcd74.json';
   static String distanceType = "km";
