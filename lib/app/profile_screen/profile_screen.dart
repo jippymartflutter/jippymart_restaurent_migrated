@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/app/add_advertisement_screen/advertisement_list_screen.dart';
 import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_screen.dart';
 import 'package:jippymart_restaurant/app/add_story_screen/add_story_screen.dart';
-import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/change%20langauge/change_language_screen.dart';
 import 'package:jippymart_restaurant/app/dine_in_screen/dine_in_create_screen.dart';
 import 'package:jippymart_restaurant/app/driver_screens/driver_list_screen.dart';
@@ -28,7 +27,6 @@ import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
 import 'package:jippymart_restaurant/controller/profile_controller.dart';
 
 import 'package:jippymart_restaurant/models/user_model.dart';
-import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/themes/custom_dialog_box.dart';
 import 'package:jippymart_restaurant/themes/responsive.dart';
@@ -438,7 +436,9 @@ class ProfileScreen extends StatelessWidget {
                                                 () {
                                                   Get.to(const AddRestaurantScreen())
                                                       ?.then((v) {
-                                                    controller.getUserProfile();
+                                                    if (v == true) {
+                                                      controller.getUserProfile();
+                                                    }
                                                   });
                                                 },
                                               ),
@@ -1186,7 +1186,7 @@ class ProfileScreen extends StatelessWidget {
                                               .deleteUserFromServer();
                                           await FireStoreUtils().deleteUser()
                                               .then((value) {
-                                            // ShowToastDialog.closeLoader();
+                                            ShowToastDialog.closeLoader();
                                             // if (value == true) {
                                             //   ShowToastDialog.showToast(
                                             //       "Account deleted successfully"

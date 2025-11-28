@@ -9,6 +9,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
+import 'package:jippymart_restaurant/controller/home_controller.dart';
+import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/models/vendor_category_model.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
@@ -266,22 +268,25 @@ class AddRestaurantController extends GetxController {
             vendorModel.value.subscriptionTotalOrders =
                 userModel.value.subscriptionPlan?.orderLimit;
           }
-          if (Constant.userModel!.vendorID!.isNotEmpty) {
-            await FireStoreUtils.updateVendor(vendorModel.value).then((value) {
+          if (Constant.userModel?.vendorID?.isNotEmpty == true) {
+            try {
+              final updatedVendor =
+                  await FireStoreUtils.updateVendor(vendorModel.value);
               ShowToastDialog.closeLoader();
-              if (value != null) {
+              if (updatedVendor != null) {
                 ShowToastDialog.showToast(
                     "Restaurant details save successfully".tr);
-                Get.back();
+                await _handleSuccessfulSave(updatedVendor);
+                Get.back(result: true);
               } else {
                 ShowToastDialog.showToast(
                     "Failed to save restaurant details".tr);
               }
-            }).catchError((error) {
+            } catch (error) {
               ShowToastDialog.closeLoader();
               ShowToastDialog.showToast(
                   "Failed to save restaurant details".tr);
-            });
+            }
           } else {
             vendorModel.value.adminCommission = Constant.adminCommission;
             vendorModel.value.workingHours = [
@@ -307,17 +312,20 @@ class AddRestaurantController extends GetxController {
                   day: 'Sunday'.tr,
                   timeslot: [Timeslot(from: '00:00', to: '23:59')])
             ];
-            await FireStoreUtils.firebaseCreateNewVendor(vendorModel.value)
-                .then((value) {
+            try {
+              final createdVendor =
+                  await FireStoreUtils.firebaseCreateNewVendor(
+                      vendorModel.value);
               ShowToastDialog.closeLoader();
               ShowToastDialog.showToast(
                   "Restaurant details save successfully".tr);
-              Get.back();
-            }).catchError((error) {
+              await _handleSuccessfulSave(createdVendor);
+              Get.back(result: true);
+            } catch (error) {
               ShowToastDialog.closeLoader();
               ShowToastDialog.showToast(
                   "Failed to save restaurant details".tr);
-            });
+            }
           }
         } else {
           ShowToastDialog.showToast(
@@ -401,6 +409,36 @@ class AddRestaurantController extends GetxController {
       Get.back();
     } on PlatformException catch (e) {
       ShowToastDialog.showToast("${"Failed to Pick :".tr} \n $e");
+    }
+  }
+
+  Future<void> _handleSuccessfulSave(VendorModel updatedVendor) async {
+    try {
+      vendorModel.value = updatedVendor;
+      Constant.vendorAdminCommission =
+          updatedVendor.adminCommission ?? Constant.vendorAdminCommission;
+      final userId = await FireStoreUtils.getCurrentUid();
+      final refreshedUser = await FireStoreUtils.getUserProfile(userId);
+      if (refreshedUser != null) {
+        Constant.userModel = refreshedUser;
+        userModel.value = refreshedUser;
+      }
+
+      if (Get.isRegistered<HomeController>()) {
+        final homeController = Get.find<HomeController>();
+        if (refreshedUser != null) {
+          homeController.userModel.value = refreshedUser;
+        }
+        homeController.vendermodel.value = updatedVendor;
+        homeController.update();
+      }
+
+      if (Get.isRegistered<ProductListController>()) {
+        final productListController = Get.find<ProductListController>();
+        await productListController.getUserProfile();
+      }
+    } catch (e) {
+      print("_handleSuccessfulSave error $e");
     }
   }
 }

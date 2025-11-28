@@ -13,10 +13,8 @@ import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_screen.dart';
 import 'package:jippymart_restaurant/app/chat_screens/chat_screen.dart';
 import 'package:jippymart_restaurant/app/chat_screens/restaurant_inbox_screen.dart';
-import 'package:jippymart_restaurant/app/driver_screens/add_driver_screen.dart';
 import 'package:jippymart_restaurant/app/product_rating_view_screen/product_rating_view_screen.dart';
 import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
-import 'package:jippymart_restaurant/constant/collection_name.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/send_notification.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
@@ -37,15 +35,56 @@ import 'package:uuid/uuid.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../themes/round_button_fill.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  late HomeController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Get or create controller instance
+    if (Get.isRegistered<HomeController>()) {
+      controller = Get.find<HomeController>();
+      // Resume polling when screen becomes visible
+      controller.resumeOrderPolling();
+    } else {
+      controller = Get.put(HomeController());
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Don't dispose controller here - let it be managed by GetX
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Resume polling when app comes to foreground
+      controller.resumeOrderPolling();
+      // Refresh orders when app comes back
+      controller.getOrder(silent: false);
+    } else if (state == AppLifecycleState.paused) {
+      // Optional: Stop polling when app goes to background to save resources
+      // controller.stopOrderPolling();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
-    Size size = MediaQuery.of(context).size;
-    return GetX(
-        init: HomeController(),
+    return GetX<HomeController>(
+        init: controller,
         builder: (controller) {
           return controller.isLoading.value
               ? Constant.loader()
@@ -319,7 +358,9 @@ class HomeScreen extends StatelessWidget {
                                       onPress: () async {
                                         Get.to(const AddRestaurantScreen())
                                             ?.then((v) {
-                                          controller.getUserProfile();
+                                          if (v == true) {
+                                            controller.getUserProfile();
+                                          }
                                         });
                                       },
                                     ),
@@ -559,6 +600,7 @@ class HomeScreen extends StatelessWidget {
 
   newOrderWidget(themeChange, BuildContext context, OrderModel orderModel,
       HomeController controller) {
+    // ignore: unused_local_variable
     double totalAmount = 0.0;
     double subTotal = 0.0;
     double taxAmount = 0.0;
@@ -1305,6 +1347,7 @@ class HomeScreen extends StatelessWidget {
 
   acceptedWidget(themeChange, BuildContext context, OrderModel orderModel,
       HomeController controller) {
+    // ignore: unused_local_variable
     double totalAmount = 0.0;
     double subTotal = 0.0;
     double taxAmount = 0.0;
@@ -2018,6 +2061,7 @@ class HomeScreen extends StatelessWidget {
 
   completedAndRejectedWidget(themeChange, BuildContext context,
       OrderModel orderModel, HomeController controller) {
+    // ignore: unused_local_variable
     double totalAmount = 0.0;
     double subTotal = 0.0;
     double taxAmount = 0.0;
@@ -2801,7 +2845,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _updateDuration(Duration duration, HomeController controller) {
-    final minutes = duration.inMinutes;
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final hours = duration.inHours;
     final mins = duration.inMinutes.remainder(60);

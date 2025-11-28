@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -171,7 +172,7 @@ class AppUpdateService {
       print('[UPDATE DEBUG] Endpoint: {{baseURL}}restaurant/version');
 
       final response = await http.get(
-        Uri.parse('{{baseURL}}restaurant/version'),
+        Uri.parse('${Constant.baseUrl}restaurant/version'),
         headers: {
           'Content-Type': 'application/json',
         },

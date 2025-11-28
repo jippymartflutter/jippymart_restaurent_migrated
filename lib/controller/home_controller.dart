@@ -1,8 +1,9 @@
-import 'dart:developer';
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:jippymart_restaurant/constant/collection_name.dart';
+import 'package:http/http.dart' as http;
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
 import 'package:jippymart_restaurant/models/order_model.dart';
@@ -10,22 +11,33 @@ import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
 import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:get/get.dart';
+
 class HomeController extends GetxController {
   RxBool isLoading = true.obs;
+  RxBool isFetchingOrders = false.obs;
 
   Rx<TextEditingController> estimatedTimeController =
       TextEditingController().obs;
 
   RxInt selectedTabIndex = 0.obs;
 
+  Timer? _orderPollingTimer;
+  bool _isPollingActive = false;
+  int _previousNewOrderCount = 0;
+
   @override
   void onInit() {
-    // TODO: implement onInit
-    getUserProfile();
     super.onInit();
+    getUserProfile();
+  }
+
+  @override
+  void onClose() {
+    _orderPollingTimer?.cancel();
+    _orderPollingTimer = null;
+    _isPollingActive = false;
+    estimatedTimeController.value.dispose();
+    super.onClose();
   }
 
   RxList<OrderModel> allOrderList = <OrderModel>[].obs;
@@ -48,7 +60,7 @@ class HomeController extends GetxController {
         }
       },
     );
-    if (userModel.value.vendorID != null ) {
+    if (userModel.value.vendorID != null) {
       await FireStoreUtils.getVendorById(userModel.value.vendorID!).then(
         (vender) {
           if (vender?.id != null) {
@@ -56,9 +68,45 @@ class HomeController extends GetxController {
           }
         },
       );
+      // Start fetching orders and polling once vendor ID is available
+      await getOrder();
+      _startOrderPolling();
     }
-    await getOrder();
     isLoading.value = false;
+  }
+
+  // Start periodic polling for orders
+  void _startOrderPolling() {
+    if (_isPollingActive) return;
+    
+    _isPollingActive = true;
+    // Poll every 10 seconds for new orders
+    _orderPollingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (!_isPollingActive || Constant.userModel?.vendorID == null) {
+        timer.cancel();
+        return;
+      }
+      // Only poll if not currently fetching to avoid overlapping requests
+      if (!isFetchingOrders.value) {
+        getOrder(silent: true);
+      }
+    });
+    print('🔄 Started order polling (every 10 seconds)');
+  }
+
+  // Stop polling (useful when app goes to background)
+  void stopOrderPolling() {
+    _isPollingActive = false;
+    _orderPollingTimer?.cancel();
+    _orderPollingTimer = null;
+    print('⏹️ Stopped order polling');
+  }
+
+  // Resume polling
+  void resumeOrderPolling() {
+    if (Constant.userModel?.vendorID != null && !_isPollingActive) {
+      _startOrderPolling();
+    }
   }
 
   RxList<UserModel> driverUserList = <UserModel>[].obs;
@@ -137,91 +185,137 @@ class HomeController extends GetxController {
   // }
 
 
-  Future<void> getOrder() async {
-    String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
-    print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
+  Future<void> getOrder({bool silent = false}) async {
+    // Prevent multiple simultaneous requests
+    if (isFetchingOrders.value && silent) {
+      return;
+    }
 
-    print('getOrder : ${url}');
+    if (Constant.userModel?.vendorID == null || Constant.userModel!.vendorID!.isEmpty) {
+      print('⚠️ Vendor ID not available, skipping order fetch');
+      return;
+    }
+
+    String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
+    
+    if (!silent) {
+      print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
+    }
+
+    isFetchingOrders.value = true;
+    
     try {
       final response = await http.get(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw TimeoutException('Order fetch request timed out');
+        },
       );
-      log('getOrder : ${response.body}');
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         if (jsonResponse['success'] == true) {
           List<OrderModel> allOrderTemp = [];
           int successCount = 0;
           int errorCount = 0;
+          
           for (var element in jsonResponse['data']) {
             try {
-              print('🔄 Processing order: ${element['id']}');
               OrderModel orderModel = OrderModel.fromJson(element);
               orderModel.id = element['id']; // Ensure ID is set
               allOrderTemp.add(orderModel);
               successCount++;
-              print('✅ Successfully processed order ${orderModel.id}: Status = "${orderModel.status}"');
-            } catch (e, stackTrace) {
+            } catch (e) {
               errorCount++;
-              print('❌ Error parsing order ${element['id']}: $e');
-              print('Stack trace: $stackTrace');
-              print('Problematic order data: $element');
-              // Continue with other orders even if one fails
+              if (!silent) {
+                print('❌ Error parsing order ${element['id']}: $e');
+              }
             }
           }
 
-          print('📊 Order processing summary: $successCount successful, $errorCount failed');
+          if (!silent) {
+            print('📊 Order processing summary: $successCount successful, $errorCount failed');
+          }
 
-          // Update reactive lists only if we have successful orders
-          if (successCount > 0) {
-            allOrderList.clear();
-            allOrderList.addAll(allOrderTemp);
+          // Store previous count before updating to detect new orders
+          int previousNewOrderCount = _previousNewOrderCount;
+          
+          // Update reactive lists
+          allOrderList.clear();
+          allOrderList.addAll(allOrderTemp);
 
-            newOrderList.value = allOrderList
-                .where((p0) => p0.status == Constant.orderPlaced || p0.status?.toLowerCase() == "pending")
-                .toList();
+          newOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderPlaced || 
+                      p0.status?.toLowerCase() == "pending")
+              .toList();
 
-            acceptedOrderList.value = allOrderList
-                .where((p0) =>
-            p0.status == Constant.orderAccepted ||
-                p0.status == Constant.driverPending ||
-                p0.status == Constant.driverRejected ||
-                p0.status == Constant.orderShipped ||
-                p0.status == Constant.orderInTransit)
-                .toList();
+          acceptedOrderList.value = allOrderList
+              .where((p0) =>
+                  p0.status == Constant.orderAccepted ||
+                  p0.status == Constant.driverPending ||
+                  p0.status == Constant.driverRejected ||
+                  p0.status == Constant.orderShipped ||
+                  p0.status == Constant.orderInTransit)
+              .toList();
 
-            completedOrderList.value = allOrderList
-                .where((p0) => p0.status == Constant.orderCompleted)
-                .toList();
+          completedOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderCompleted)
+              .toList();
 
-            rejectedOrderList.value = allOrderList
-                .where((p0) => p0.status == Constant.orderRejected)
-                .toList();
+          rejectedOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderRejected)
+              .toList();
 
-            cancelledOrderList.value = allOrderList
-                .where((p0) => p0.status == Constant.orderCancelled)
-                .toList();
+          cancelledOrderList.value = allOrderList
+              .where((p0) => p0.status == Constant.orderCancelled)
+              .toList();
+
+          if (!silent) {
             print('✅ Filtered orders - New: ${newOrderList.length}, Accepted: ${acceptedOrderList.length}, Completed: ${completedOrderList.length}, Rejected: ${rejectedOrderList.length}, Cancelled: ${cancelledOrderList.length}');
-            update();
-            if (newOrderList.isNotEmpty) {
-              print('🔔 Playing notification sound for new orders');
-              await AudioPlayerService.playSound(true);
-            }
-          } else {
-            print('⚠️ No orders were successfully processed');
           }
+
+          update();
+
+          // Detect and notify about new orders
+          if (newOrderList.length > previousNewOrderCount && previousNewOrderCount > 0) {
+            int newOrdersCount = newOrderList.length - previousNewOrderCount;
+            print('🔔 $newOrdersCount new order(s) detected!');
+            await AudioPlayerService.playSound(true);
+          } else if (newOrderList.isNotEmpty && previousNewOrderCount == 0 && !silent) {
+            // First time loading with new orders
+            print('🔔 Initial load: ${newOrderList.length} new order(s) found');
+            await AudioPlayerService.playSound(true);
+          }
+
+          // Update previous count for next comparison
+          _previousNewOrderCount = newOrderList.length;
+
         } else {
-          print('⚠️ API returned success=false');
+          if (!silent) {
+            print('⚠️ API returned success=false: ${jsonResponse['message'] ?? 'Unknown error'}');
+          }
         }
       } else {
-        print('❌ Failed to fetch orders: ${response.statusCode}');
+        if (!silent) {
+          print('❌ Failed to fetch orders: ${response.statusCode}');
+        }
+      }
+    } on TimeoutException catch (e) {
+      if (!silent) {
+        print('⏱️ Order fetch timeout: $e');
       }
     } catch (e, stackTrace) {
-      print('❌ Error fetching orders: $e');
-      print('Stack trace: $stackTrace');
+      if (!silent) {
+        print('❌ Error fetching orders: $e');
+        print('Stack trace: $stackTrace');
+      }
+    } finally {
+      isFetchingOrders.value = false;
     }
   }
 
@@ -229,6 +323,12 @@ class HomeController extends GetxController {
   // Refresh method for pull-to-refresh functionality
   Future<void> refreshApp() async {
     isLoading.value = true;
+    
+    // Fetch orders immediately without waiting for full profile reload
+    if (Constant.userModel?.vendorID != null) {
+      await getOrder(silent: false);
+    }
+    
     await getUserProfile();
 
     // Also refresh the dashboard controller's vendor data to update restaurant status

@@ -1,6 +1,7 @@
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
+import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/utils/const/color_const.dart';
 import 'package:jippymart_restaurant/utils/const/image_const.dart';
@@ -17,6 +18,8 @@ class DashBoardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+    final dashController = Get.put(DashBoardController());
+    final productListController = Get.put(ProductListController()); // ← fix
     return GetX(
         init: DashBoardController(),
         builder: (controller) {
@@ -115,6 +118,13 @@ class DashBoardScreen extends StatelessWidget {
                       : AppThemeData.grey600,
                   onTap: (int index) {
                     controller.selectedIndex.value = index;
+
+                    if(index==1){
+                      if(productListController.productList.isEmpty){
+                        productListController.getUserProfile();
+                        productListController.getProduct();
+                      }
+                    }
                   },
                   items: Constant.isDineInEnable &&
                           Constant.userModel?.subscriptionPlan?.features

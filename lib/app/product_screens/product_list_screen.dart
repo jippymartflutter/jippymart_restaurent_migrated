@@ -10,13 +10,11 @@ import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_sc
 import 'package:jippymart_restaurant/app/product_screens/add_product_screen.dart';
 import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
-import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/themes/responsive.dart';
 import 'package:jippymart_restaurant/themes/round_button_fill.dart';
 import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
-import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/network_image_widget.dart';
 
 import '../../models/product_model.dart';
@@ -94,15 +92,11 @@ class ProductListScreen extends StatelessWidget {
   Widget _buildPriceDisplay(String price, String disPrice, DarkThemeProvider themeChange) {
     // Debug prints to see what's happening
     print("🔍 Price Display - Raw Price: '$price', Raw DisPrice: '$disPrice'");
-
     double parsedPrice = _safeParseDouble(price);
     double parsedDisPrice = _safeParseDouble(disPrice);
-
     print("🔍 Price Display - Parsed Price: $parsedPrice, Parsed DisPrice: $parsedDisPrice");
-
     // Check if we should show discounted price
     bool shouldShowDiscounted = parsedDisPrice > 0 && parsedDisPrice < parsedPrice;
-
     if (!shouldShowDiscounted) {
       return Text(
         Constant.amountShow(amount: parsedPrice.toString()),
@@ -333,7 +327,10 @@ class ProductListScreen extends StatelessWidget {
                     color: AppThemeData.secondary300,
                     textColor: AppThemeData.grey50,
                     onPress: () async {
-                      Get.to(const AddRestaurantScreen());
+                      final result = await Get.to(const AddRestaurantScreen());
+                      if (result == true) {
+                        await controller.getUserProfile();
+                      }
                     },
                   ),
                 ],
