@@ -210,7 +210,11 @@ class Constant {
   static String getUuid() {
     return const Uuid().v4();
   }
-
+  String formatTime(String time) {
+    if (time.isEmpty) return "";
+    DateTime dt = DateFormat("HH:mm").parse(time); // backend format
+    return DateFormat("h:mm a").format(dt);        // UI format  → 6:30 PM
+  }
   static Widget loader() {
     return Center(
       child: CircularProgressIndicator(color: AppThemeData.secondary300),

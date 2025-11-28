@@ -44,15 +44,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late HomeController controller;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Get or create controller instance
     if (Get.isRegistered<HomeController>()) {
       controller = Get.find<HomeController>();
-      // Resume polling when screen becomes visible
       controller.resumeOrderPolling();
     } else {
       controller = Get.put(HomeController());

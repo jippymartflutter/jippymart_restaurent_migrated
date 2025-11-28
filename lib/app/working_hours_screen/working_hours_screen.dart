@@ -14,6 +14,7 @@ import 'package:jippymart_restaurant/widget/my_separator.dart';
 class WorkingHoursScreen extends StatelessWidget {
   const WorkingHoursScreen({super.key});
 
+
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -112,126 +113,126 @@ class WorkingHoursScreen extends StatelessWidget {
                                             children: [
                                               Expanded(
                                                   child: InkWell(
-                                                onTap: () async {
-                                                  TimeOfDay? startTime =
+                                                    onTap: () async {
+                                                      TimeOfDay? startTime =
                                                       await _selectTime(
                                                           context);
-                                                  controller
-                                                      .workingHours[index]
-                                                      .timeslot![indexTimeSlot]
-                                                      .from = DateFormat(
+                                                      controller
+                                                          .workingHours[index]
+                                                          .timeslot![indexTimeSlot]
+                                                          .from = DateFormat(
                                                           'HH:mm')
-                                                      .format(DateTime(
+                                                          .format(DateTime(
                                                           DateTime.now().year,
                                                           DateTime.now().month,
                                                           DateTime.now().day,
                                                           startTime!.hour,
                                                           startTime.minute));
-                                                },
-                                                child: Container(
-                                                  decoration: ShapeDecoration(
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
+                                                    },
+                                                    child: Container(
+                                                      decoration: ShapeDecoration(
+                                                        color: themeChange.getThem()
+                                                            ? AppThemeData
                                                             .surfaceDark
-                                                        : AppThemeData.surface,
-                                                    shape:
+                                                            : AppThemeData.surface,
+                                                        shape:
                                                         RoundedRectangleBorder(
-                                                      borderRadius:
+                                                          borderRadius:
                                                           BorderRadius.circular(
                                                               12),
-                                                    ),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        vertical: 4.0),
-                                                    child: Padding(
-                                                      padding:
+                                                        ),
+                                                      ),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets
+                                                            .symmetric(
+                                                            vertical: 4.0),
+                                                        child: Padding(
+                                                          padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child: Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              controller
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Text(
+                                                                  Constant().formatTime(controller
                                                                       .workingHours[
-                                                                          index]
+                                                                  index]
                                                                       .timeslot![
-                                                                          indexTimeSlot]
+                                                                  indexTimeSlot]
                                                                       .from!
                                                                       .isEmpty
-                                                                  ? 'Start Time'
+                                                                      ? 'Start Time'
                                                                       .tr
-                                                                  : controller
+                                                                      : controller
                                                                       .workingHours[
-                                                                          index]
+                                                                  index]
                                                                       .timeslot![
-                                                                          indexTimeSlot]
+                                                                  indexTimeSlot]
                                                                       .from
-                                                                      .toString(),
-                                                              style: TextStyle(
-                                                                  color: controller
+                                                                      .toString()),
+                                                                  style: TextStyle(
+                                                                      color: controller
                                                                           .workingHours[
-                                                                              index]
+                                                                      index]
                                                                           .timeslot![
-                                                                              indexTimeSlot]
+                                                                      indexTimeSlot]
                                                                           .to!
                                                                           .isEmpty
-                                                                      ? themeChange
-                                                                              .getThem()
+                                                                          ? themeChange
+                                                                          .getThem()
                                                                           ? AppThemeData
-                                                                              .grey600
+                                                                          .grey600
                                                                           : AppThemeData
-                                                                              .grey400
-                                                                      : themeChange
-                                                                              .getThem()
+                                                                          .grey400
+                                                                          : themeChange
+                                                                          .getThem()
                                                                           ? AppThemeData
-                                                                              .grey100
+                                                                          .grey100
                                                                           : AppThemeData
-                                                                              .grey900),
-                                                            ),
-                                                          ),
-                                                          Icon(
-                                                            Icons.access_time,
-                                                            color: themeChange
+                                                                          .grey900),
+                                                                ),
+                                                              ),
+                                                              Icon(
+                                                                Icons.access_time,
+                                                                color: themeChange
                                                                     .getThem()
-                                                                ? AppThemeData
+                                                                    ? AppThemeData
                                                                     .grey200
-                                                                : AppThemeData
+                                                                    : AppThemeData
                                                                     .grey700,
-                                                          )
-                                                        ],
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ),
-                                              )),
+                                                  )),
                                               const SizedBox(
                                                 width: 10,
                                               ),
                                               Expanded(
                                                   child: InkWell(
-                                                onTap: () async {
-                                                  TimeOfDay? endTimeOfDay =
+                                                    onTap: () async {
+                                                      TimeOfDay? endTimeOfDay =
                                                       await _selectTime(
                                                           context);
 
-                                                  if (endTimeOfDay != null) {
-                                                    DateTime endTime = DateTime(
-                                                        DateTime.now().year,
-                                                        DateTime.now().month,
-                                                        DateTime.now().day,
-                                                        endTimeOfDay.hour,
-                                                        endTimeOfDay.minute);
-                                                    DateTime time = DateFormat(
+                                                      if (endTimeOfDay != null) {
+                                                        DateTime endTime = DateTime(
+                                                            DateTime.now().year,
+                                                            DateTime.now().month,
+                                                            DateTime.now().day,
+                                                            endTimeOfDay.hour,
+                                                            endTimeOfDay.minute);
+                                                        DateTime time = DateFormat(
                                                             "HH:mm")
-                                                        .parse(controller
+                                                            .parse(controller
                                                             .workingHours[index]
                                                             .timeslot![
-                                                                indexTimeSlot]
+                                                        indexTimeSlot]
                                                             .from
                                                             .toString());
-                                                    DateTime startTime =
+                                                        DateTime startTime =
                                                         DateTime(
                                                             DateTime.now().year,
                                                             DateTime.now()
@@ -240,23 +241,23 @@ class WorkingHoursScreen extends StatelessWidget {
                                                             time.hour,
                                                             time.minute);
 
-                                                    if (startTime
-                                                        .isAfter(endTime)) {
-                                                      ShowToastDialog.showToast(
-                                                          "Please select Valid Time"
-                                                              .tr);
-                                                    } else {
-                                                      if (endTimeOfDay
+                                                        if (startTime
+                                                            .isAfter(endTime)) {
+                                                          ShowToastDialog.showToast(
+                                                              "Please select Valid Time"
+                                                                  .tr);
+                                                        } else {
+                                                          if (endTimeOfDay
                                                               .format(context)
                                                               .toString() ==
-                                                          "12:00 AM") {
-                                                        controller
-                                                            .workingHours[index]
-                                                            .timeslot![
-                                                                indexTimeSlot]
-                                                            .to = DateFormat(
+                                                              "12:00 AM") {
+                                                            controller
+                                                                .workingHours[index]
+                                                                .timeslot![
+                                                            indexTimeSlot]
+                                                                .to = DateFormat(
                                                                 'HH:mm')
-                                                            .format(DateTime(
+                                                                .format(DateTime(
                                                                 DateTime.now()
                                                                     .year,
                                                                 DateTime.now()
@@ -265,14 +266,14 @@ class WorkingHoursScreen extends StatelessWidget {
                                                                     .day,
                                                                 23,
                                                                 59));
-                                                      } else {
-                                                        controller
-                                                            .workingHours[index]
-                                                            .timeslot![
-                                                                indexTimeSlot]
-                                                            .to = DateFormat(
+                                                          } else {
+                                                            controller
+                                                                .workingHours[index]
+                                                                .timeslot![
+                                                            indexTimeSlot]
+                                                                .to = DateFormat(
                                                                 'HH:mm')
-                                                            .format(DateTime(
+                                                                .format(DateTime(
                                                                 DateTime.now()
                                                                     .year,
                                                                 DateTime.now()
@@ -283,90 +284,350 @@ class WorkingHoursScreen extends StatelessWidget {
                                                                     .hour,
                                                                 endTimeOfDay
                                                                     .minute));
+                                                          }
+                                                        }
                                                       }
-                                                    }
-                                                  }
-                                                },
-                                                child: Container(
-                                                  decoration: ShapeDecoration(
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
+                                                    },
+                                                    child: Container(
+                                                      decoration: ShapeDecoration(
+                                                        color: themeChange.getThem()
+                                                            ? AppThemeData
                                                             .surfaceDark
-                                                        : AppThemeData.surface,
-                                                    shape:
+                                                            : AppThemeData.surface,
+                                                        shape:
                                                         RoundedRectangleBorder(
-                                                      borderRadius:
+                                                          borderRadius:
                                                           BorderRadius.circular(
                                                               12),
-                                                    ),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        vertical: 4.0),
-                                                    child: Padding(
-                                                      padding:
+                                                        ),
+                                                      ),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets
+                                                            .symmetric(
+                                                            vertical: 4.0),
+                                                        child: Padding(
+                                                          padding:
                                                           const EdgeInsets.all(
                                                               8.0),
-                                                      child: Row(
-                                                        children: [
-                                                          Expanded(
-                                                            child: Text(
-                                                              controller
+                                                          child: Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: Text(
+                                    Constant().formatTime(  controller
                                                                       .workingHours[
-                                                                          index]
+                                                                  index]
                                                                       .timeslot![
-                                                                          indexTimeSlot]
+                                                                  indexTimeSlot]
                                                                       .to!
                                                                       .isEmpty
-                                                                  ? 'End Time'
+                                                                      ? 'End Time'
                                                                       .tr
-                                                                  : controller
+                                                                      : controller
                                                                       .workingHours[
-                                                                          index]
+                                                                  index]
                                                                       .timeslot![
-                                                                          indexTimeSlot]
+                                                                  indexTimeSlot]
                                                                       .to
-                                                                      .toString(),
-                                                              style: TextStyle(
-                                                                  color: controller
+                                                                      .toString()),
+                                                                  style: TextStyle(
+                                                                      color: controller
                                                                           .workingHours[
-                                                                              index]
+                                                                      index]
                                                                           .timeslot![
-                                                                              indexTimeSlot]
+                                                                      indexTimeSlot]
                                                                           .to!
                                                                           .isEmpty
-                                                                      ? themeChange
-                                                                              .getThem()
+                                                                          ? themeChange
+                                                                          .getThem()
                                                                           ? AppThemeData
-                                                                              .grey600
+                                                                          .grey600
                                                                           : AppThemeData
-                                                                              .grey400
-                                                                      : themeChange
-                                                                              .getThem()
+                                                                          .grey400
+                                                                          : themeChange
+                                                                          .getThem()
                                                                           ? AppThemeData
-                                                                              .grey100
+                                                                          .grey100
                                                                           : AppThemeData
-                                                                              .grey800),
-                                                            ),
-                                                          ),
-                                                          Icon(
-                                                            Icons.access_time,
-                                                            color: themeChange
+                                                                          .grey800),
+                                                                ),
+                                                              ),
+                                                              Icon(
+                                                                Icons.access_time,
+                                                                color: themeChange
                                                                     .getThem()
-                                                                ? AppThemeData
+                                                                    ? AppThemeData
                                                                     .grey200
-                                                                : AppThemeData
+                                                                    : AppThemeData
                                                                     .grey700,
-                                                          )
-                                                        ],
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ),
-                                              )),
+                                                  )),
                                             ],
                                           ),
+                                          // Row(
+                                          //   mainAxisSize: MainAxisSize.min,
+                                          //   children: [
+                                          //     Expanded(
+                                          //         child: InkWell(
+                                          //       onTap: () async {
+                                          //         TimeOfDay? startTime =
+                                          //             await _selectTime(
+                                          //                 context);
+                                          //         controller
+                                          //             .workingHours[index]
+                                          //             .timeslot![indexTimeSlot]
+                                          //             .from = DateFormat(
+                                          //                 'HH:mm')
+                                          //             .format(DateTime(
+                                          //                 DateTime.now().year,
+                                          //                 DateTime.now().month,
+                                          //                 DateTime.now().day,
+                                          //                 startTime!.hour,
+                                          //                 startTime.minute));
+                                          //       },
+                                          //       child: Container(
+                                          //         decoration: ShapeDecoration(
+                                          //           color: themeChange.getThem()
+                                          //               ? AppThemeData
+                                          //                   .surfaceDark
+                                          //               : AppThemeData.surface,
+                                          //           shape:
+                                          //               RoundedRectangleBorder(
+                                          //             borderRadius:
+                                          //                 BorderRadius.circular(
+                                          //                     12),
+                                          //           ),
+                                          //         ),
+                                          //         child: Padding(
+                                          //           padding: const EdgeInsets
+                                          //               .symmetric(
+                                          //               vertical: 4.0),
+                                          //           child: Padding(
+                                          //             padding:
+                                          //                 const EdgeInsets.all(
+                                          //                     8.0),
+                                          //             child: Row(
+                                          //               children: [
+                                          //                 Expanded(
+                                          //                   child: Text(
+                                          //                     controller
+                                          //                             .workingHours[
+                                          //                                 index]
+                                          //                             .timeslot![
+                                          //                                 indexTimeSlot]
+                                          //                             .from!
+                                          //                             .isEmpty
+                                          //                         ? 'Start Time'
+                                          //                             .tr
+                                          //                         : controller
+                                          //                             .workingHours[
+                                          //                                 index]
+                                          //                             .timeslot![
+                                          //                                 indexTimeSlot]
+                                          //                             .from
+                                          //                             .toString(),
+                                          //                     style: TextStyle(
+                                          //                         color: controller
+                                          //                                 .workingHours[
+                                          //                                     index]
+                                          //                                 .timeslot![
+                                          //                                     indexTimeSlot]
+                                          //                                 .to!
+                                          //                                 .isEmpty
+                                          //                             ? themeChange
+                                          //                                     .getThem()
+                                          //                                 ? AppThemeData
+                                          //                                     .grey600
+                                          //                                 : AppThemeData
+                                          //                                     .grey400
+                                          //                             : themeChange
+                                          //                                     .getThem()
+                                          //                                 ? AppThemeData
+                                          //                                     .grey100
+                                          //                                 : AppThemeData
+                                          //                                     .grey900),
+                                          //                   ),
+                                          //                 ),
+                                          //                 Icon(
+                                          //                   Icons.access_time,
+                                          //                   color: themeChange
+                                          //                           .getThem()
+                                          //                       ? AppThemeData
+                                          //                           .grey200
+                                          //                       : AppThemeData
+                                          //                           .grey700,
+                                          //                 )
+                                          //               ],
+                                          //             ),
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     )),
+                                          //     const SizedBox(
+                                          //       width: 10,
+                                          //     ),
+                                          //     Expanded(
+                                          //         child: InkWell(
+                                          //       onTap: () async {
+                                          //         TimeOfDay? endTimeOfDay =
+                                          //             await _selectTime(
+                                          //                 context);
+                                          //
+                                          //         if (endTimeOfDay != null) {
+                                          //           DateTime endTime = DateTime(
+                                          //               DateTime.now().year,
+                                          //               DateTime.now().month,
+                                          //               DateTime.now().day,
+                                          //               endTimeOfDay.hour,
+                                          //               endTimeOfDay.minute);
+                                          //           DateTime time = DateFormat(
+                                          //                   "HH:mm")
+                                          //               .parse(controller
+                                          //                   .workingHours[index]
+                                          //                   .timeslot![
+                                          //                       indexTimeSlot]
+                                          //                   .from
+                                          //                   .toString());
+                                          //           DateTime startTime =
+                                          //               DateTime(
+                                          //                   DateTime.now().year,
+                                          //                   DateTime.now()
+                                          //                       .month,
+                                          //                   DateTime.now().day,
+                                          //                   time.hour,
+                                          //                   time.minute);
+                                          //
+                                          //           if (startTime
+                                          //               .isAfter(endTime)) {
+                                          //             ShowToastDialog.showToast(
+                                          //                 "Please select Valid Time"
+                                          //                     .tr);
+                                          //           } else {
+                                          //             if (endTimeOfDay
+                                          //                     .format(context)
+                                          //                     .toString() ==
+                                          //                 "12:00 AM") {
+                                          //               controller
+                                          //                   .workingHours[index]
+                                          //                   .timeslot![
+                                          //                       indexTimeSlot]
+                                          //                   .to = DateFormat(
+                                          //                       'HH:mm')
+                                          //                   .format(DateTime(
+                                          //                       DateTime.now()
+                                          //                           .year,
+                                          //                       DateTime.now()
+                                          //                           .month,
+                                          //                       DateTime.now()
+                                          //                           .day,
+                                          //                       23,
+                                          //                       59));
+                                          //             } else {
+                                          //               controller
+                                          //                   .workingHours[index]
+                                          //                   .timeslot![
+                                          //                       indexTimeSlot]
+                                          //                   .to = DateFormat(
+                                          //                       'HH:mm')
+                                          //                   .format(DateTime(
+                                          //                       DateTime.now()
+                                          //                           .year,
+                                          //                       DateTime.now()
+                                          //                           .month,
+                                          //                       DateTime.now()
+                                          //                           .day,
+                                          //                       endTimeOfDay
+                                          //                           .hour,
+                                          //                       endTimeOfDay
+                                          //                           .minute));
+                                          //             }
+                                          //           }
+                                          //         }
+                                          //       },
+                                          //       child: Container(
+                                          //         decoration: ShapeDecoration(
+                                          //           color: themeChange.getThem()
+                                          //               ? AppThemeData
+                                          //                   .surfaceDark
+                                          //               : AppThemeData.surface,
+                                          //           shape:
+                                          //               RoundedRectangleBorder(
+                                          //             borderRadius:
+                                          //                 BorderRadius.circular(
+                                          //                     12),
+                                          //           ),
+                                          //         ),
+                                          //         child: Padding(
+                                          //           padding: const EdgeInsets
+                                          //               .symmetric(
+                                          //               vertical: 4.0),
+                                          //           child: Padding(
+                                          //             padding:
+                                          //                 const EdgeInsets.all(
+                                          //                     8.0),
+                                          //             child: Row(
+                                          //               children: [
+                                          //                 Expanded(
+                                          //                   child: Text(
+                                          //                     controller
+                                          //                             .workingHours[
+                                          //                                 index]
+                                          //                             .timeslot![
+                                          //                                 indexTimeSlot]
+                                          //                             .to!
+                                          //                             .isEmpty
+                                          //                         ? 'End Time'
+                                          //                             .tr
+                                          //                         : controller
+                                          //                             .workingHours[
+                                          //                                 index]
+                                          //                             .timeslot![
+                                          //                                 indexTimeSlot]
+                                          //                             .to
+                                          //                             .toString(),
+                                          //                     style: TextStyle(
+                                          //                         color: controller
+                                          //                                 .workingHours[
+                                          //                                     index]
+                                          //                                 .timeslot![
+                                          //                                     indexTimeSlot]
+                                          //                                 .to!
+                                          //                                 .isEmpty
+                                          //                             ? themeChange
+                                          //                                     .getThem()
+                                          //                                 ? AppThemeData
+                                          //                                     .grey600
+                                          //                                 : AppThemeData
+                                          //                                     .grey400
+                                          //                             : themeChange
+                                          //                                     .getThem()
+                                          //                                 ? AppThemeData
+                                          //                                     .grey100
+                                          //                                 : AppThemeData
+                                          //                                     .grey800),
+                                          //                   ),
+                                          //                 ),
+                                          //                 Icon(
+                                          //                   Icons.access_time,
+                                          //                   color: themeChange
+                                          //                           .getThem()
+                                          //                       ? AppThemeData
+                                          //                           .grey200
+                                          //                       : AppThemeData
+                                          //                           .grey700,
+                                          //                 )
+                                          //               ],
+                                          //             ),
+                                          //           ),
+                                          //         ),
+                                          //       ),
+                                          //     )),
+                                          //   ],
+                                          // ),
                                           const SizedBox(
                                             height: 10,
                                           ),
@@ -429,7 +690,6 @@ class WorkingHoursScreen extends StatelessWidget {
                         continue;
                       }
                     }
-
                     if (!isEmptyField) {
                       controller.saveWorkingHours();
                     }

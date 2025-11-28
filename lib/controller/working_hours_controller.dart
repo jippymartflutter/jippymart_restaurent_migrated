@@ -46,13 +46,12 @@ class WorkingHoursController extends GetxController {
 
   saveWorkingHours() async {
     ShowToastDialog.showLoader("Please wait".tr);
-
     FocusScope.of(Get.context!).requestFocus(FocusNode()); //remove focus
     vendorModel.value.workingHours = workingHours;
-
     await FireStoreUtils.updateVendor(vendorModel.value).then((value) async {
       ShowToastDialog.showToast("Working hours update successfully".tr);
       ShowToastDialog.closeLoader();
+      Get.back();
     });
   }
 

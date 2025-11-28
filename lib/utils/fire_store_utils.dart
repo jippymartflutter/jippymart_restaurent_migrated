@@ -247,7 +247,7 @@ class FireStoreUtils {
         return false;
       }
     } catch (error) {
-      log("Failed to update user: $error");
+      log("Failed to update userds: $error");
       return false;
     }
   }
@@ -1827,54 +1827,156 @@ class FireStoreUtils {
       throw Exception('Failed to add admin chat: $e');
     }
   }
-
   static Future<bool> uploadDriverDocument(Documents documents) async {
-    String userId = await FireStoreUtils.getCurrentUid();
+    String userId = await FireStoreUtils.getCurrentUid(); // FIXED
     bool isAdded = false;
 
+    print("------------ Document Upload Debug Log ------------");
+    print("User ID      : $userId");
+    print("documentId   : ${documents.documentId}");
+    print("status       : ${documents.status}");
+    print("type         : restaurant");
+    print("frontImage   : ${documents.frontImage}");
+    print("backImage    : ${documents.backImage}");
+    print("--------------------------------------------------");
+
     try {
-      // Create multipart request
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${Constant.baseUrl}documents/driver/upload'),
       );
-      // Add fields
+
       request.fields['userId'] = userId;
       request.fields['documentId'] = documents.documentId ?? '';
       request.fields['status'] = documents.status ?? '';
       request.fields['type'] = 'restaurant';
+
+      // ⛔ Prevent URL upload — Only upload Local Files
       if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
-        // Assuming frontImage is a file path or you have a way to get the file
-        var frontImageFile = await http.MultipartFile.fromPath(
-          'frontImage',
-          documents.frontImage!,
-        );
-        request.files.add(frontImageFile);
+        if (documents.frontImage!.startsWith("http")) {
+          print("⚠ frontImage is URL → Skipping upload");
+        } else {
+          request.files.add(await http.MultipartFile.fromPath(
+            'frontImage',
+            documents.frontImage!,
+          ));
+        }
       }
 
       if (documents.backImage != null && documents.backImage!.isNotEmpty) {
-        // Assuming backImage is a file path
-        var backImageFile = await http.MultipartFile.fromPath(
-          'backImage',
-          documents.backImage!,
-        );
-        request.files.add(backImageFile);
+        if (documents.backImage!.startsWith("http")) {
+          print("⚠ backImage is URL → Skipping upload");
+        } else {
+          request.files.add(await http.MultipartFile.fromPath(
+            'backImage',
+            documents.backImage!,
+          ));
+        }
       }
-      // Send the request
+
       var response = await request.send();
-      print('uploadDriverDocument: ${response.statusCode}');
-      if (response.statusCode == 200) {
-        isAdded = true;
-      } else {
-        isAdded = false;
-        print('Upload failed with status: ${response.statusCode}');
-      }
-    } catch (error) {
-      isAdded = false;
-      print('Error uploading document: $error');
+      print("📤 uploadDriverDocument Status: ${response.statusCode}");
+
+      isAdded = response.statusCode == 200;
+
+    } catch (e) {
+      print("❌ Error uploading document: $e");
     }
+
     return isAdded;
   }
+
+  // static Future<bool> uploadDriverDocument(Documents documents) async {
+  //   String userId = await FireStoreUtils.getCurrentUid();
+  //   bool isAdded = false;
+  //
+  //   print("------------ Document Upload Debug Log ------------");
+  //   print("User ID      : $userId");
+  //   print("documentId   : ${documents.documentId}");
+  //   print("status       : ${documents.status}");
+  //   print("type         : restaurant");
+  //   print("frontImage   : ${documents.frontImage}");
+  //   print("backImage    : ${documents.backImage}");
+  //   print("--------------------------------------------------");
+  //
+  //   try {
+  //     var request = http.MultipartRequest(
+  //       'POST',
+  //       Uri.parse('${Constant.baseUrl}documents/driver/upload'),
+  //     );
+  //
+  //     request.fields['userId'] = userId;
+  //     request.fields['documentId'] = documents.documentId ?? '';
+  //     request.fields['status'] = documents.status ?? '';
+  //     request.fields['type'] = 'restaurant';
+  //
+  //     if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
+  //       request.files.add(await http.MultipartFile.fromPath('frontImage', documents.frontImage!));
+  //     }
+  //
+  //     if (documents.backImage != null && documents.backImage!.isNotEmpty) {
+  //       request.files.add(await http.MultipartFile.fromPath('backImage', documents.backImage!));
+  //     }
+  //
+  //     var response = await request.send();
+  //     print('uploadDriverDocument Response: ${response.statusCode}');
+  //
+  //     isAdded = response.statusCode == 200;
+  //   } catch (e) {
+  //     ShowToastDialog.closeLoader();
+  //     print('Error uploading document: $e');
+  //   }
+  //
+  //   return isAdded;
+  // }
+
+  // static Future<bool> uploadDriverDocument(Documents documents) async {
+  //   String userId = await FireStoreUtils.getCurrentUid();
+  //   bool isAdded = false;
+  //
+  //   try {
+  //     // Create multipart request
+  //     var request = http.MultipartRequest(
+  //       'POST',
+  //       Uri.parse('${Constant.baseUrl}documents/driver/upload'),
+  //     );
+  //     // Add fields
+  //     request.fields['userId'] = userId;
+  //     request.fields['documentId'] = documents.documentId ?? '';
+  //     request.fields['status'] = documents.status ?? '';
+  //     request.fields['type'] = 'restaurant';
+  //     if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
+  //       // Assuming frontImage is a file path or you have a way to get the file
+  //       var frontImageFile = await http.MultipartFile.fromPath(
+  //         'frontImage',
+  //         documents.frontImage!,
+  //       );
+  //       request.files.add(frontImageFile);
+  //     }
+  //
+  //     if (documents.backImage != null && documents.backImage!.isNotEmpty) {
+  //       // Assuming backImage is a file path
+  //       var backImageFile = await http.MultipartFile.fromPath(
+  //         'backImage',
+  //         documents.backImage!,
+  //       );
+  //       request.files.add(backImageFile);
+  //     }
+  //     // Send the request
+  //     var response = await request.send();
+  //     print('uploadDriverDocument: ${response.statusCode}');
+  //     if (response.statusCode == 200) {
+  //       isAdded = true;
+  //     } else {
+  //       isAdded = false;
+  //       print('Upload failed with status: ${response.statusCode}');
+  //     }
+  //   } catch (error) {
+  //     isAdded = false;
+  //     print('Error uploading document: $error');
+  //   }
+  //   return isAdded;
+  // }
 
 
 

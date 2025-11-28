@@ -74,7 +74,7 @@ class OrderModel {
         discount: _parseNumber(json['discount']),
         authorID: json['authorID']?.toString(),
         estimatedTimeToPrepare: json['estimatedTimeToPrepare']?.toString(),
-        createdAt: _parseTimestamp(json['createdAt']),
+        createdAt: _parseCustomDateTime(json['createdAt']),
         triggerDelivery: _parseTimestamp(json['triggerDelivery']) ?? Timestamp.now(),
         taxSetting: _parseTaxSetting(json['taxSetting']),
         paymentMethod: json['payment_method']?.toString(),
@@ -129,9 +129,15 @@ class OrderModel {
       if (timestampData is Timestamp) {
         return timestampData;
       } else if (timestampData is String) {
-        return Timestamp.fromDate(DateTime.parse(timestampData));
+        // Try to parse as ISO string first
+        try {
+          return Timestamp.fromDate(DateTime.parse(timestampData));
+        } catch (e) {
+          // If ISO parsing fails, try to parse the custom format "Nov 28, 2025 12:33 PM"
+          return _parseCustomDateTime(timestampData);
+        }
       } else if (timestampData is Map<String, dynamic>) {
-        // Handle Firestore timestamp format if needed
+        // Handle Firestore timestamp format
         if (timestampData['_seconds'] != null) {
           return Timestamp(timestampData['_seconds'], timestampData['_nanoseconds'] ?? 0);
         }
@@ -139,10 +145,57 @@ class OrderModel {
       return null;
     } catch (e) {
       print('❌ Error parsing timestamp: $e');
+      print('Timestamp data: $timestampData');
       return null;
     }
   }
 
+  static Timestamp _parseCustomDateTime(String dateString) {
+    try {
+      // Parse format like "Nov 28, 2025 12:33 PM"
+      final months = {
+        'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+        'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+      };
+
+      final parts = dateString.split(' ');
+      if (parts.length >= 4) {
+        final monthStr = parts[0];
+        final day = parts[1].replaceAll(',', '');
+        final year = parts[2];
+        final timeStr = parts[3];
+        final period = parts.length > 4 ? parts[4] : 'AM'; // AM/PM
+
+        final timeParts = timeStr.split(':');
+        var hour = int.parse(timeParts[0]);
+        final minute = int.parse(timeParts[1]);
+
+        // Convert to 24-hour format
+        if (period.toUpperCase() == 'PM' && hour < 12) {
+          hour += 12;
+        } else if (period.toUpperCase() == 'AM' && hour == 12) {
+          hour = 0;
+        }
+
+        final month = months[monthStr] ?? 1;
+        final dateTime = DateTime(
+          int.parse(year),
+          month,
+          int.parse(day),
+          hour,
+          minute,
+        );
+
+        return Timestamp.fromDate(dateTime);
+      }
+
+      throw FormatException('Unable to parse date: $dateString');
+    } catch (e) {
+      print('❌ Error parsing custom date format: $e');
+      // Return current timestamp as fallback
+      return Timestamp.now();
+    }
+  }
   static List<TaxModel>? _parseTaxSetting(dynamic taxData) {
     if (taxData == null || taxData is! List) return null;
 

@@ -39,7 +39,7 @@ class SendNotification {
       debugPrint(accessToken);
       NotificationModel? notificationModel =
           await FireStoreUtils.getNotificationContent(type);
-      print('[FCM DEBUG] NotificationModel: $notificationModel');
+      print('[FCM DEBUG] NotificationModel: ${notificationModel?.toJson()}');
       final response = await http.post(
         Uri.parse(
             'https://fcm.googleapis.com/v1/projects/${Constant.senderId}/messages:send'),

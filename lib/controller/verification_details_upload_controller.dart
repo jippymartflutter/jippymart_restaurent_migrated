@@ -70,36 +70,90 @@ class DetailsUploadController extends GetxController {
       ShowToastDialog.showToast("${"Failed to Pick :".tr} \n $e");
     }
   }
-
   uploadDocument() async {
-    String frontImageFileName = File(frontImage.value).path.split('/').last;
-    String backImageFileName = File(backImage.value).path.split('/').last;
-
-    if (frontImage.value.isNotEmpty &&
-        Constant().hasValidUrl(frontImage.value) == false) {
-      frontImage.value = await Constant.uploadUserImageToFireStorage(
+    try {
+      if (frontImage.value.isNotEmpty &&
+          !frontImage.value.startsWith('http') &&
+          !frontImage.value.startsWith('https')) {
+        String frontImageFileName = File(frontImage.value).path.split('/').last;
+        frontImage.value = await Constant.uploadUserImageToFireStorage(
           File(frontImage.value),
           "driverDocument/${FireStoreUtils.getCurrentUid()}",
-          frontImageFileName);
-    }
-    if (backImage.value.isNotEmpty &&
-        Constant().hasValidUrl(backImage.value) == false) {
-      backImage.value = await Constant.uploadUserImageToFireStorage(
+          frontImageFileName,
+        );
+      }
+      if (backImage.value.isNotEmpty &&
+          !backImage.value.startsWith('http') &&
+          !backImage.value.startsWith('https')) {
+        String backImageFileName = File(backImage.value).path.split('/').last;
+        backImage.value = await Constant.uploadUserImageToFireStorage(
           File(backImage.value),
           "driverDocument/${FireStoreUtils.getCurrentUid()}",
-          backImageFileName);
-    }
-    documents.value.frontImage = frontImage.value;
-    documents.value.backImage = backImage.value;
-    documents.value.documentId = documentModel.value.id;
-    documents.value.status = "uploaded";
-    await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
-      if (value) {
-        ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast("Document upload successfully".tr);
-
-        Get.back(result: true);
+          backImageFileName,
+        );
       }
-    });
+
+      // Update document data
+      documents.value.frontImage = frontImage.value;
+      documents.value.backImage = backImage.value;
+      documents.value.documentId = documentModel.value.id;
+      documents.value.status = "uploaded";
+      // Debug log
+      print('------------ Document Upload Debug Log ------------');
+      print('User ID      : ${FireStoreUtils.getCurrentUid()}');
+      print('documentId   : ${documentModel.value.id}');
+      print('status       : ${documents.value.status}');
+      // print('type         : ${documents.value.type}');
+      print('frontImage   : ${documents.value.frontImage}');
+      print('backImage    : ${documents.value.backImage}');
+      print('--------------------------------------------------');
+      await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
+        if (value) {
+          ShowToastDialog.closeLoader();
+          ShowToastDialog.showToast("Document upload successfully".tr);
+          Get.back(result: true);
+        }
+      }).catchError((error) {
+        ShowToastDialog.closeLoader();
+        ShowToastDialog.showToast("Error uploading document: $error");
+        print('Error uploading document: $error');
+      });
+
+    } catch (e) {
+      ShowToastDialog.closeLoader();
+      ShowToastDialog.showToast("Error uploading document: $e");
+      print('Error in uploadDocument: $e');
+    }
   }
+  // uploadDocument() async {
+  //   String frontImageFileName = File(frontImage.value).path.split('/').last;
+  //   String backImageFileName = File(backImage.value).path.split('/').last;
+  //
+  //   if (frontImage.value.isNotEmpty &&
+  //       Constant().hasValidUrl(frontImage.value) == false) {
+  //     frontImage.value = await Constant.uploadUserImageToFireStorage(
+  //         File(frontImage.value),
+  //         "driverDocument/${FireStoreUtils.getCurrentUid()}",
+  //         frontImageFileName);
+  //   }
+  //   if (backImage.value.isNotEmpty &&
+  //       Constant().hasValidUrl(backImage.value) == false) {
+  //     backImage.value = await Constant.uploadUserImageToFireStorage(
+  //         File(backImage.value),
+  //         "driverDocument/${FireStoreUtils.getCurrentUid()}",
+  //         backImageFileName);
+  //   }
+  //   documents.value.frontImage = frontImage.value;
+  //   documents.value.backImage = backImage.value;
+  //   documents.value.documentId = documentModel.value.id;
+  //   documents.value.status = "uploaded";
+  //   await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
+  //     if (value) {
+  //       ShowToastDialog.closeLoader();
+  //       ShowToastDialog.showToast("Document upload successfully".tr);
+  //
+  //       Get.back(result: true);
+  //     }
+  //   });
+  // }
 }
