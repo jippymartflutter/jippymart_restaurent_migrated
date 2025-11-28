@@ -374,9 +374,32 @@ class Constant {
     return DateFormat('MMM dd,yyyy').format(dateTime);
   }
 
-  static String timestampToDateTime(Timestamp timestamp) {
-    DateTime dateTime = timestamp.toDate();
-    return DateFormat('MMM dd,yyyy hh:mm aa').format(dateTime);
+  // static String timestampToDateTime(Timestamp timestamp) {
+  //   DateTime dateTime = timestamp.toDate();
+  //   return DateFormat('MMM dd,yyyy hh:mm aa').format(dateTime);
+  // }
+  // static String timestampToDateTime(Timestamp timestamp) {
+  //   print("timestampToDateTime $timestamp ");
+  //   DateTime dateTime = timestamp.toDate();
+  //   return DateFormat('MMM dd,yyyy hh:mm aa').format(dateTime);
+  // }
+
+  static String timestampToDateTime(dynamic date) {
+    try {
+      print("timestampToDateTime $date");
+      late DateTime dateTime;
+      if (date is Timestamp) {
+        dateTime = date.toDate();
+      } else if (date is String) {
+        dateTime = DateTime.parse(date); // handles 2025-11-28T07:19:48.233035Z
+      } else {
+        return "—";
+      }
+      print("timestampToDateTime ${DateFormat('dd MMM yyyy, hh:mm aa').format(dateTime)}");
+      return DateFormat('dd MMM yyyy, hh:mm aa').format(dateTime);
+    } catch (e) {
+      return "Invalid date";
+    }
   }
 
   static String timestampToTime(Timestamp timestamp) {

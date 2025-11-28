@@ -51,28 +51,49 @@ class HomeController extends GetxController {
   Rx<VendorModel> vendermodel = VendorModel().obs;
 
   getUserProfile() async {
-    String userId = await FireStoreUtils.getCurrentUid();
-    await FireStoreUtils.getUserProfile(userId).then(
-      (value) {
-        if (value != null) {
-          userModel.value = value;
-          Constant.userModel = userModel.value;
-        }
-      },
-    );
-    if (userModel.value.vendorID != null) {
-      await FireStoreUtils.getVendorById(userModel.value.vendorID!).then(
-        (vender) {
-          if (vender?.id != null) {
-            vendermodel.value = vender!;
+    try {
+      String userId = await FireStoreUtils.getCurrentUid();
+      if (userId.isEmpty) {
+        print("⚠️ getUserProfile: User ID is empty, cannot fetch profile");
+        isLoading.value = false;
+        return;
+      }
+      
+      await FireStoreUtils.getUserProfile(userId).then(
+        (value) {
+          if (value != null) {
+            userModel.value = value;
+            Constant.userModel = userModel.value;
+            
+            // Only proceed if we have a valid user model with vendor ID
+            if (userModel.value.vendorID != null && userModel.value.vendorID!.isNotEmpty) {
+              FireStoreUtils.getVendorById(userModel.value.vendorID!).then(
+                (vender) {
+                  if (vender?.id != null) {
+                    vendermodel.value = vender!;
+                  }
+                },
+              ).catchError((error) {
+                print("⚠️ Error fetching vendor: $error");
+              });
+              // Start fetching orders and polling once vendor ID is available
+              getOrder().catchError((error) {
+                print("⚠️ Error fetching orders: $error");
+              });
+              _startOrderPolling();
+            }
+          } else {
+            print("⚠️ getUserProfile: User profile not found (404 or null response)");
           }
         },
-      );
-      // Start fetching orders and polling once vendor ID is available
-      await getOrder();
-      _startOrderPolling();
+      ).catchError((error) {
+        print("⚠️ Error in getUserProfile: $error");
+      });
+    } catch (e) {
+      print("⚠️ Exception in getUserProfile: $e");
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 
   // Start periodic polling for orders
@@ -195,9 +216,7 @@ class HomeController extends GetxController {
       print('⚠️ Vendor ID not available, skipping order fetch');
       return;
     }
-
     String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
-    
     if (!silent) {
       print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
     }

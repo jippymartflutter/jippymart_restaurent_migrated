@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -24,8 +25,18 @@ class NotificationHandler {
   static const String channelCustomName = "Custom Notifications";
   static const String channelCustomDescription = "Custom order notifications";
 
+  // Key for storing notification initialization status
+  static const String notificationInitializedKey = "notification_initialized";
+
   Future<void> initializeNotification() async {
     try {
+      // ✅ Check if already initialized to prevent duplicate initialization
+      final bool alreadyInitialized = Preferences.getBoolean(notificationInitializedKey);
+      if (alreadyInitialized) {
+        print("✅ Notifications already initialized, skipping...");
+        return;
+      }
+
       print("🔄 Starting notification initialization...");
 
       // ✅ Initialize timezone
@@ -66,6 +77,9 @@ class NotificationHandler {
 
       // Schedule daily notification after initialization
       await scheduleDaily8AMNotification();
+
+      // Mark as initialized
+      await Preferences.setBoolean(notificationInitializedKey, true);
     } catch (e, stackTrace) {
       print("❌ Error initializing notifications: $e");
       print("Stack trace: $stackTrace");
@@ -126,6 +140,7 @@ class NotificationHandler {
       // Get current time in local timezone
       final now = tz.TZDateTime.now(tz.local);
       print("🕒 Current local time: $now");
+      
       // Create 8 AM today
       tz.TZDateTime scheduledDate = tz.TZDateTime(
         tz.local,
@@ -137,13 +152,21 @@ class NotificationHandler {
       );
 
       // If it's already past 8 AM today, schedule for tomorrow
-      if (scheduledDate.isBefore(now)) {
+      if (scheduledDate.isBefore(now) || scheduledDate.isAtSameMomentAs(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
         print("⏰ Scheduled time has passed, scheduling for tomorrow");
       }
 
+      // ✅ Ensure scheduled date is in the future (at least 1 minute from now)
+      final minScheduledTime = now.add(const Duration(minutes: 1));
+      if (scheduledDate.isBefore(minScheduledTime)) {
+        scheduledDate = minScheduledTime;
+        print("⏰ Adjusted scheduled time to be at least 1 minute in the future");
+      }
+
       print("📅 Scheduling daily notification for: $scheduledDate");
       print("⏰ That's in: ${scheduledDate.difference(now)} from now");
+      
       await flutterLocalNotificationsPlugin.zonedSchedule(
         8888, // Fixed ID for daily notification
         "Good Morning! Are you opening your restaurant today? ",

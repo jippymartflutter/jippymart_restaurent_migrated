@@ -1347,7 +1347,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   acceptedWidget(themeChange, BuildContext context, OrderModel orderModel,
       HomeController controller) {
-    // ignore: unused_local_variable
     double totalAmount = 0.0;
     double subTotal = 0.0;
     double taxAmount = 0.0;
@@ -1400,7 +1399,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } else {
       adminCommission = double.parse(orderModel.adminCommission!);
     }
-
+print("acceptedWidget ${orderModel.vendorID}");
     return InkWell(
       // onTap: () async {
       //   Get.to(const OrderDetailsScreen(),
@@ -1698,8 +1697,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
+                    // Text(
+                    //   orderModel.id.toString(),
+                    //   style: TextStyle(
+                    //     color: themeChange.getThem()
+                    //         ? AppThemeData.grey100
+                    //         : AppThemeData.grey800,
+                    //     fontSize: 14,
+                    //     fontWeight: FontWeight.w500,
+                    //     fontFamily: AppThemeData.semiBold,
+                    //   ),
+                    // ),
                     Text(
-                      Constant.timestampToDateTime(orderModel.createdAt!),
+                      Constant.timestampToDateTime(orderModel.createdAt??''),
                       style: TextStyle(
                         color: themeChange.getThem()
                             ? AppThemeData.grey100

@@ -209,17 +209,29 @@ class AddRestaurantController extends GetxController {
             vendorModel.value = VendorModel();
             vendorModel.value.createdAt = Timestamp.now();
           }
+          // Upload images in parallel for better performance
+          List<Future<String>> uploadFutures = [];
+          List<int> uploadIndices = [];
+          
           for (int i = 0; i < images.length; i++) {
             if (images[i].runtimeType == XFile) {
-              String url = await Constant.uploadUserImageToFireStorage(
-                File(images[i].path),
-                "profileImage/${FireStoreUtils.getCurrentUid()}",
-                File(images[i].path).path
-                    .split('/')
-                    .last,
+              uploadIndices.add(i);
+              uploadFutures.add(
+                Constant.uploadUserImageToFireStorage(
+                  File(images[i].path),
+                  "profileImage/${FireStoreUtils.getCurrentUid()}",
+                  File(images[i].path).path.split('/').last,
+                ),
               );
-              images.removeAt(i);
-              images.insert(i, url);
+            }
+          }
+          
+          // Wait for all uploads to complete in parallel
+          if (uploadFutures.isNotEmpty) {
+            List<String> uploadedUrls = await Future.wait(uploadFutures);
+            // Update images list with uploaded URLs
+            for (int i = 0; i < uploadIndices.length; i++) {
+              images[uploadIndices[i]] = uploadedUrls[i];
             }
           }
           vendorModel.value.id = Constant.userModel?.vendorID;

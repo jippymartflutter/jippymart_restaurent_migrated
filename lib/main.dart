@@ -10,15 +10,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/app/splash_screen.dart';
 import 'package:jippymart_restaurant/firebase_options.dart';
-import 'package:jippymart_restaurant/utils/notification/daily_notification_service.dart';
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/global_setting_controller.dart';
-import 'package:jippymart_restaurant/firebase_options.dart';
 import 'package:jippymart_restaurant/models/language_model.dart';
 import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/service/localization_service.dart';
@@ -85,11 +82,7 @@ void main() async {
 
     // Initialize preferences
     await Preferences.initPref();
-    // Initialize notifications immediately
-    // Initialize notifications immediately
     // ✅ Start background service
-    await initializeService();
-    // Start background service
     await initializeService();
     // Initialize notifications
     final notificationService = NotificationService();
@@ -179,20 +172,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       }
     });
-    // In your initState or after login
-    // ✅ FIXED: Initialize notifications only once
-    _initializeNotificationsOnce();
+    // Notifications are already initialized in main() via notificationService.initInfo()
+    // No need to initialize again here to avoid duplicate notifications
     super.initState();
-  }
-  bool _notificationInitialized = false; // Add this flag
-  Future<void> _initializeNotificationsOnce() async {
-    if (!_notificationInitialized) {
-      _notificationInitialized = true;
-      await NotificationHandler().initializeNotification();
-      print(
-        "🎯 Daily 8 AM notification scheduled. No test notifications will be shown.",
-      );
-    }
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

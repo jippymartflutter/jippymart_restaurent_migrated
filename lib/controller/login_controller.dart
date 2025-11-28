@@ -65,6 +65,15 @@ class LoginController extends GetxController {
       );
       if (response['success'] == true) {
         final userData = response['data'];
+        
+        // Validate that we have a firebase_id before proceeding
+        if (userData['firebase_id'] == null || userData['firebase_id'].toString().isEmpty) {
+          print("⚠️ Login error: firebase_id is missing or empty");
+          ShowToastDialog.showToast("Login failed: Invalid user data".tr);
+          ShowToastDialog.closeLoader();
+          return;
+        }
+        
         await _saveUserDataToSharedPreferences(userData);
         UserModel? userModel = await _convertApiResponseToUserModel(userData);
         if (userModel != null) {
@@ -108,15 +117,33 @@ class LoginController extends GetxController {
           } else {
             await clearUserData();
           }
+        } else {
+          print("⚠️ Login error: Failed to convert user data to UserModel");
+          await clearUserData();
+          ShowToastDialog.showToast("Login failed: Invalid user data".tr);
         }
       } else {
         ShowToastDialog.showToast(response['message'] ?? "Login failed".tr);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print("Login error: $e");
+      print("Stack trace: $stackTrace");
       ShowToastDialog.showToast("Login failed. Please try again.".tr);
     }
     ShowToastDialog.closeLoader();
+  }
+
+// Helper method to parse bool from various types
+  bool _parseBoolValue(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is String) {
+      return value.toLowerCase() == 'true' || value == '1';
+    }
+    if (value is int) {
+      return value == 1;
+    }
+    return false;
   }
 
 // Helper method to save user data to SharedPreferences
@@ -130,11 +157,11 @@ class LoginController extends GetxController {
     await prefs.setString('phone_number', userData['phoneNumber'] ?? '');
     await prefs.setString('country_code', userData['countryCode'] ?? '');
     await prefs.setString('role', userData['role'] ?? '');
-    await prefs.setBool('is_active', userData['isActive'] ?? false);
+    await prefs.setBool('is_active', _parseBoolValue(userData['isActive'] ?? userData['active']));
     await prefs.setString('user_id', userData['id'].toString());
     await prefs.setString('profile_picture', userData['profilePictureURL'] ?? '');
     await prefs.setString('zone_id', userData['zoneId'] ?? '');
-    await prefs.setBool('is_document_verify', userData['isDocumentVerify'] == "1");
+    await prefs.setBool('is_document_verify', _parseBoolValue(userData['isDocumentVerify']));
     await prefs.setBool('is_logged_in', true);
   }
 
@@ -170,11 +197,11 @@ class LoginController extends GetxController {
         phoneNumber: userData['phoneNumber'],
         countryCode: userData['countryCode'],
         role: userData['role'],
-        active: userData['isActive'] ?? userData['active'] == 1,
+        active: _parseBoolValue(userData['isActive'] ?? userData['active']),
         profilePictureURL: userData['profilePictureURL'],
         fcmToken: userData['fcmToken'],
         zoneId: userData['zoneId'],
-        isDocumentVerify: userData['isDocumentVerify'] == "1",
+        isDocumentVerify: _parseBoolValue(userData['isDocumentVerify']),
         subscriptionPlanId: userData['subscriptionPlanId'],
         subscriptionExpiryDate:_parseTimestamp(userData['subscriptionExpiryDate'],),
         // userData['subscriptionExpiryDate'] != null
