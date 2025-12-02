@@ -77,22 +77,15 @@ Future<void> initializeFirebase() async {
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    // Initialize Firebase
     await initializeFirebase();
-
-    // Initialize preferences
     await Preferences.initPref();
-    // ✅ Start background service
     await initializeService();
-    // Initialize notifications
     final notificationService = NotificationService();
     await notificationService.initInfo();
     FirebaseMessaging.onBackgroundMessage(firebaseMessageBackgroundHandle);
-    // Run the app
     runApp(const MyApp());
   } catch (e) {
     print('Error in main: $e');
-    // Run the app even if there's an error
     runApp(const MyApp());
   }
 }

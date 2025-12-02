@@ -1589,7 +1589,6 @@ class FireStoreUtils {
   }
   static Future<bool?> setOrder(OrderModel orderModel) async {
     bool isAdded = false;
-
     try {
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/orders'),

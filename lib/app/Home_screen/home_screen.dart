@@ -1068,38 +1068,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 const SizedBox(
                   height: 5,
                 ),
-                orderModel.scheduleTime == null
-                    ? const SizedBox()
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Schedule Time".tr,
-                              style: TextStyle(
-                                color: themeChange.getThem()
-                                    ? AppThemeData.grey300
-                                    : AppThemeData.grey600,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: AppThemeData.regular,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            Constant.timestampToDateTime(
-                                    orderModel.scheduleTime!)
-                                .tr,
-                            style: TextStyle(
-                              color: themeChange.getThem()
-                                  ? AppThemeData.secondary300
-                                  : AppThemeData.secondary300,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: AppThemeData.semiBold,
-                            ),
-                          ),
-                        ],
-                      ),
+                // orderModel.scheduleTime == null
+                //     ? const SizedBox()
+                //     : Row(
+                //         children: [
+                //           Expanded(
+                //             child: Text(
+                //               "Schedule Time".tr,
+                //               style: TextStyle(
+                //                 color: themeChange.getThem()
+                //                     ? AppThemeData.grey300
+                //                     : AppThemeData.grey600,
+                //                 fontSize: 16,
+                //                 fontWeight: FontWeight.w400,
+                //                 fontFamily: AppThemeData.regular,
+                //               ),
+                //             ),
+                //           ),
+                //           Text(
+                //             Constant.timestampToDateTime(
+                //                     orderModel.scheduleTime!)
+                //                 .tr,
+                //             style: TextStyle(
+                //               color: themeChange.getThem()
+                //                   ? AppThemeData.secondary300
+                //                   : AppThemeData.secondary300,
+                //               fontSize: 16,
+                //               fontWeight: FontWeight.w500,
+                //               fontFamily: AppThemeData.semiBold,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
                 const SizedBox(
                   height: 5,
                 ),
@@ -1764,38 +1764,38 @@ print("acceptedWidget ${orderModel.vendorID}");
                 const SizedBox(
                   height: 5,
                 ),
-                orderModel.scheduleTime == null
-                    ? const SizedBox()
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Schedule Time".tr,
-                              style: TextStyle(
-                                color: themeChange.getThem()
-                                    ? AppThemeData.grey300
-                                    : AppThemeData.grey600,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: AppThemeData.regular,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            Constant.timestampToDateTime(
-                                    orderModel.scheduleTime!)
-                                .tr,
-                            style: TextStyle(
-                              color: themeChange.getThem()
-                                  ? AppThemeData.secondary300
-                                  : AppThemeData.secondary300,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: AppThemeData.semiBold,
-                            ),
-                          ),
-                        ],
-                      ),
+                // orderModel.scheduleTime == null
+                //     ? const SizedBox()
+                //     : Row(
+                //         children: [
+                //           Expanded(
+                //             child: Text(
+                //               "Schedule Time".tr,
+                //               style: TextStyle(
+                //                 color: themeChange.getThem()
+                //                     ? AppThemeData.grey300
+                //                     : AppThemeData.grey600,
+                //                 fontSize: 16,
+                //                 fontWeight: FontWeight.w400,
+                //                 fontFamily: AppThemeData.regular,
+                //               ),
+                //             ),
+                //           ),
+                //           Text(
+                //             Constant.timestampToDateTime(
+                //                     orderModel.scheduleTime!)
+                //                 .tr,
+                //             style: TextStyle(
+                //               color: themeChange.getThem()
+                //                   ? AppThemeData.secondary300
+                //                   : AppThemeData.secondary300,
+                //               fontSize: 16,
+                //               fontWeight: FontWeight.w500,
+                //               fontFamily: AppThemeData.semiBold,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
                 const SizedBox(
                   height: 5,
                 ),
@@ -2478,38 +2478,38 @@ print("acceptedWidget ${orderModel.vendorID}");
                 const SizedBox(
                   height: 5,
                 ),
-                orderModel.scheduleTime == null
-                    ? const SizedBox()
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Schedule Time".tr,
-                              style: TextStyle(
-                                color: themeChange.getThem()
-                                    ? AppThemeData.grey300
-                                    : AppThemeData.grey600,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: AppThemeData.regular,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            Constant.timestampToDateTime(
-                                    orderModel.scheduleTime!)
-                                .tr,
-                            style: TextStyle(
-                              color: themeChange.getThem()
-                                  ? AppThemeData.secondary300
-                                  : AppThemeData.secondary300,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: AppThemeData.semiBold,
-                            ),
-                          ),
-                        ],
-                      ),
+                // orderModel.scheduleTime == null
+                //     ? const SizedBox()
+                //     : Row(
+                //         children: [
+                //           Expanded(
+                //             child: Text(
+                //               "Schedule Time".tr,
+                //               style: TextStyle(
+                //                 color: themeChange.getThem()
+                //                     ? AppThemeData.grey300
+                //                     : AppThemeData.grey600,
+                //                 fontSize: 16,
+                //                 fontWeight: FontWeight.w400,
+                //                 fontFamily: AppThemeData.regular,
+                //               ),
+                //             ),
+                //           ),
+                //           Text(
+                //             Constant.timestampToDateTime(
+                //                     orderModel.scheduleTime!)
+                //                 .tr,
+                //             style: TextStyle(
+                //               color: themeChange.getThem()
+                //                   ? AppThemeData.secondary300
+                //                   : AppThemeData.secondary300,
+                //               fontSize: 16,
+                //               fontWeight: FontWeight.w500,
+                //               fontFamily: AppThemeData.semiBold,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
                 const SizedBox(
                   height: 5,
                 ),

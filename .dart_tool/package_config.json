@@ -915,9 +915,9 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/meta-1.16.0",
+      "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/meta-1.17.0",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.5"
     },
     {
       "name": "mgrs_dart",
@@ -1275,7 +1275,7 @@
     },
     {
       "name": "test_api",
-      "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/test_api-0.7.6",
+      "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/test_api-0.7.7",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -1503,8 +1503,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.9.2",
+  "generatorVersion": "3.10.1",
   "flutterRoot": "file:///Users/jippymart/Development/flutter",
-  "flutterVersion": "3.35.5",
+  "flutterVersion": "3.38.3",
   "pubCache": "file:///Users/jippymart/.pub-cache"
 }
