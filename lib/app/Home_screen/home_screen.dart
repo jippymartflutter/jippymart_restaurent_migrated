@@ -1849,10 +1849,13 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   ?.remove(orderModel.id);
                               await FireStoreUtils.updateDriverUser(
                                   driverModel!);
-                              SendNotification.sendFcmMessage(
-                                  Constant.driverCancelled,
-                                  driverModel.fcmToken.toString(),
-                                  {'title': 'Cancelled Order'});
+                              if (driverModel.fcmToken != null &&
+                                  driverModel.fcmToken!.isNotEmpty) {
+                                SendNotification.sendFcmMessage(
+                                    Constant.driverCancelled,
+                                    driverModel.fcmToken.toString(),
+                                    {'title': 'Cancelled Order'});
+                              }
                             }
                             await FireStoreUtils.updateOrder(orderModel);
                             // Notify customer on order cancel
@@ -1984,10 +1987,13 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   await FireStoreUtils.updateOrder(orderModel);
                                   await FireStoreUtils
                                       .restaurantVendorWalletSet(orderModel);
-                                  SendNotification.sendFcmMessage(
-                                      Constant.takeawayCompleted,
-                                      orderModel.author!.fcmToken.toString(),
-                                      {});
+                                  if (orderModel.author?.fcmToken != null &&
+                                      orderModel.author!.fcmToken!.isNotEmpty) {
+                                    SendNotification.sendFcmMessage(
+                                        Constant.takeawayCompleted,
+                                        orderModel.author!.fcmToken.toString(),
+                                        {});
+                                  }
 
                                   ShowToastDialog.closeLoader();
                                 },
@@ -2802,12 +2808,18 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   controller.selectDriverUser.value);
                               await FireStoreUtils.restaurantVendorWalletSet(
                                   orderModel);
-                              SendNotification.sendFcmMessage(
-                                  Constant.restaurantAccepted,
-                                  orderModel.author!.fcmToken.toString(), {});
-                              SendNotification.sendFcmMessage(
-                                  Constant.newDeliveryOrder,
-                                  orderModel.driver?.fcmToken ?? '', {});
+                              if (orderModel.author?.fcmToken != null &&
+                                  orderModel.author!.fcmToken!.isNotEmpty) {
+                                SendNotification.sendFcmMessage(
+                                    Constant.restaurantAccepted,
+                                    orderModel.author!.fcmToken.toString(), {});
+                              }
+                              if (orderModel.driver?.fcmToken != null &&
+                                  orderModel.driver!.fcmToken!.isNotEmpty) {
+                                SendNotification.sendFcmMessage(
+                                    Constant.newDeliveryOrder,
+                                    orderModel.driver!.fcmToken.toString(), {});
+                              }
                               ShowToastDialog.closeLoader();
                             } else {
                               ShowToastDialog.showToast(
@@ -3173,22 +3185,17 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 await AudioPlayerService.playSound(false);
                                 await FireStoreUtils.updateOrder(orderModel);
                                 await FireStoreUtils.restaurantVendorWalletSet(orderModel);
-
                                 ///this for Driver
                                 // Broadcast order to drivers within admin-set radius
                                 double radius = Constant.driverSearchRadius ?? 5.0;
                                 if (Constant.driverSearchRadius == null) {
-                                  // Replace Firebase call with API call
                                   try {
                                     final response = await http.get(
                                       Uri.parse('${Constant.baseUrl}restaurant/GetDriverNearBy'),
                                       headers: {
                                         'Content-Type': 'application/json',
-                                        // Add authorization header if needed
-                                        // 'Authorization': 'Bearer $token',
                                       },
                                     );
-
                                     if (response.statusCode == 200) {
                                       final data = json.decode(response.body);
                                       if (data['success'] == true) {
@@ -3213,7 +3220,10 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 List<UserModel> eligibleDrivers = allDrivers.where((driver) {
                                   if (driver.location == null ||
                                       driver.location!.latitude == null ||
-                                      driver.location!.longitude == null) return false;
+                                      driver.location!.longitude == null) {
+                                    return
+                                      false;
+                                  }
                                   final double driverLat = driver.location!.latitude!;
                                   final double driverLng = driver.location!.longitude!;
                                   double distance = Geolocator.distanceBetween(
@@ -3228,11 +3238,14 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     await FireStoreUtils.updateDriverUser(driver);
                                   }
                                 }
-                                SendNotification.sendFcmMessage(
-                                  Constant.restaurantAccepted,
-                                  orderModel.author!.fcmToken.toString(),
-                                  {},
-                                );
+                                if (orderModel.author?.fcmToken != null &&
+                                    orderModel.author!.fcmToken!.isNotEmpty) {
+                                  SendNotification.sendFcmMessage(
+                                    Constant.restaurantAccepted,
+                                    orderModel.author!.fcmToken.toString(),
+                                    {},
+                                  );
+                                }
                                 ShowToastDialog.closeLoader();
                                 Get.back();
                               }

@@ -71,6 +71,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
           duration: const Duration(milliseconds: 1200),
         );
       } else {
+        FireStoreUtils.getAvalibleDrivers();
         bool isLogin = await FireStoreUtils.isLogin();
         if (isLogin == true) {
           await FireStoreUtils.getUserProfile(

@@ -137,7 +137,6 @@ class FireStoreUtils {
   static Future<UserModel?> getUserById(String uuid) async {
     try {
       log("uuid :: $uuid");
-
       final response = await http.get(
         Uri.parse('${Constant.baseUrl}restaurant/users/$uuid'),
         headers: {
@@ -204,17 +203,16 @@ class FireStoreUtils {
       return false;
     }
   }
-
   static Future<bool> updateUser(UserModel userModel) async {
     bool isUpdate = false;
     try {
-      print(" updateUser  ${ json.encode(userModel.toJson())}");
+      print("updateUser  ${ userModel.toJson()}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: json.encode(userModel.toJson()), // Add json.encode here
+        body: json.encode(userModel.toJson()),
       );
       if (response.statusCode == 200) {
         Constant.userModel = userModel;
@@ -232,6 +230,9 @@ class FireStoreUtils {
 
   static Future<bool> updateDriverUser(UserModel userModel) async {
     try {
+      log("updateDriverUser ${'${Constant.baseUrl}restaurant/updateUser'} ");
+      log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
+      log("updateDriverUser ${userModel.toJson()}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
         headers: {
@@ -2936,14 +2937,16 @@ class FireStoreUtils {
   static Future<List<UserModel>> getAvalibleDrivers() async {
     List<UserModel> driverList = [];
     try {
-      log("getAvalibleDrivers :: 22");
+      String? userId = await getFirebaseId();
+      log("getAvalibleDrivers :: 22  $userId");
       // Make API call
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}drivers/available?vendorID=${Constant.userModel?.vendorID}'),
+        Uri.parse('${Constant.baseUrl}drivers/available'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
+      log("getAvalibleDrivers ${response.body} ");
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {

@@ -58,13 +58,11 @@ class HomeController extends GetxController {
         isLoading.value = false;
         return;
       }
-      
       await FireStoreUtils.getUserProfile(userId).then(
         (value) {
           if (value != null) {
             userModel.value = value;
             Constant.userModel = userModel.value;
-            
             // Only proceed if we have a valid user model with vendor ID
             if (userModel.value.vendorID != null && userModel.value.vendorID!.isNotEmpty) {
               FireStoreUtils.getVendorById(userModel.value.vendorID!).then(
@@ -216,7 +214,9 @@ class HomeController extends GetxController {
       print('⚠️ Vendor ID not available, skipping order fetch');
       return;
     }
+
     String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
+    print("getOrdergetOrder ${url}");
     if (!silent) {
       print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
     }

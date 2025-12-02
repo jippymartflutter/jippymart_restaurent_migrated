@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
@@ -72,7 +74,19 @@ class UserModel {
   }
 
   UserModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+    // Handle id field: convert int to String if needed
+    if (json['id'] != null) {
+      if (json['id'] is int) {
+        id = json['id'].toString();
+      } else if (json['id'] is String) {
+        id = json['id'];
+      } else {
+        id = json['id']?.toString();
+      }
+    } else {
+      id = null;
+    }
+
     zoneId = json['zoneId'] ?? '';
     email = json['email'];
     firstName = json['firstName'];
@@ -81,10 +95,22 @@ class UserModel {
     profilePictureURL = json['profilePictureURL'] ?? json['profile_pic'];
     fcmToken = json['fcmToken'];
     countryCode = json['countryCode'];
-    phoneNumber = json['phone'] ?? json['phoneNumber']; // Fixed: API uses 'phone'
-    walletAmount = json['wallet_amount'] != null
-        ? double.parse(json['wallet_amount'].toString())
-        : 0;
+    phoneNumber = json['phone'] ?? json['phoneNumber'];
+
+    // Handle wallet_amount for both int and double values
+    if (json['wallet_amount'] != null) {
+      if (json['wallet_amount'] is int) {
+        walletAmount = json['wallet_amount'].toDouble();
+      } else if (json['wallet_amount'] is double) {
+        walletAmount = json['wallet_amount'];
+      } else if (json['wallet_amount'] is String) {
+        walletAmount = double.tryParse(json['wallet_amount']) ?? 0;
+      } else {
+        walletAmount = 0;
+      }
+    } else {
+      walletAmount = 0;
+    }
 
     // Handle createdAt safely
     createdAt = _parseTimestamp(json['createdAt'] ?? json['_created_at']);
@@ -98,16 +124,18 @@ class UserModel {
     location = json['location'] != null
         ? UserLocation.fromJson(json['location'])
         : null;
-    userBankDetails = json['userBankDetails'] != null
-        ? UserBankDetails.fromJson(json['userBankDetails'])
-        : null;
-
-    if (json['shippingAddress'] != null) {
-      shippingAddress = <ShippingAddress>[];
-      json['shippingAddress'].forEach((v) {
-        shippingAddress!.add(ShippingAddress.fromJson(v));
-      });
+    try {
+      if (json['userBankDetails'] != null && json['userBankDetails'] is Map) {
+        userBankDetails = UserBankDetails.fromJson(json['userBankDetails'] as Map<String, dynamic>);
+      } else {
+        userBankDetails = null;
+      }
+    } catch (e) {
+      print('Error parsing userBankDetails: $e');
+      userBankDetails = null;
     }
+    // FIX: Handle shippingAddress with better error handling
+    shippingAddress = _parseShippingAddress(json['shippingAddress']);
 
     carName = json['carName'];
     carNumber = json['carNumber'];
@@ -115,19 +143,88 @@ class UserModel {
     inProgressOrderID = json['inProgressOrderID'];
     orderRequestData = json['orderRequestData'];
     vendorID = json['vendorID'] ?? '';
-    rotation = json['rotation'];
+
+    // Handle rotation field: convert String to num if needed
+    if (json['rotation'] != null) {
+      if (json['rotation'] is num) {
+        rotation = json['rotation'];
+      } else if (json['rotation'] is String) {
+        rotation = num.tryParse(json['rotation']) ?? 0;
+      }
+    }
     appIdentifier = json['appIdentifier'];
     provider = json['provider'];
     subscriptionPlanId = json['subscriptionPlanId'];
-
-    // FIX: Handle subscriptionExpiryDate from String to Timestamp
     subscriptionExpiryDate = _parseTimestamp(json['subscriptionExpiryDate']);
-
-    subscriptionPlan = json['subscription_plan'] != null
-        ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
-        : null;
+    try {
+      if (json['subscription_plan'] != null) {
+        if (json['subscription_plan'] is Map<String, dynamic>) {
+          subscriptionPlan = SubscriptionPlanModel.fromJson(json['subscription_plan'] as Map<String, dynamic>);
+        } else if (json['subscription_plan'] is Map) {
+          subscriptionPlan = SubscriptionPlanModel.fromJson(Map<String, dynamic>.from(json['subscription_plan']));
+        } else if (json['subscription_plan'] is String) {
+          subscriptionPlan = SubscriptionPlanModel(
+            id: json['subscriptionPlanId']?.toString(),
+            name: json['subscription_plan'] as String,
+            // Add other default properties as needed
+          );
+        }
+      } else {
+        subscriptionPlan = null;
+      }
+    } catch (e) {
+      print('Error parsing subscription_plan: $e');
+      subscriptionPlan = null;
+    }
   }
+// Helper method to parse shippingAddress with better error handling
+  List<ShippingAddress>? _parseShippingAddress(dynamic shippingAddressData) {
+    if (shippingAddressData == null) return null;
 
+    final List<ShippingAddress> addresses = [];
+
+    try {
+      if (shippingAddressData is String) {
+        // Clean the string - remove any extra quotes or escape characters
+        String cleanedString = shippingAddressData;
+
+        // Remove outer quotes if they exist
+        if (cleanedString.startsWith('"') && cleanedString.endsWith('"')) {
+          cleanedString = cleanedString.substring(1, cleanedString.length - 1);
+        }
+
+        // Unescape the string
+        cleanedString = cleanedString.replaceAll(r'\"', '"');
+
+        // Try to parse as JSON
+        final decoded = jsonDecode(cleanedString);
+
+        if (decoded is List) {
+          for (var item in decoded) {
+            if (item is Map<String, dynamic>) {
+              addresses.add(ShippingAddress.fromJson(item));
+            } else if (item is Map) {
+              // Try to cast it
+              addresses.add(ShippingAddress.fromJson(Map<String, dynamic>.from(item)));
+            }
+          }
+        }
+      } else if (shippingAddressData is List) {
+        // It's already a list
+        for (var item in shippingAddressData) {
+          if (item is Map<String, dynamic>) {
+            addresses.add(ShippingAddress.fromJson(item));
+          } else if (item is Map) {
+            addresses.add(ShippingAddress.fromJson(Map<String, dynamic>.from(item)));
+          }
+        }
+      }
+    } catch (e) {
+      print('Error parsing shippingAddress: $e - Data: $shippingAddressData');
+    }
+
+    return addresses.isNotEmpty ? addresses : null;
+  }
 // Add this helper method to parse Timestamp from various types
   Timestamp? _parseTimestamp(dynamic value) {
     if (value == null) return null;

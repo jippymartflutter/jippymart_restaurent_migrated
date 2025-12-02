@@ -69,12 +69,10 @@ class SplashController extends GetxController {
         print('🔄 Force update required, blocking app flow');
         return; // Don't proceed to next screen
       }
-
       if (Preferences.getBoolean(Preferences.isFinishOnBoardingKey) == false) {
         Get.offAll(() => const OnBoardingScreen());
         return;
       }
-
       bool isLogin = await FireStoreUtils.isLogin();
       if (!isLogin) {
         loginController.clearUserData();
@@ -96,13 +94,11 @@ class SplashController extends GetxController {
         Get.offAll(() => const LoginScreen());
         return;
       }
-
       if (Constant.userModel?.active != true) {
         loginController.clearUserData();
         Get.offAll(() => const LoginScreen());
         return;
       }
-
       // Update FCM token
       try {
         Constant.userModel?.fcmToken = await NotificationService.getToken();
