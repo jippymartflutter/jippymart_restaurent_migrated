@@ -212,7 +212,8 @@ class FireStoreUtils {
   static Future<bool> updateUser(UserModel userModel) async {
     bool isUpdate = false;
     try {
-      userModel.id = userModel.firebaseId;
+      String? userId = await getFirebaseId();
+      userModel.id = userId;
       print("updateUser  ${ userModel.toJson()}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
@@ -1836,7 +1837,7 @@ class FireStoreUtils {
     }
   }
   static Future<bool> uploadDriverDocument(Documents documents) async {
-    String userId = await FireStoreUtils.getCurrentUid(); // FIXED
+    String userId = await FireStoreUtils.getCurrentUid();
     bool isAdded = false;
 
     print("------------ Document Upload Debug Log ------------");
@@ -1859,40 +1860,95 @@ class FireStoreUtils {
       request.fields['status'] = documents.status ?? '';
       request.fields['type'] = 'restaurant';
 
-      // ⛔ Prevent URL upload — Only upload Local Files
-      if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
-        if (documents.frontImage!.startsWith("http")) {
-          print("⚠ frontImage is URL → Skipping upload");
-        } else {
-          request.files.add(await http.MultipartFile.fromPath(
-            'frontImage',
-            documents.frontImage!,
-          ));
-        }
+      // FRONT IMAGE
+      if (documents.frontImage != null &&
+          documents.frontImage!.isNotEmpty &&
+          !documents.frontImage!.startsWith('http')) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'frontImage',
+          documents.frontImage!,
+        ));
       }
 
-      if (documents.backImage != null && documents.backImage!.isNotEmpty) {
-        if (documents.backImage!.startsWith("http")) {
-          print("⚠ backImage is URL → Skipping upload");
-        } else {
-          request.files.add(await http.MultipartFile.fromPath(
-            'backImage',
-            documents.backImage!,
-          ));
-        }
+      // BACK IMAGE
+      if (documents.backImage != null &&
+          documents.backImage!.isNotEmpty &&
+          !documents.backImage!.startsWith('http')) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'backImage',
+          documents.backImage!,
+        ));
       }
 
       var response = await request.send();
       print("📤 uploadDriverDocument Status: ${response.statusCode}");
 
       isAdded = response.statusCode == 200;
-
     } catch (e) {
       print("❌ Error uploading document: $e");
     }
 
     return isAdded;
   }
+
+  // static Future<bool> uploadDriverDocument(Documents documents) async {
+  //   String userId = await FireStoreUtils.getCurrentUid(); // FIXED
+  //   bool isAdded = false;
+  //
+  //   print("------------ Document Upload Debug Log ------------");
+  //   print("User ID      : $userId");
+  //   print("documentId   : ${documents.documentId}");
+  //   print("status       : ${documents.status}");
+  //   print("type         : restaurant");
+  //   print("frontImage   : ${documents.frontImage}");
+  //   print("backImage    : ${documents.backImage}");
+  //   print("--------------------------------------------------");
+  //
+  //   try {
+  //     var request = http.MultipartRequest(
+  //       'POST',
+  //       Uri.parse('${Constant.baseUrl}documents/driver/upload'),
+  //     );
+  //
+  //     request.fields['userId'] = userId;
+  //     request.fields['documentId'] = documents.documentId ?? '';
+  //     request.fields['status'] = documents.status ?? '';
+  //     request.fields['type'] = 'restaurant';
+  //
+  //     // ⛔ Prevent URL upload — Only upload Local Files
+  //     if (documents.frontImage != null && documents.frontImage!.isNotEmpty) {
+  //       if (documents.frontImage!.startsWith("http")) {
+  //         print("⚠ frontImage is URL → Skipping upload");
+  //       } else {
+  //         request.files.add(await http.MultipartFile.fromPath(
+  //           'frontImage',
+  //           documents.frontImage!,
+  //         ));
+  //       }
+  //     }
+  //
+  //     if (documents.backImage != null && documents.backImage!.isNotEmpty) {
+  //       if (documents.backImage!.startsWith("http")) {
+  //         print("⚠ backImage is URL → Skipping upload");
+  //       } else {
+  //         request.files.add(await http.MultipartFile.fromPath(
+  //           'backImage',
+  //           documents.backImage!,
+  //         ));
+  //       }
+  //     }
+  //
+  //     var response = await request.send();
+  //     print("📤 uploadDriverDocument Status: ${response.statusCode}");
+  //
+  //     isAdded = response.statusCode == 200;
+  //
+  //   } catch (e) {
+  //     print("❌ Error uploading document: $e");
+  //   }
+  //
+  //   return isAdded;
+  // }
 
   // static Future<bool> uploadDriverDocument(Documents documents) async {
   //   String userId = await FireStoreUtils.getCurrentUid();
@@ -2028,12 +2084,14 @@ class FireStoreUtils {
         if (jsonResponse['success'] == true) {
           if (jsonResponse['data'] != null) {
             VendorModel createdVendor = VendorModel.fromJson(jsonResponse['data']);
+            // Constant.userModel!.id = userId;
             Constant.userModel!.vendorID = createdVendor.id ?? vendorId;
             vendor.fcmToken = Constant.userModel!.fcmToken;
             Constant.vendorAdminCommission = createdVendor.adminCommission ?? vendor.adminCommission;
             await updateUser(Constant.userModel!);
             return createdVendor;
           } else {
+            // Constant.userModel!.id = userId;
             Constant.userModel!.vendorID = vendorId;
             vendor.fcmToken = Constant.userModel!.fcmToken;
             Constant.vendorAdminCommission = vendor.adminCommission;

@@ -105,7 +105,6 @@ class VerificationScreen extends StatelessWidget {
                                           itemToCheck.documentId ==
                                           documentModel.id);
                                 }
-
                                 return InkWell(
                                   onTap: () {
                                     Get.to(const VerificationDetailsUploadScreen(),

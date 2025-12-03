@@ -60,7 +60,6 @@ class DetailsUploadController extends GetxController {
       XFile? image = await _imagePicker.pickImage(source: source);
       if (image == null) return;
       Get.back();
-
       if (type == "front") {
         frontImage.value = image.path;
       } else {
@@ -72,59 +71,90 @@ class DetailsUploadController extends GetxController {
   }
   uploadDocument() async {
     try {
-      if (frontImage.value.isNotEmpty &&
-          !frontImage.value.startsWith('http') &&
-          !frontImage.value.startsWith('https')) {
-        String frontImageFileName = File(frontImage.value).path.split('/').last;
-        frontImage.value = await Constant.uploadUserImageToFireStorage(
-          File(frontImage.value),
-          "driverDocument/${FireStoreUtils.getCurrentUid()}",
-          frontImageFileName,
-        );
-      }
-      if (backImage.value.isNotEmpty &&
-          !backImage.value.startsWith('http') &&
-          !backImage.value.startsWith('https')) {
-        String backImageFileName = File(backImage.value).path.split('/').last;
-        backImage.value = await Constant.uploadUserImageToFireStorage(
-          File(backImage.value),
-          "driverDocument/${FireStoreUtils.getCurrentUid()}",
-          backImageFileName,
-        );
-      }
-
-      // Update document data
+      // Update document data directly
       documents.value.frontImage = frontImage.value;
       documents.value.backImage = backImage.value;
       documents.value.documentId = documentModel.value.id;
       documents.value.status = "uploaded";
-      // Debug log
+
       print('------------ Document Upload Debug Log ------------');
       print('User ID      : ${FireStoreUtils.getCurrentUid()}');
-      print('documentId   : ${documentModel.value.id}');
+      print('documentId   : ${documents.value.documentId}');
       print('status       : ${documents.value.status}');
-      // print('type         : ${documents.value.type}');
       print('frontImage   : ${documents.value.frontImage}');
       print('backImage    : ${documents.value.backImage}');
       print('--------------------------------------------------');
+
       await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
         if (value) {
           ShowToastDialog.closeLoader();
           ShowToastDialog.showToast("Document upload successfully".tr);
           Get.back(result: true);
+        } else {
+          ShowToastDialog.closeLoader();
+          ShowToastDialog.showToast("Upload failed");
         }
-      }).catchError((error) {
-        ShowToastDialog.closeLoader();
-        ShowToastDialog.showToast("Error uploading document: $error");
-        print('Error uploading document: $error');
       });
-
     } catch (e) {
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast("Error uploading document: $e");
       print('Error in uploadDocument: $e');
     }
   }
+
+// uploadDocument() async {
+  //   try {
+  //     if (frontImage.value.isNotEmpty &&
+  //         !frontImage.value.startsWith('http') &&
+  //         !frontImage.value.startsWith('https')) {
+  //       String frontImageFileName = File(frontImage.value).path.split('/').last;
+  //       frontImage.value = await Constant.uploadUserImageToFireStorage(
+  //         File(frontImage.value),
+  //         "driverDocument/${FireStoreUtils.getCurrentUid()}",
+  //         frontImageFileName,
+  //       );
+  //     }
+  //     if (backImage.value.isNotEmpty &&
+  //         !backImage.value.startsWith('http') &&
+  //         !backImage.value.startsWith('https')) {
+  //       String backImageFileName = File(backImage.value).path.split('/').last;
+  //       backImage.value = await Constant.uploadUserImageToFireStorage(
+  //         File(backImage.value),
+  //         "driverDocument/${FireStoreUtils.getCurrentUid()}",
+  //         backImageFileName,
+  //       );
+  //     }
+  //     // Update document data
+  //     documents.value.frontImage = frontImage.value;
+  //     documents.value.backImage = backImage.value;
+  //     documents.value.documentId = documentModel.value.id;
+  //     documents.value.status = "uploaded";
+  //     // Debug log
+  //     print('------------ Document Upload Debug Log ------------');
+  //     print('User ID      : ${FireStoreUtils.getCurrentUid()}');
+  //     print('documentId   : ${documentModel.value.id}');
+  //     print('status       : ${documents.value.status}');
+  //     print('frontImage   : ${documents.value.frontImage}');
+  //     print('backImage    : ${documents.value.backImage}');
+  //     print('--------------------------------------------------');
+  //     await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
+  //       if (value) {
+  //         ShowToastDialog.closeLoader();
+  //         ShowToastDialog.showToast("Document upload successfully".tr);
+  //         Get.back(result: true);
+  //       }
+  //     }).catchError((error) {
+  //       ShowToastDialog.closeLoader();
+  //       ShowToastDialog.showToast("Error uploading document: $error");
+  //       print('Error uploading document: $error');
+  //     });
+  //
+  //   } catch (e) {
+  //     ShowToastDialog.closeLoader();
+  //     ShowToastDialog.showToast("Error uploading document: $e");
+  //     print('Error in uploadDocument: $e');
+  //   }
+  // }
   // uploadDocument() async {
   //   String frontImageFileName = File(frontImage.value).path.split('/').last;
   //   String backImageFileName = File(backImage.value).path.split('/').last;

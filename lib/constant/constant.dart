@@ -45,7 +45,6 @@ class Constant {
   static String senderId = 'jippymart-27c08'; // <-- Set to your Firebase project ID
   static String jsonNotificationFileURL = 'https://storage.googleapis.com/app_notification/jippymart-27c08-7191b6fdcd74.json';
   static String distanceType = "km";
-
   static String placeholderImage = "";
   static String googlePlayLink = "";
   static String appStoreLink = "";
@@ -283,7 +282,6 @@ class Constant {
     }
     return distance.toStringAsFixed(2);
   }
-
   bool hasValidUrl(String value) {
     String pattern =
         r'(http|https)://[\w-]+(\.[\w-]+)+([\w.,@?^=%&amp;:/~+#-]*[\w@?^=%&amp;/~+#-])?';

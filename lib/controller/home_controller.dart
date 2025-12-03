@@ -307,10 +307,8 @@ class HomeController extends GetxController {
             print('🔔 Initial load: ${newOrderList.length} new order(s) found');
             await AudioPlayerService.playSound(true);
           }
-
           // Update previous count for next comparison
           _previousNewOrderCount = newOrderList.length;
-
         } else {
           if (!silent) {
             print('⚠️ API returned success=false: ${jsonResponse['message'] ?? 'Unknown error'}');
