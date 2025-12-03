@@ -209,18 +209,15 @@ class HomeController extends GetxController {
     if (isFetchingOrders.value && silent) {
       return;
     }
-
     if (Constant.userModel?.vendorID == null || Constant.userModel!.vendorID!.isEmpty) {
       print('⚠️ Vendor ID not available, skipping order fetch');
       return;
     }
-
     String? url = '${Constant.baseUrl}orders/vendor/${Constant.userModel?.vendorID}';
     print("getOrdergetOrder ${url}");
     if (!silent) {
       print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
     }
-
     isFetchingOrders.value = true;
     
     try {

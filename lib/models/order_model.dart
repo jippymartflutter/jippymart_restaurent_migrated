@@ -74,8 +74,8 @@ class OrderModel {
         discount: _parseNumber(json['discount']),
         authorID: json['authorID']?.toString(),
         estimatedTimeToPrepare: json['estimatedTimeToPrepare']?.toString(),
-        createdAt: _parseCustomDateTime(json['createdAt']),
-        triggerDelivery: _parseTimestamp(json['triggerDelivery']) ?? Timestamp.now(),
+        createdAt: _parseTimestamp(json['createdAt']),
+        triggerDelivery: _parseTimestamp(json['triggerDelivery']),
         taxSetting: _parseTaxSetting(json['taxSetting']),
         paymentMethod: json['payment_method']?.toString(),
         products: _parseProducts(json['products']),
@@ -133,25 +133,60 @@ class OrderModel {
         try {
           return Timestamp.fromDate(DateTime.parse(timestampData));
         } catch (e) {
-          // If ISO parsing fails, try to parse the custom format "Nov 28, 2025 12:33 PM"
+          // If ISO parsing fails, try to parse numeric string (milliseconds)
+          try {
+            final millis = int.tryParse(timestampData);
+            if (millis != null) {
+              return Timestamp.fromMillisecondsSinceEpoch(millis);
+            }
+          } catch (e) {
+            print('❌ Error parsing numeric timestamp: $e');
+          }
+
+          // If numeric parsing fails, try custom format
           return _parseCustomDateTime(timestampData);
+        }
+      } else if (timestampData is int) {
+        // Handle integer timestamp (could be seconds or milliseconds)
+        if (timestampData > 10000000000) {
+          // Likely milliseconds
+          return Timestamp.fromMillisecondsSinceEpoch(timestampData);
+        } else {
+          // Likely seconds
+          return Timestamp.fromMillisecondsSinceEpoch(timestampData * 1000);
         }
       } else if (timestampData is Map<String, dynamic>) {
         // Handle Firestore timestamp format
         if (timestampData['_seconds'] != null) {
-          return Timestamp(timestampData['_seconds'], timestampData['_nanoseconds'] ?? 0);
+          final seconds = timestampData['_seconds'] is int
+              ? timestampData['_seconds']
+              : int.tryParse(timestampData['_seconds'].toString());
+          final nanoseconds = timestampData['_nanoseconds'] is int
+              ? timestampData['_nanoseconds'] ?? 0
+              : int.tryParse(timestampData['_nanoseconds']?.toString() ?? '0') ?? 0;
+
+          if (seconds != null) {
+            return Timestamp(seconds, nanoseconds);
+          }
         }
       }
+
+      print('⚠️ Unexpected timestamp type: ${timestampData.runtimeType}');
       return null;
     } catch (e) {
       print('❌ Error parsing timestamp: $e');
-      print('Timestamp data: $timestampData');
+      print('Timestamp data: $timestampData (type: ${timestampData.runtimeType})');
       return null;
     }
   }
 
-  static Timestamp _parseCustomDateTime(String dateString) {
+  static Timestamp? _parseCustomDateTime(String dateString) {
     try {
+      // Only try to parse if it looks like a date string
+      if (!dateString.contains(RegExp(r'[a-zA-Z]'))) {
+        return null; // Not a custom date format
+      }
+
       // Parse format like "Nov 28, 2025 12:33 PM"
       final months = {
         'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
@@ -176,7 +211,6 @@ class OrderModel {
         } else if (period.toUpperCase() == 'AM' && hour == 12) {
           hour = 0;
         }
-
         final month = months[monthStr] ?? 1;
         final dateTime = DateTime(
           int.parse(year),
@@ -185,17 +219,17 @@ class OrderModel {
           hour,
           minute,
         );
-
         return Timestamp.fromDate(dateTime);
       }
 
-      throw FormatException('Unable to parse date: $dateString');
+      print('⚠️ Unable to parse custom date format: $dateString');
+      return null;
     } catch (e) {
       print('❌ Error parsing custom date format: $e');
-      // Return current timestamp as fallback
-      return Timestamp.now();
+      return null;
     }
   }
+
   static List<TaxModel>? _parseTaxSetting(dynamic taxData) {
     if (taxData == null || taxData is! List) return null;
 
@@ -298,6 +332,7 @@ class OrderModel {
       return 0;
     }
   }
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     if (address != null) {
@@ -311,10 +346,16 @@ class OrderModel {
     data['authorID'] = authorID;
     data['estimatedTimeToPrepare'] = estimatedTimeToPrepare;
 
-    // Convert Timestamps to ISO strings - THIS IS CRITICAL
-    data['createdAt'] = createdAt?.toDate().toIso8601String();
-    data['triggerDelivery'] = triggerDelivery?.toDate().toIso8601String();
-    data['scheduleTime'] = scheduleTime?.toDate().toIso8601String();
+    // Handle Timestamps - convert to ISO strings or milliseconds
+    if (createdAt != null) {
+      data['createdAt'] = createdAt!.millisecondsSinceEpoch;
+    }
+    if (triggerDelivery != null) {
+      data['triggerDelivery'] = triggerDelivery!.millisecondsSinceEpoch;
+    }
+    if (scheduleTime != null) {
+      data['scheduleTime'] = scheduleTime!.millisecondsSinceEpoch;
+    }
 
     if (taxSetting != null) {
       data['taxSetting'] = taxSetting!.map((v) => v.toJson()).toList();
@@ -344,47 +385,4 @@ class OrderModel {
     data['rejectedByDrivers'] = rejectedByDrivers;
     return data;
   }
-  // Map<String, dynamic> toJson() {
-  //   final Map<String, dynamic> data = <String, dynamic>{};
-  //   if (address != null) {
-  //     data['address'] = address!.toJson();
-  //   }
-  //   data['status'] = status;
-  //   data['couponId'] = couponId;
-  //   data['vendorID'] = vendorID;
-  //   data['driverID'] = driverID;
-  //   data['discount'] = discount;
-  //   data['authorID'] = authorID;
-  //   data['estimatedTimeToPrepare'] = estimatedTimeToPrepare;
-  //   data['createdAt'] = createdAt;
-  //   data['triggerDelivery'] = triggerDelivery;
-  //   if (taxSetting != null) {
-  //     data['taxSetting'] = taxSetting!.map((v) => v.toJson()).toList();
-  //   }
-  //   data['payment_method'] = paymentMethod;
-  //   if (products != null) {
-  //     data['products'] = products!.map((v) => v.toJson()).toList();
-  //   }
-  //   data['adminCommissionType'] = adminCommissionType;
-  //   if (vendor != null) {
-  //     data['vendor'] = vendor!.toJson();
-  //   }
-  //   data['id'] = id;
-  //   data['adminCommission'] = adminCommission;
-  //   data['couponCode'] = couponCode;
-  //   data['specialDiscount'] = specialDiscount;
-  //   data['deliveryCharge'] = deliveryCharge;
-  //   data['scheduleTime'] = scheduleTime;
-  //   data['tip_amount'] = tipAmount;
-  //   data['notes'] = notes;
-  //   if (author != null) {
-  //     data['author'] = author!.toJson();
-  //   }
-  //   if (driver != null) {
-  //     data['driver'] = driver!.toJson();
-  //   }
-  //   data['takeAway'] = takeAway;
-  //   data['rejectedByDrivers'] = rejectedByDrivers;
-  //   return data;
-  // }
 }

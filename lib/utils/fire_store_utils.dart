@@ -59,6 +59,12 @@ import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:http/http.dart' as http;
+
+final headers = {
+  "Accept": "application/json",
+  "Content-Type": "application/json",
+  "User-Agent": "Flutter-App",
+};
 class FireStoreUtils {
   static FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
@@ -206,6 +212,7 @@ class FireStoreUtils {
   static Future<bool> updateUser(UserModel userModel) async {
     bool isUpdate = false;
     try {
+      userModel.id = userModel.firebaseId;
       print("updateUser  ${ userModel.toJson()}");
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
@@ -227,9 +234,9 @@ class FireStoreUtils {
     }
     return isUpdate;
   }
-
   static Future<bool> updateDriverUser(UserModel userModel) async {
     try {
+      userModel.id = userModel.firebaseId;
       log("updateDriverUser ${'${Constant.baseUrl}restaurant/updateUser'} ");
       log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
       log("updateDriverUser ${userModel.toJson()}");
@@ -279,6 +286,7 @@ class FireStoreUtils {
     try {
       final response = await http.get(
         Uri.parse('${Constant.baseUrl}onboarding/restaurantApp'),
+        headers: headers
       );
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
@@ -2005,12 +2013,8 @@ class FireStoreUtils {
     try {
       String vendorId = const Uuid().v4();
       vendor.id = vendorId;
-
-      // Convert VendorModel to JSON and handle GeoPoint serialization
       Map<String, dynamic> requestBody = _convertVendorToJson(vendor);
-
       log("firebaseCreateNewVendor  ${requestBody}");
-
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/vendors'),
         headers: {

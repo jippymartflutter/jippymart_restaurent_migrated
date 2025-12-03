@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -194,7 +195,8 @@ class AddRestaurantController extends GetxController {
         if (Constant.isPointInPolygon(
             selectedLocation!, selectedZone.value.area!)) {
           ShowToastDialog.showLoader("Please wait".tr);
-          filter();
+          try {
+            filter();
           // Safe number parsing with default values
           DeliveryCharge deliveryChargeModel = DeliveryCharge(
             vendorCanModify: true,
@@ -209,32 +211,63 @@ class AddRestaurantController extends GetxController {
             vendorModel.value = VendorModel();
             vendorModel.value.createdAt = Timestamp.now();
           }
-          // Upload images in parallel for better performance
           List<Future<String>> uploadFutures = [];
           List<int> uploadIndices = [];
-          
+          String userId = await FireStoreUtils.getCurrentUid();
           for (int i = 0; i < images.length; i++) {
             if (images[i].runtimeType == XFile) {
               uploadIndices.add(i);
               uploadFutures.add(
                 Constant.uploadUserImageToFireStorage(
                   File(images[i].path),
-                  "profileImage/${FireStoreUtils.getCurrentUid()}",
-                  File(images[i].path).path.split('/').last,
+                  "vendor/${userId}/restaurant",
+                  "${DateTime.now().millisecondsSinceEpoch}_${File(images[i].path).path.split('/').last}",
+                ).timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw TimeoutException('Image upload timed out after 30 seconds');
+                  },
                 ),
               );
             }
           }
-          
-          // Wait for all uploads to complete in parallel
+          // Wait for all uploads to complete in parallel with error handling
           if (uploadFutures.isNotEmpty) {
-            List<String> uploadedUrls = await Future.wait(uploadFutures);
-            // Update images list with uploaded URLs
-            for (int i = 0; i < uploadIndices.length; i++) {
-              images[uploadIndices[i]] = uploadedUrls[i];
+            try {
+              print("📤 Uploading ${uploadFutures.length} image(s)...");
+              List<String> uploadedUrls = await Future.wait(uploadFutures, eagerError: false)
+                  .timeout(
+                    const Duration(seconds: 60),
+                    onTimeout: () {
+                      throw TimeoutException('Image uploads timed out after 60 seconds');
+                    },
+                  );
+              print("✅ Successfully uploaded ${uploadedUrls.length} image(s)");
+              for (int i = 0; i < uploadIndices.length; i++) {
+                if (i < uploadedUrls.length && uploadedUrls[i].isNotEmpty) {
+                  images[uploadIndices[i]] = uploadedUrls[i];
+                }
+              }
+            } catch (uploadError) {
+              print("❌ Error uploading images: $uploadError");
+              // Don't block the save process - just show a warning
+              String errorMessage = "Some images failed to upload. Saving restaurant details without images.";
+              if (uploadError is TimeoutException) {
+                errorMessage = "Image upload timed out. Saving restaurant details without images.";
+              } else if (uploadError.toString().contains("auth") || uploadError.toString().contains("403")) {
+                errorMessage = "Image upload failed due to authentication error. Saving restaurant details without images.";
+              }
+              ShowToastDialog.showToast(errorMessage.tr);
+              for (int i = uploadIndices.length - 1; i >= 0; i--) {
+                if (images[uploadIndices[i]].runtimeType == XFile) {
+                  images.removeAt(uploadIndices[i]);
+                }
+              }
             }
           }
-          vendorModel.value.id = Constant.userModel?.vendorID;
+          if (Constant.userModel?.vendorID?.isNotEmpty == true) {
+            vendorModel.value.id = Constant.userModel?.vendorID;
+          }
           vendorModel.value.author = Constant.userModel!.id;
           vendorModel.value.authorName = Constant.userModel!.firstName;
           vendorModel.value.authorProfilePic =
@@ -282,22 +315,30 @@ class AddRestaurantController extends GetxController {
           }
           if (Constant.userModel?.vendorID?.isNotEmpty == true) {
             try {
-              final updatedVendor =
-                  await FireStoreUtils.updateVendor(vendorModel.value);
-              ShowToastDialog.closeLoader();
+              print("🔄 Updating existing vendor: ${vendorModel.value.id}");
+              final updatedVendor = await FireStoreUtils.updateVendor(vendorModel.value)
+                  .timeout(
+                    const Duration(seconds: 30),
+                    onTimeout: () {
+                      throw TimeoutException('Vendor update timed out after 30 seconds');
+                    },
+                  );
               if (updatedVendor != null) {
+                print("✅ Vendor updated successfully");
                 ShowToastDialog.showToast(
                     "Restaurant details save successfully".tr);
                 await _handleSuccessfulSave(updatedVendor);
                 Get.back(result: true);
               } else {
+                print("❌ Vendor update returned null");
                 ShowToastDialog.showToast(
                     "Failed to save restaurant details".tr);
               }
             } catch (error) {
-              ShowToastDialog.closeLoader();
+              print("❌ Error updating vendor: $error");
               ShowToastDialog.showToast(
-                  "Failed to save restaurant details".tr);
+                  "Failed to save restaurant details: ${error.toString()}".tr);
+              rethrow;
             }
           } else {
             vendorModel.value.adminCommission = Constant.adminCommission;
@@ -325,19 +366,33 @@ class AddRestaurantController extends GetxController {
                   timeslot: [Timeslot(from: '00:00', to: '23:59')])
             ];
             try {
-              final createdVendor =
-                  await FireStoreUtils.firebaseCreateNewVendor(
-                      vendorModel.value);
-              ShowToastDialog.closeLoader();
+              print("🔄 Creating new vendor...");
+              final createdVendor = await FireStoreUtils.firebaseCreateNewVendor(vendorModel.value)
+                  .timeout(
+                    const Duration(seconds: 30),
+                    onTimeout: () {
+                      throw TimeoutException('Vendor creation timed out after 30 seconds');
+                    },
+                  );
+              print("✅ Vendor created successfully with ID: ${createdVendor.id}");
               ShowToastDialog.showToast(
                   "Restaurant details save successfully".tr);
               await _handleSuccessfulSave(createdVendor);
+              if (Get.isRegistered<HomeController>()) {
+                final homeController = Get.find<HomeController>();
+                homeController.resumeOrderPolling();
+              }
               Get.back(result: true);
             } catch (error) {
-              ShowToastDialog.closeLoader();
+              print("❌ Error creating vendor: $error");
               ShowToastDialog.showToast(
-                  "Failed to save restaurant details".tr);
+                  "Failed to save restaurant details: ${error.toString()}".tr);
+              rethrow;
             }
+          }
+          } finally {
+            // Always close loader regardless of success or failure
+            ShowToastDialog.closeLoader();
           }
         } else {
           ShowToastDialog.showToast(
@@ -426,31 +481,44 @@ class AddRestaurantController extends GetxController {
 
   Future<void> _handleSuccessfulSave(VendorModel updatedVendor) async {
     try {
+      print("🔄 Handling successful save, vendor ID: ${updatedVendor.id}");
       vendorModel.value = updatedVendor;
       Constant.vendorAdminCommission =
           updatedVendor.adminCommission ?? Constant.vendorAdminCommission;
+      
+      // Refresh user profile to get the latest vendor ID
       final userId = await FireStoreUtils.getCurrentUid();
       final refreshedUser = await FireStoreUtils.getUserProfile(userId);
       if (refreshedUser != null) {
         Constant.userModel = refreshedUser;
         userModel.value = refreshedUser;
+        print("✅ User profile refreshed, vendor ID: ${refreshedUser.vendorID}");
+      } else {
+        print("⚠️ Warning: User profile refresh returned null");
       }
 
+      // Update HomeController if registered
       if (Get.isRegistered<HomeController>()) {
         final homeController = Get.find<HomeController>();
         if (refreshedUser != null) {
           homeController.userModel.value = refreshedUser;
         }
         homeController.vendermodel.value = updatedVendor;
+        // Start fetching orders if vendor ID is now available
+        if (refreshedUser?.vendorID != null && refreshedUser!.vendorID!.isNotEmpty) {
+          print("🔄 Starting order fetch for vendor: ${refreshedUser.vendorID}");
+          homeController.resumeOrderPolling();
+        }
         homeController.update();
       }
 
+      // Update ProductListController if registered
       if (Get.isRegistered<ProductListController>()) {
         final productListController = Get.find<ProductListController>();
         await productListController.getUserProfile();
       }
     } catch (e) {
-      print("_handleSuccessfulSave error $e");
+      print("❌ _handleSuccessfulSave error: $e");
     }
   }
 }
