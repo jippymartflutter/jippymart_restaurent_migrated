@@ -178,7 +178,10 @@ class AddRestaurantController extends GetxController {
         ShowToastDialog.showToast("Please enter Description".tr);
       } else if (mobileNumberController.value.text.isEmpty) {
         ShowToastDialog.showToast("Please enter phone number".tr);
-      } else if (addressController.value.text.isEmpty) {
+      } else if (mobileNumberController.value.text.length!=10) {
+        ShowToastDialog.showToast("Mobile number must be 10".tr);
+      }
+      else if (addressController.value.text.isEmpty) {
         ShowToastDialog.showToast("Please enter address".tr);
       } else if (selectedZone.value.id == null) {
         ShowToastDialog.showToast("Please select zone".tr);
@@ -272,7 +275,6 @@ class AddRestaurantController extends GetxController {
           vendorModel.value.authorName = Constant.userModel!.firstName;
           vendorModel.value.authorProfilePic =
               Constant.userModel!.profilePictureURL;
-
           vendorModel.value.categoryID =
               selectedCategories.map((e) => e.id ?? '').toList();
           vendorModel.value.categoryTitle =

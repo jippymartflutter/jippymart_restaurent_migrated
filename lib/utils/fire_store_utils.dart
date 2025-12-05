@@ -669,7 +669,6 @@ class FireStoreUtils {
     bool isUpdate = false;
     try {
       log(" updateOrder ${orderModel.toJson()} ");
-
       // Convert the entire model to JSON and handle any remaining Timestamps
       Map<String, dynamic> orderJson = _convertTimestampsToJson(orderModel.toJson());
 
@@ -1700,16 +1699,18 @@ class FireStoreUtils {
   static Future<List<DocumentModel>> getDocumentList() async {
     List<DocumentModel> documentList = [];
     try {
+      String url = '${Constant.baseUrl}documents';
+      print(" getDocumentList  $url");
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}documents'),
+        Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
       );
+      print(" getDocumentList  ${response.body}");
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         if (responseData['success'] == true && responseData['data'] != null) {
           List<dynamic> documentsData = responseData['data'];
           for (var element in documentsData) {
-            // Apply filters: type == "restaurant" and enable == 1 (true)
             if (element['type'] == "restaurant" && element['enable'] == 1) {
               DocumentModel documentModel = DocumentModel.fromJson(element);
               documentList.add(documentModel);
@@ -1727,36 +1728,42 @@ class FireStoreUtils {
 
   static Future<DriverDocumentModel?> getDocumentOfDriver() async {
     try {
-
-      final response = await http.get(
-        Uri.parse('${Constant.baseUrl}documents/driver'),
+      String? userId = await getFirebaseId();
+   String url =    '${Constant.baseUrl}documents/driver';
+      print("getDocumentOfDriver userId: $userId  $url");
+      final response = await http.post(
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          "userId": userId,
+        }),
       );
+      print("API Status Code: ${response.statusCode}");
+      print("API Response: ${response.body}");
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
         if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
-          DriverDocumentModel driverDocumentModel = DriverDocumentModel.fromJson(jsonResponse['data']);
-          return driverDocumentModel;
+          return DriverDocumentModel.fromJson(jsonResponse['data']);
         } else if (jsonResponse['success'] == true && jsonResponse['data'] == null) {
           print('No document found for driver');
           return null;
         } else {
-          throw Exception('API returned unsuccessful response: ${jsonResponse['message']}');
+          throw Exception('API unsuccessful: ${jsonResponse['message']}');
         }
       } else if (response.statusCode == 404) {
-        // Document not found
         print('Driver document not found (404)');
         return null;
       } else {
-        throw Exception('Failed to load driver document: ${response.statusCode}');
+        throw Exception('Failed with status: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching driver document: $e');
       return null;
     }
   }
+
 
   static Future<InboxModel> addRestaurantInbox(InboxModel inboxModel) async {
     try {
@@ -1854,34 +1861,45 @@ class FireStoreUtils {
         'POST',
         Uri.parse('${Constant.baseUrl}documents/driver/upload'),
       );
-
-      request.fields['userId'] = userId;
+      // === IMPORTANT: Use backend-expected field names ===
+      request.fields['user_id'] = userId;
       request.fields['documentId'] = documents.documentId ?? '';
       request.fields['status'] = documents.status ?? '';
       request.fields['type'] = 'restaurant';
-
-      // FRONT IMAGE
+      // === FRONT IMAGE FILE ===
       if (documents.frontImage != null &&
           documents.frontImage!.isNotEmpty &&
           !documents.frontImage!.startsWith('http')) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'frontImage',
-          documents.frontImage!,
-        ));
+        final file = File(documents.frontImage!);
+        print("Front exists: ${file.existsSync()} / Size: ${file.lengthSync()}");
+        if (file.existsSync() && file.lengthSync() > 0) {
+          request.files.add(await http.MultipartFile.fromPath(
+            'front_image',   // <-- CHANGE TO MATCH LARAVEL
+            documents.frontImage!,
+          ));
+        }
       }
 
-      // BACK IMAGE
+      // === BACK IMAGE FILE ===
       if (documents.backImage != null &&
           documents.backImage!.isNotEmpty &&
           !documents.backImage!.startsWith('http')) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'backImage',
-          documents.backImage!,
-        ));
+        final file = File(documents.backImage!);
+        print("Back exists: ${file.existsSync()} / Size: ${file.lengthSync()}");
+        if (file.existsSync() && file.lengthSync() > 0) {
+          request.files.add(await http.MultipartFile.fromPath(
+            'back_image',    // <-- CHANGE TO MATCH LARAVEL
+            documents.backImage!,
+          ));
+        }
       }
-
+      // SEND REQUEST
       var response = await request.send();
       print("📤 uploadDriverDocument Status: ${response.statusCode}");
+
+      // READ RESPONSE BODY
+      final respStr = await response.stream.bytesToString();
+      print("📥 Response Body: $respStr");
 
       isAdded = response.statusCode == 200;
     } catch (e) {
@@ -1890,6 +1908,7 @@ class FireStoreUtils {
 
     return isAdded;
   }
+
 
   // static Future<bool> uploadDriverDocument(Documents documents) async {
   //   String userId = await FireStoreUtils.getCurrentUid(); // FIXED
@@ -3102,14 +3121,19 @@ class FireStoreUtils {
 
   static Future<void> updateCategoryIsActive(String categoryId, bool isActive) async {
     try {
+      print("updateCategoryIsActive ${isActive}");
+      String url  = '${Constant.baseUrl}restaurant/vendor-categories/$categoryId/active';
+          // 'restaurant/categories/$categoryId/products-availability'
+      // ;
+      print("updateCategoryIsActive $url vendorID ${Constant.userModel!.vendorID}  isAvailable ${isActive ? 1 : 0}");
       final response = await http.put(
-        Uri.parse('${Constant.baseUrl}restaurant/categories/$categoryId/products-availability'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'vendorID': Constant.userModel!.vendorID, // Assuming you have vendorID in user model
-          'isAvailable': isActive ? 1 : 0, // Convert bool to int (1 for true, 0 for false)
+          // 'vendorID': Constant.userModel!.vendorID, // Assuming you have vendorID in user model
+          'isActive': isActive , // Convert bool to int (1 for true, 0 for false)
         }),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {

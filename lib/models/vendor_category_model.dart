@@ -7,7 +7,6 @@ class VendorCategoryModel {
   String? id;
   String? title;
   bool? isActive;
-
   VendorCategoryModel({
     this.reviewAttributes,
     this.photo,
@@ -16,7 +15,6 @@ class VendorCategoryModel {
     this.title,
     this.isActive,
   });
-
   VendorCategoryModel.fromJson(Map<String, dynamic> json) {
     reviewAttributes = json['review_attributes'] is String
         ? jsonDecode(json['review_attributes'])
@@ -27,7 +25,6 @@ class VendorCategoryModel {
     title = json['title'] ?? "";
     isActive = json['isActive'] == 1 || json['isActive'] == true;
   }
-
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['review_attributes'] = reviewAttributes;

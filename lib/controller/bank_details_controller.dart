@@ -34,13 +34,15 @@ class BankDetailsController extends GetxController {
         holderNameController.value.text;
     userModel.value.userBankDetails!.otherDetails =
         otherInfoController.value.text;
-
     await FireStoreUtils.updateUser(userModel.value).then(
       (value) {
         ShowToastDialog.closeLoader();
         Get.back();
+        Get.back();
       },
     );
+
+
   }
 
   getCurrentUser() async {

@@ -148,7 +148,7 @@ class ProductListScreen extends StatelessWidget {
               backgroundColor: ColorConst.orange,
               centerTitle: false,
               title: Text(
-                "Manage Products".tr,
+                "Manage Productsdd".tr,
                 style: TextStyle(
                     color: themeChange.getThem()
                         ? AppThemeData.grey50
@@ -417,7 +417,6 @@ class ProductListScreen extends StatelessWidget {
             )
                 : Column(
               children: [
-                // Category selector
                 SizedBox(
                   height: 48,
                   child: ListView.builder(
@@ -472,7 +471,7 @@ class ProductListScreen extends StatelessWidget {
                               ),
                               Switch(
                                 value: isActive,
-                                onChanged: (_) => controller.toggleCategoryActive(index - 1),
+                                onChanged: (_) => controller.toggleCategoryActive(index -1,),
                                 activeColor: AppThemeData.secondary300,
                                 thumbColor: MaterialStatePropertyAll(Colors.white),
                                 trackColor: MaterialStatePropertyAll(Color(0xFFE74C3C)),

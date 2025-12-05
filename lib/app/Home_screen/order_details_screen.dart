@@ -514,7 +514,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                             Text(
                                               Constant.timestampToDateTime(
                                                       controller.orderModel
-                                                          .value.scheduleTime!)
+                                                          .value.scheduleTime!,)
                                                   .tr,
                                               style: TextStyle(
                                                 color: themeChange.getThem()

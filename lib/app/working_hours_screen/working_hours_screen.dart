@@ -155,7 +155,7 @@ class WorkingHoursScreen extends StatelessWidget {
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
-                                                                    Constant().formatTime(controller
+                                                                    controller
                                                                         .workingHours[
                                                                     index]
                                                                         .timeslot![
@@ -164,7 +164,7 @@ class WorkingHoursScreen extends StatelessWidget {
                                                                         .isEmpty
                                                                         ? 'Start Time'
                                                                         .tr
-                                                                        : controller
+                                                                        : Constant().formatTime(controller
                                                                         .workingHours[
                                                                     index]
                                                                         .timeslot![
@@ -314,7 +314,7 @@ class WorkingHoursScreen extends StatelessWidget {
                                                               children: [
                                                                 Expanded(
                                                                   child: Text(
-                                      Constant().formatTime(  controller
+                                                                    controller
                                                                         .workingHours[
                                                                     index]
                                                                         .timeslot![
@@ -323,7 +323,7 @@ class WorkingHoursScreen extends StatelessWidget {
                                                                         .isEmpty
                                                                         ? 'End Time'
                                                                         .tr
-                                                                        : controller
+                                                                        : Constant().formatTime(controller
                                                                         .workingHours[
                                                                     index]
                                                                         .timeslot![

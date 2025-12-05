@@ -246,100 +246,55 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                     const SizedBox(
                                       height: 5,
                                     ),
-                                    SafeArea(
-                                      child: DropdownButtonFormField<VendorCategoryModel>(
-                                          hint: Text(
-                                            'Select Product Categories'.tr,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.grey700
-                                                  : AppThemeData.grey700,
-                                              fontFamily: AppThemeData.regular,
-                                            ),
-                                          ),
-                                          icon: const Icon(Icons.keyboard_arrow_down),
-                                          decoration: InputDecoration(
-                                            errorStyle:
-                                                const TextStyle(color: Colors.red),
-                                            isDense: true,
-                                            filled: true,
-                                            fillColor: themeChange.getThem()
-                                                ? AppThemeData.grey900
-                                                : AppThemeData.grey50,
-                                            disabledBorder: UnderlineInputBorder(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.grey900
-                                                      : AppThemeData.grey50,
-                                                  width: 1),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.secondary300
-                                                      : AppThemeData.secondary300,
-                                                  width: 1),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.grey900
-                                                      : AppThemeData.grey50,
-                                                  width: 1),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.grey900
-                                                      : AppThemeData.grey50,
-                                                  width: 1),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius: const BorderRadius.all(
-                                                  Radius.circular(10)),
-                                              borderSide: BorderSide(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.grey900
-                                                      : AppThemeData.grey50,
-                                                  width: 1),
-                                            ),
-                                          ),
-                                          value: controller.selectedProductCategory
-                                                      .value.id ==
-                                                  null
-                                              ? null
-                                              : controller
-                                                  .selectedProductCategory.value,
-                                          onChanged: (value) {
-                                            controller.selectedProductCategory.value =
-                                                value!;
-                                            controller.update();
-                                          },
-                                          style: TextStyle(
-                                              fontSize: 14,
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.grey50
-                                                  : AppThemeData.grey900,
-                                              fontFamily: AppThemeData.medium),
-                                          items:
-                                              controller.vendorCategoryList.map((item) {
-                                            return DropdownMenuItem<
-                                                VendorCategoryModel>(
-                                              value: item,
-                                              child: Text(item.title.toString()),
-                                            );
-                                          }).toList()),
-                                    ),
-                                    const SizedBox(
+                        SafeArea(
+                          child: DropdownSearch<VendorCategoryModel>(
+                            popupProps: PopupProps.menu(
+                              showSearchBox: true,
+                              searchFieldProps: TextFieldProps(
+                                decoration: InputDecoration(
+                                  hintText: "Search Category",
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                              itemBuilder: (context, item, isSelected) {
+                                return ListTile(
+                                  title: Text(item.title ?? ""),
+                                );
+                              },
+                            ),
+
+                            items: controller.vendorCategoryList,
+
+                            // 🔥 FIX: Show text instead of instance
+                            itemAsString: (VendorCategoryModel item) => item.title ?? "",
+
+                            selectedItem: controller.selectedProductCategory.value.id == null
+                                ? null
+                                : controller.selectedProductCategory.value,
+
+                            dropdownDecoratorProps: DropDownDecoratorProps(
+                              dropdownSearchDecoration: InputDecoration(
+                                hintText: "Select Product Categories",
+                                filled: true,
+                                fillColor: themeChange.getThem()
+                                    ? AppThemeData.grey900
+                                    : AppThemeData.grey50,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+
+                            onChanged: (value) {
+                              controller.selectedProductCategory.value = value!;
+                              controller.update();
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(
                                       height: 10,
                                     ),
                                   ],

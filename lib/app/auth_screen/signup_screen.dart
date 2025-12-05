@@ -133,8 +133,7 @@ class SignupScreen extends StatelessWidget {
                       textInputAction: TextInputAction.done,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp('[0-9]')),
-                      ],
-                                            prefix: Container(
+                      ],  prefix: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -276,9 +275,11 @@ class SignupScreen extends StatelessWidget {
                             ShowToastDialog.showToast("Please enter last name".tr);
                           } else if (controller.emailEditingController.value.text.trim().isEmpty) {
                             ShowToastDialog.showToast("Please enter valid email".tr);
-                          } else if (controller.phoneNUmberEditingController.value.text.trim().isEmpty) {
+                          } else if (controller.phoneNUmberEditingController.value.text.trim().isEmpty ) {
                             ShowToastDialog.showToast("Please enter phone number".tr);
-                          } else {
+                          } else if (controller.phoneNUmberEditingController.value.text.length !=10) {
+                            ShowToastDialog.showToast("Number Must Be 10".tr);
+                          }else {
                             controller.signUpWithEmailAndPassword();
                           }
                         } else {

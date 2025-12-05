@@ -127,7 +127,6 @@ class AppUpdateService {
   static String getPlatformUpdateUrl(Map<String, dynamic> versionInfo) {
     String platformUrl = '';
     if (Platform.isAndroid) {
-      // Check if android_update_url is a valid URL (not a placeholder)
       String androidUrl = versionInfo['android_update_url'] ?? '';
       if (androidUrl.isNotEmpty && 
           androidUrl != "update_url" && 
@@ -142,7 +141,6 @@ class AppUpdateService {
       print('[UPDATE DEBUG]   android_update_url from Firestore: "${versionInfo['android_update_url']}"');
       print('[UPDATE DEBUG]   update_url from Firestore: "${versionInfo['update_url']}"');
     } else if (Platform.isIOS) {
-      // Check if ios_update_url is a valid URL (not a placeholder)
       String iosUrl = versionInfo['ios_update_url'] ?? '';
       if (iosUrl.isNotEmpty && 
           iosUrl != "update_url" && 
@@ -165,12 +163,10 @@ class AppUpdateService {
     return platformUrl;
   }
 
-
   static Future<Map<String, dynamic>?> getLatestVersionInfo() async {
     try {
       print('[UPDATE DEBUG] Fetching version info from API...');
       print('[UPDATE DEBUG] Endpoint: {{baseURL}}restaurant/version');
-
       final response = await http.get(
         Uri.parse('${Constant.baseUrl}restaurant/version'),
         headers: {

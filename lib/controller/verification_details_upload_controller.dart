@@ -71,12 +71,10 @@ class DetailsUploadController extends GetxController {
   }
   uploadDocument() async {
     try {
-      // Update document data directly
       documents.value.frontImage = frontImage.value;
       documents.value.backImage = backImage.value;
       documents.value.documentId = documentModel.value.id;
       documents.value.status = "uploaded";
-
       print('------------ Document Upload Debug Log ------------');
       print('User ID      : ${FireStoreUtils.getCurrentUid()}');
       print('documentId   : ${documents.value.documentId}');
@@ -85,20 +83,22 @@ class DetailsUploadController extends GetxController {
       print('backImage    : ${documents.value.backImage}');
       print('--------------------------------------------------');
 
-      await FireStoreUtils.uploadDriverDocument(documents.value).then((value) {
-        if (value) {
-          ShowToastDialog.closeLoader();
-          ShowToastDialog.showToast("Document upload successfully".tr);
-          Get.back(result: true);
-        } else {
-          ShowToastDialog.closeLoader();
-          ShowToastDialog.showToast("Upload failed");
-        }
-      });
+      ShowToastDialog.showLoader("Please wait...");
+
+      bool result = await FireStoreUtils.uploadDriverDocument(documents.value);
+
+      ShowToastDialog.closeLoader();
+
+      if (result) {
+        ShowToastDialog.showToast("Document uploaded successfully");
+        Get.back(result: true);
+      } else {
+        ShowToastDialog.showToast("Upload failed — check server logs");
+      }
     } catch (e) {
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast("Error uploading document: $e");
-      print('Error in uploadDocument: $e');
+      print('❌ Error in uploadDocument: $e');
     }
   }
 

@@ -34,7 +34,6 @@ class ProductListController extends GetxController {
   RxList<ProductModel> productList = <ProductModel>[].obs;
   RxList<VendorCategoryModel> categoryList = <VendorCategoryModel>[].obs;
   Rx<VendorCategoryModel?> selectedCategory = Rx<VendorCategoryModel?>(null);
-
   Future<void> getProduct() async {
     await FireStoreUtils.getProduct().then(
       (value) {
@@ -45,7 +44,6 @@ class ProductListController extends GetxController {
     );
     await refreshCategoriesWithProducts();
   }
-
   Future<void> refreshCategoriesWithProducts() async {
     final categories = await FireStoreUtils.getVendorCategoryById();
     if (categories != null) {
@@ -89,7 +87,6 @@ class ProductListController extends GetxController {
     productList.removeAt(index);
     update();
   }
-
   List<ProductModel> get filteredProductList {
     if (selectedCategory.value == null) {
       return productList;
@@ -100,9 +97,11 @@ class ProductListController extends GetxController {
     }
   }
 
+
   Future<void> toggleCategoryActive(int index) async {
     final category = categoryList[index];
     final newStatus = !(category.isActive ?? true);
+    print("toggleCategoryActive $index");
     categoryList[index] = VendorCategoryModel(
       reviewAttributes: category.reviewAttributes,
       photo: category.photo,
@@ -113,9 +112,45 @@ class ProductListController extends GetxController {
     );
     update();
     await FireStoreUtils.updateCategoryIsActive(category.id!, newStatus);
-    // Set all products in this category to available/unavailable based on newStatus
     await FireStoreUtils.setAllProductsAvailabilityForCategory(category.id!, newStatus);
-    await getProduct(); // Refresh product list
-    getCategories(); // Refresh list from Firestore
+    await getProduct();
+       getCategories();
+    update();
   }
+  // Future<void> toggleCategoryActive(int index) async {
+  //   final category = categoryList[index];
+  //   final newStatus = !(category.isActive ?? true);
+  //   print("toggleCategoryActive ${newStatus} ");
+  //   // Update category in local list immediately
+  //   categoryList[index] = VendorCategoryModel(
+  //     reviewAttributes: category.reviewAttributes,
+  //     photo: category.photo,
+  //     description: category.description,
+  //     id: category.id,
+  //     title: category.title,
+  //     isActive: newStatus,
+  //   );
+  //   // for (var product in productList) {
+  //   //   if (product.categoryID == category.id) {
+  //   //     product.isAvailable = newStatus;
+  //   //   }
+  //   // }
+  //   productList.value = List.from(productList);
+  //   update();
+  //   try {
+  //     // Sync with server
+  //     await FireStoreUtils.updateCategoryIsActive(category.id!, newStatus);
+  //     await FireStoreUtils.setAllProductsAvailabilityForCategory(category.id!, newStatus);
+  //     await Future.delayed(Duration(milliseconds: 500));
+  //     await getProduct();
+  //     getCategories();
+  //   } catch (e) {
+  //     print('Error toggling category active: $e');
+  //     // Revert local changes on error
+  //     categoryList[index] = category;
+  //     await getProduct(); // Refresh to get correct state from server
+  //     getCategories();
+  //     rethrow;
+  //   }
+  // }
 }

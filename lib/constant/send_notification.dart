@@ -11,20 +11,17 @@ import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
 class SendNotification {
   static final _scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
-
   static Future getCharacters() {
     return http.get(Uri.parse(Constant.jsonNotificationFileURL.toString()));
   }
 
   static Future<String> getAccessToken() async {
     Map<String, dynamic> jsonData = {};
-
     await getCharacters().then((response) {
       jsonData = json.decode(response.body);
     });
     final serviceAccountCredentials =
         ServiceAccountCredentials.fromJson(jsonData);
-
     final client =
         await clientViaServiceAccount(serviceAccountCredentials, _scopes);
     return client.credentials.accessToken.data;

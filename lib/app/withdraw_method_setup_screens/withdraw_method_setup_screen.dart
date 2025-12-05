@@ -1394,7 +1394,6 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                         .then(
                       (value) async {
                         ShowToastDialog.showLoader("Please wait..".tr);
-
                         await controller.getPaymentMethod();
                         ShowToastDialog.closeLoader();
                         ShowToastDialog.showToast(

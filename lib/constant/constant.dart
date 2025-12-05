@@ -30,8 +30,8 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 class Constant {
-  // static String baseUrl  = "http://192.168.0.125:8000/api/";
-  static String baseUrl = "https://web.jippymart.in/api/";
+  static String baseUrl  = "http://192.168.0.126:8000/api/";
+  // static String baseUrl = "https://web.jippymart.in/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
   static String userRoleVendor = 'vendor';
@@ -57,11 +57,9 @@ class Constant {
   static String? referralAmount = "0.0";
   static String? selectedMapType = "google";
   static bool? storyEnable = true;
-
   static bool? autoApproveRestaurant = true;
   static bool isSubscriptionModelApplied =
       false; //Check SubscriptionModel is Active or Not in the Admin Panel.
-
   static bool isRestaurantVerification = false;
   static bool isDineInEnable = false;
   static bool specialDiscountOfferEnable = false;
@@ -211,8 +209,13 @@ class Constant {
   }
   String formatTime(String time) {
     if (time.isEmpty) return "";
-    DateTime dt = DateFormat("HH:mm").parse(time); // backend format
-    return DateFormat("h:mm a").format(dt);        // UI format  → 6:30 PM
+    try {
+      DateTime dt = DateFormat("HH:mm").parse(time); // backend format
+      return DateFormat("h:mm a").format(dt);        // UI format  → 6:30 PM
+    } catch (e) {
+      // If parsing fails, return empty string or original time
+      return "";
+    }
   }
   static Widget loader() {
     return Center(

@@ -33,7 +33,6 @@ class AdminInboxScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Admin Chat Inbox".tr),

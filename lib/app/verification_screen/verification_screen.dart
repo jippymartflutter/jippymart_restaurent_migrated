@@ -95,7 +95,6 @@ class VerificationScreen extends StatelessWidget {
                                 DocumentModel documentModel =
                                     controller.documentList[index];
                                 Documents documents = Documents();
-
                                 var contain = controller.driverDocumentList
                                     .where((element) =>
                                         element.documentId == documentModel.id);
