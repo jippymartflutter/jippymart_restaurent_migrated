@@ -3182,20 +3182,18 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 ShowToastDialog.showLoader('Please wait...'.tr);
                                 orderModel.estimatedTimeToPrepare = controller.estimatedTimeController.value.text;
                                 orderModel.status = Constant.orderAccepted;
+                                // Play sound (quick operation)
                                 await AudioPlayerService.playSound(false);
-                                await FireStoreUtils.updateOrder(orderModel);
-                                await FireStoreUtils.restaurantVendorWalletSet(orderModel);
-                                ///this for Driver
-                                // Broadcast order to drivers within admin-set radius
+                                // Get driver radius in parallel with other operations
                                 double radius = Constant.driverSearchRadius ?? 5.0;
+                                Future<void> radiusFuture = Future.value();
                                 if (Constant.driverSearchRadius == null) {
-                                  try {
-                                    final response = await http.get(
-                                      Uri.parse('${Constant.baseUrl}restaurant/GetDriverNearBy'),
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                      },
-                                    );
+                                  radiusFuture = http.get(
+                                    Uri.parse('${Constant.baseUrl}restaurant/GetDriverNearBy'),
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                  ).then((response) {
                                     if (response.statusCode == 200) {
                                       final data = json.decode(response.body);
                                       if (data['success'] == true) {
@@ -3203,41 +3201,67 @@ print("acceptedWidget ${orderModel.vendorID}");
                                         Constant.driverSearchRadius = radius;
                                       }
                                     } else {
-                                      // Fallback to default radius if API call fails
                                       radius = 5.0;
                                       Constant.driverSearchRadius = radius;
                                     }
-                                  } catch (e) {
+                                  }).catchError((e) {
                                     print('Error fetching driver radius: $e');
-                                    // Fallback to default radius if API call fails
                                     radius = 5.0;
                                     Constant.driverSearchRadius = radius;
-                                  }
+                                  });
                                 }
+                                
+                                // Update order and wallet in parallel
+                                final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
+                                final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
+                                
+                                // Wait for radius and order/wallet updates
+                                await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
+                                
+                                ///this for Driver
+                                // Broadcast order to drivers within admin-set radius
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
+                                
+                                // Get available drivers
                                 List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
+                                
+                                // Filter eligible drivers based on distance
                                 List<UserModel> eligibleDrivers = allDrivers.where((driver) {
                                   if (driver.location == null ||
                                       driver.location!.latitude == null ||
                                       driver.location!.longitude == null) {
-                                    return
-                                      false;
+                                    print("Driver ${driver.firebaseId} filtered: No location data");
+                                    return false;
                                   }
                                   final double driverLat = driver.location!.latitude!;
                                   final double driverLng = driver.location!.longitude!;
                                   double distance = Geolocator.distanceBetween(
                                       restaurantLat, restaurantLng, driverLat, driverLng) /
                                       1000; // km
-                                  return distance <= radius;
-                                }).toList();
-                                for (var driver in eligibleDrivers) {
-                                  driver.orderRequestData ??= [];
-                                  if (!driver.orderRequestData!.contains(orderModel.id)) {
-                                    driver.orderRequestData!.add(orderModel.id);
-                                    await FireStoreUtils.updateDriverUser(driver);
+                                  bool isEligible = distance <= radius;
+                                  if (!isEligible) {
+                                    print("Driver ${driver.firebaseId} (${driver.firstName} ${driver.lastName}) filtered: Distance ${distance.toStringAsFixed(2)}km exceeds radius ${radius}km");
                                   }
+                                  return isEligible;
+                                }).toList();
+                                print("Total drivers: ${allDrivers.length}, Eligible drivers: ${eligibleDrivers.length}, Radius: ${radius}km");
+                                // OPTIMIZATION: Update all drivers in parallel instead of sequentially
+                                if (eligibleDrivers.isNotEmpty) {
+                                  List<Future<bool>> driverUpdateFutures = [];
+                                  for (var driver in eligibleDrivers) {
+                                    driver.orderRequestData ??= [];
+                                    if (!driver.orderRequestData!.contains(orderModel.id)) {
+                                      driver.orderRequestData!.add(orderModel.id);
+                                      // Add update future without awaiting
+                                      driverUpdateFutures.add(FireStoreUtils.updateDriverUser(driver));
+                                    }
+                                  }
+                                  // Wait for all driver updates to complete in parallel
+                                  await Future.wait(driverUpdateFutures);
                                 }
+                                
+                                // Send notification (non-blocking, don't wait for it)
                                 if (orderModel.author?.fcmToken != null &&
                                     orderModel.author!.fcmToken!.isNotEmpty) {
                                   SendNotification.sendFcmMessage(
@@ -3246,6 +3270,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     {},
                                   );
                                 }
+                                
                                 ShowToastDialog.closeLoader();
                                 Get.back();
                               }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductModel {
@@ -58,6 +60,7 @@ class ProductModel {
     this.createdAt,
     this.isAvailable,
   });
+
   ProductModel.fromJson(Map<String, dynamic> json) {
     fats = json['fats'];
     vendorID = json['vendorID'];
@@ -69,41 +72,26 @@ class ProductModel {
     takeawayOption = _convertToBool(json['takeawayOption']);
     isAvailable = _convertToBool(json['isAvailable']);
 
-    addOnsTitle = json['addOnsTitle'] != null ? List<String>.from(json['addOnsTitle']) : [];
+    // FIX: Handle Firestore arrayValue format for addOnsTitle
+    addOnsTitle = _extractArrayFromFirestore(json['addOnsTitle']) ?? [];
+
     calories = json['calories'];
     proteins = json['proteins'];
-    addOnsPrice = json['addOnsPrice'] != null ? List<String>.from(json['addOnsPrice']) : [];
+
+    // FIX: Handle Firestore arrayValue format for addOnsPrice
+    addOnsPrice = _extractArrayFromFirestore(json['addOnsPrice']) ?? [];
+
     reviewsSum = json['reviewsSum'] ?? 0.0;
     name = json['name'];
-    reviewAttributes = json['reviewAttributes'];
 
-    // FIX: Handle product_specification that can be either List or Map
-    if (json['product_specification'] != null) {
-      if (json['product_specification'] is Map) {
-        productSpecification = Map<String, dynamic>.from(json['product_specification']);
-      } else if (json['product_specification'] is List) {
-        // If it's a list, convert to empty map or handle as needed
-        productSpecification = {};
-      } else {
-        productSpecification = {};
-      }
-    } else {
-      productSpecification = {};
-    }
+    // FIX: Handle reviewAttributes that might be a String (JSON) instead of Map
+    reviewAttributes = _parseJsonField(json['reviewAttributes']);
 
-    // FIX: Handle item_attribute that can be either List or Map
-    if (json['item_attribute'] != null) {
-      if (json['item_attribute'] is Map) {
-        itemAttribute = ItemAttribute.fromJson(json['item_attribute']);
-      } else if (json['item_attribute'] is List) {
-        // If it's a list, create empty ItemAttribute
-        itemAttribute = ItemAttribute(attributes: [], variants: []);
-      } else {
-        itemAttribute = null;
-      }
-    } else {
-      itemAttribute = null;
-    }
+    // FIX: Handle product_specification that can be either List or Map or String
+    productSpecification = _parseJsonField(json['product_specification']) ?? {};
+
+    // FIX: Handle item_attribute that can be either List or Map or String
+    itemAttribute = _parseItemAttribute(json['item_attribute']);
 
     id = json['id'];
     quantity = json['quantity'];
@@ -113,7 +101,9 @@ class ProductModel {
     // Fix: Convert disPrice to string
     disPrice = _convertToString(json['disPrice']) ?? "0";
 
-    photos = json['photos'] ?? [];
+    // FIX: Handle Firestore arrayValue format for photos
+    photos = _extractArrayFromFirestore(json['photos']) ?? [];
+
     photo = json['photo'];
 
     // Fix: Convert price to string
@@ -146,73 +136,152 @@ class ProductModel {
       }
     }
   }
-  // ProductModel.fromJson(Map<String, dynamic> json) {
-  //   fats = json['fats'];
-  //   vendorID = json['vendorID'];
-  //
-  //   // Handle boolean fields that might come as integers (0/1)
-  //   veg = _convertToBool(json['veg']);
-  //   publish = _convertToBool(json['publish']);
-  //   nonveg = _convertToBool(json['nonveg']);
-  //   takeawayOption = _convertToBool(json['takeawayOption']);
-  //   isAvailable = _convertToBool(json['isAvailable']);
-  //
-  //   addOnsTitle = json['addOnsTitle'] != null ? List<String>.from(json['addOnsTitle']) : [];
-  //   calories = json['calories'];
-  //   proteins = json['proteins'];
-  //   addOnsPrice = json['addOnsPrice'] != null ? List<String>.from(json['addOnsPrice']) : [];
-  //   reviewsSum = json['reviewsSum'] ?? 0.0;
-  //   name = json['name'];
-  //   reviewAttributes = json['reviewAttributes'];
-  //   productSpecification = json['product_specification'];
-  //   itemAttribute = json['item_attribute'] != null && json['item_attribute'] is Map
-  //       ? ItemAttribute.fromJson(json['item_attribute'])
-  //       : null;
-  //   id = json['id'];
-  //   quantity = json['quantity'];
-  //   grams = json['grams'];
-  //   reviewsCount = json['reviewsCount'] ?? 0.0;
-  //
-  //   // Fix: Convert disPrice to string
-  //   disPrice = _convertToString(json['disPrice']) ?? "0";
-  //
-  //   photos = json['photos'] ?? [];
-  //   photo = json['photo'];
-  //
-  //   // Fix: Convert price to string
-  //   price = _convertToString(json['price']);
-  //
-  //   categoryID = json['categoryID'];
-  //   description = json['description'];
-  //
-  //   // Handle createdAt field - support multiple formats
-  //   if (json['createdAt'] != null) {
-  //     if (json['createdAt'] is int) {
-  //       // If it's milliseconds since epoch
-  //       createdAt = Timestamp.fromMillisecondsSinceEpoch(json['createdAt']);
-  //     } else if (json['createdAt'] is Map) {
-  //       // If it's Firestore Timestamp format
-  //       final timestampData = json['createdAt'];
-  //       createdAt = Timestamp(
-  //         timestampData['seconds'] ?? 0,
-  //         timestampData['nanoseconds'] ?? 0,
-  //       );
-  //     } else if (json['createdAt'] is String) {
-  //       // If it's ISO string format
-  //       try {
-  //         final date = DateTime.parse(json['createdAt']);
-  //         createdAt = Timestamp.fromDate(date);
-  //       } catch (e) {
-  //         createdAt = null;
-  //       }
-  //     } else {
-  //       // If it's already a Timestamp (shouldn't happen in JSON)
-  //       createdAt = json['createdAt'];
-  //     }
-  //   }
-  // }
 
-// Helper method to convert various types to boolean
+  // Helper method to parse JSON fields that might be strings
+  Map<String, dynamic>? _parseJsonField(dynamic value) {
+    if (value == null) return null;
+
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    } else if (value is String) {
+      // Try to parse the JSON string
+      try {
+        final parsedJson = jsonDecode(value);
+        if (parsedJson is Map) {
+          return Map<String, dynamic>.from(parsedJson);
+        } else {
+          return {};
+        }
+      } catch (e) {
+        // If parsing fails, use empty map
+        return {};
+      }
+    } else if (value is List) {
+      // If it's a list, return empty map
+      return {};
+    } else {
+      return {};
+    }
+  }
+
+  ItemAttribute? _parseItemAttribute(dynamic value) {
+    if (value == null) return null;
+
+    try {
+      final extractedValue = _extractValueFromFirestoreFormat(value);
+
+      if (extractedValue == null) {
+        return ItemAttribute(attributes: [], variants: []);
+      }
+
+      // Now handle the extracted value
+      if (extractedValue is Map) {
+        if (extractedValue.isEmpty) {
+          return ItemAttribute(attributes: [], variants: []);
+        }
+        return ItemAttribute.fromJson(Map<String, dynamic>.from(extractedValue));
+      } else if (extractedValue is String) {
+        // Try to parse the JSON string
+        final parsedJson = jsonDecode(extractedValue);
+        if (parsedJson is Map) {
+          return ItemAttribute.fromJson(Map<String, dynamic>.from(parsedJson));
+        }
+      }
+    } catch (e) {
+      // If anything goes wrong, return empty ItemAttribute
+    }
+
+    return ItemAttribute(attributes: [], variants: []);
+  }
+
+// Helper method to extract value from Firestore format
+  dynamic _extractValueFromFirestoreFormat(dynamic value) {
+    if (value == null) return null;
+
+    if (value is Map) {
+      // Check for Firestore value formats
+      if (value.containsKey('stringValue')) {
+        return value['stringValue'];
+      } else if (value.containsKey('mapValue')) {
+        return value['mapValue'];
+      } else if (value.containsKey('arrayValue')) {
+        return value['arrayValue'];
+      } else if (value.containsKey('intValue')) {
+        return value['intValue'];
+      } else if (value.containsKey('doubleValue')) {
+        return value['doubleValue'];
+      } else if (value.containsKey('boolValue')) {
+        return value['boolValue'];
+      } else {
+        // It's a regular Map, return as-is
+        return value;
+      }
+    }
+
+    // Not a Map, return as-is
+    return value;
+  }
+
+  // Helper method to extract array from Firestore arrayValue format
+  List<dynamic>? _extractArrayFromFirestore(dynamic value) {
+    if (value == null) return null;
+
+    // If it's already a List, return it
+    if (value is List) {
+      return value;
+    }
+
+    // If it's a Map and contains arrayValue (Firestore format)
+    if (value is Map<String, dynamic>) {
+      if (value.containsKey('arrayValue')) {
+        final arrayValue = value['arrayValue'];
+        if (arrayValue is Map && arrayValue.containsKey('values')) {
+          final values = arrayValue['values'];
+          if (values is List) {
+            // Extract the actual values from Firestore array format
+            return values.map((item) {
+              if (item is Map) {
+                // Extract stringValue, intValue, etc.
+                if (item.containsKey('stringValue')) {
+                  return item['stringValue'];
+                } else if (item.containsKey('intValue')) {
+                  return int.tryParse(item['intValue'].toString()) ?? item['intValue'];
+                } else if (item.containsKey('doubleValue')) {
+                  return double.tryParse(item['doubleValue'].toString()) ?? item['doubleValue'];
+                } else if (item.containsKey('boolValue')) {
+                  return item['boolValue'] == true;
+                }
+              }
+              return item;
+            }).toList();
+          }
+        }
+        // If arrayValue is empty (like {arrayValue: {}} or {arrayValue: []})
+        return [];
+      }
+
+      // If it's a regular map but we expect a list, convert if possible
+      if (value.containsKey('values') && value['values'] is List) {
+        return value['values'];
+      }
+    }
+
+    // If it's a string that looks like JSON, try to parse it
+    if (value is String) {
+      try {
+        final parsed = json.decode(value);
+        if (parsed is List) return parsed;
+      } catch (e) {
+        // If parsing fails, return as a single-item list
+        return [value];
+      }
+    }
+
+    // For other types, wrap in a list
+    return [value];
+  }
+
+  // Helper method to convert various types to boolean
   bool _convertToBool(dynamic value) {
     if (value == null) return false;
     if (value is bool) return value;
@@ -223,18 +292,26 @@ class ProductModel {
     return false;
   }
 
-// NEW: Helper method to convert various types to string
+  // Helper method to convert various types to string
   String? _convertToString(dynamic value) {
     if (value == null) return null;
     if (value is String) return value;
     if (value is int) return value.toString();
     if (value is double) return value.toString();
+
+    // Handle Firestore numeric value format
+    if (value is Map) {
+      if (value.containsKey('stringValue')) {
+        return value['stringValue'].toString();
+      } else if (value.containsKey('intValue')) {
+        return value['intValue'].toString();
+      } else if (value.containsKey('doubleValue')) {
+        return value['doubleValue'].toString();
+      }
+    }
+
     return value.toString();
   }
-
-// Helper method to convert various types to boolean
-
-
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
@@ -318,16 +395,62 @@ class ItemAttribute {
   ItemAttribute.fromJson(Map<String, dynamic> json) {
     if (json['attributes'] != null) {
       attributes = <Attributes>[];
-      json['attributes'].forEach((v) {
-        attributes!.add(Attributes.fromJson(v));
-      });
+      // Handle both List format and Firestore arrayValue format
+      final attributesList = _extractArrayFromFirestore(json['attributes']);
+      if (attributesList != null) {
+        for (var v in attributesList) {
+          if (v is Map) {
+            attributes!.add(Attributes.fromJson(Map<String, dynamic>.from(v)));
+          }
+        }
+      }
     }
     if (json['variants'] != null) {
       variants = <Variants>[];
-      json['variants'].forEach((v) {
-        variants!.add(Variants.fromJson(v));
-      });
+      // Handle both List format and Firestore arrayValue format
+      final variantsList = _extractArrayFromFirestore(json['variants']);
+      if (variantsList != null) {
+        for (var v in variantsList) {
+          if (v is Map) {
+            variants!.add(Variants.fromJson(Map<String, dynamic>.from(v)));
+          }
+        }
+      }
     }
+  }
+
+  // Helper method to extract array from Firestore arrayValue format
+  List<dynamic>? _extractArrayFromFirestore(dynamic value) {
+    if (value == null) return null;
+
+    // If it's already a List, return it
+    if (value is List) {
+      return value;
+    }
+
+    // If it's a Map and contains arrayValue (Firestore format)
+    if (value is Map<String, dynamic>) {
+      if (value.containsKey('arrayValue')) {
+        final arrayValue = value['arrayValue'];
+        if (arrayValue is Map && arrayValue.containsKey('values')) {
+          final values = arrayValue['values'];
+          if (values is List) {
+            return values.map((item) {
+              if (item is Map) {
+                if (item.containsKey('mapValue')) {
+                  return item['mapValue'];
+                }
+                return item;
+              }
+              return item;
+            }).toList();
+          }
+        }
+        return [];
+      }
+    }
+
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -350,7 +473,22 @@ class Attributes {
 
   Attributes.fromJson(Map<String, dynamic> json) {
     attributeId = json['attribute_id'];
-    attributeOptions = json['attribute_options'].cast<String>();
+    // Handle attribute_options that might be in Firestore arrayValue format
+    if (json['attribute_options'] != null) {
+      if (json['attribute_options'] is List) {
+        attributeOptions = List<String>.from(json['attribute_options'].map((x) => x.toString()));
+      } else if (json['attribute_options'] is Map) {
+        // Handle Firestore arrayValue format
+        if (json['attribute_options'].containsKey('arrayValue')) {
+          final arrayValue = json['attribute_options']['arrayValue'];
+          if (arrayValue is Map && arrayValue.containsKey('values')) {
+            attributeOptions = List<String>.from(
+                arrayValue['values'].map((x) => x['stringValue'].toString())
+            );
+          }
+        }
+      }
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -360,6 +498,7 @@ class Attributes {
     return data;
   }
 }
+
 class Variants {
   String? variantId;
   String? variantImage;
@@ -382,12 +521,25 @@ class Variants {
     variantQuantity = _convertToString(json['variant_quantity']) ?? '0';
     variantSku = _convertToString(json['variant_sku']);
   }
+
   // Helper method to convert various types to string
   String? _convertToString(dynamic value) {
     if (value == null) return null;
     if (value is String) return value;
     if (value is int) return value.toString();
     if (value is double) return value.toString();
+
+    // Handle Firestore value format
+    if (value is Map) {
+      if (value.containsKey('stringValue')) {
+        return value['stringValue'].toString();
+      } else if (value.containsKey('intValue')) {
+        return value['intValue'].toString();
+      } else if (value.containsKey('doubleValue')) {
+        return value['doubleValue'].toString();
+      }
+    }
+
     return value.toString();
   }
 
@@ -401,6 +553,7 @@ class Variants {
     return data;
   }
 }
+
 class ProductSpecificationModel {
   String? lable;
   String? value;

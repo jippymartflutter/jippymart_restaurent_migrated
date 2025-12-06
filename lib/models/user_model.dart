@@ -357,11 +357,24 @@ class ShippingAddress {
     address = json['address'];
     landmark = json['landmark'];
     locality = json['locality'];
-    isDefault = json['isDefault'];
+    isDefault = _parseBoolNullable(json['isDefault']);
     addressAs = json['addressAs'];
     location = json['location'] == null
         ? null
         : UserLocation.fromJson(json['location']);
+  }
+
+  // Helper method to parse bool from int, bool, or String
+  static bool? _parseBoolNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    if (value is String) {
+      if (value.toLowerCase() == 'true' || value == '1') return true;
+      if (value.toLowerCase() == 'false' || value == '0') return false;
+      return null;
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {

@@ -79,7 +79,38 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await initializeFirebase();
     await Preferences.initPref();
-    await initializeService();
+    
+    // Stop any existing background service to prevent notifications on startup
+    // We need to configure it first to be able to check/stop it, but we won't start it
+    try {
+      final service = FlutterBackgroundService();
+      // Configure service (but don't start it) so we can check if it's running
+      service.configure(
+        androidConfiguration: AndroidConfiguration(
+          onStart: onStartService,
+          autoStart: false, // Don't auto-start
+          isForegroundMode: true,
+          notificationChannelId: 'order_channel',
+          initialNotificationTitle: 'Jippymart Restaurant',
+          initialNotificationContent: 'Listening for new orders...',
+          foregroundServiceTypes: [AndroidForegroundType.mediaPlayback],
+        ),
+        iosConfiguration: IosConfiguration(),
+      );
+      
+      // Check if service is already running and stop it
+      final isRunning = await service.isRunning();
+      if (isRunning) {
+        print('Stopping existing background service...');
+        // Send stop signal to the service
+        service.invoke('stopService');
+      }
+    } catch (e) {
+      print('Error checking/stopping service: $e');
+      // Continue even if service stop fails
+    }
+    
+    // Don't start the service on startup - it will be started when needed
     final notificationService = NotificationService();
     await notificationService.initInfo();
     FirebaseMessaging.onBackgroundMessage(firebaseMessageBackgroundHandle);
@@ -90,22 +121,29 @@ void main() async {
   }
 }
 
+// Service initialization function - call this when you actually need the service
+// (e.g., after user login or when restaurant is open)
 Future<void> initializeService() async {
-  final service = FlutterBackgroundService();
-  await service.configure(
-    androidConfiguration: AndroidConfiguration(
-      onStart: onStartService,
-      autoStart: true,
-      isForegroundMode: true,
-      notificationChannelId: 'order_channel',
-      initialNotificationTitle: 'Jippymart Restaurant',
-      initialNotificationContent: 'Listening for new orders...',
-      foregroundServiceTypes: [AndroidForegroundType.mediaPlayback],
-      // foregroundServiceType: AndroidForegroundType.mediaPlayback,
-    ),
-    iosConfiguration: IosConfiguration(),
-  );
-  await service.startService();
+  try {
+    final service = FlutterBackgroundService();
+    
+    // Configure service but don't start it automatically
+    service.configure(
+      androidConfiguration: AndroidConfiguration(
+        onStart: onStartService,
+        autoStart: false, // Service won't start automatically
+        isForegroundMode: true,
+        notificationChannelId: 'order_channel',
+        initialNotificationTitle: 'Jippymart Restaurant',
+        initialNotificationContent: 'Listening for new orders...',
+        foregroundServiceTypes: [AndroidForegroundType.mediaPlayback],
+      ),
+      iosConfiguration: IosConfiguration(),
+    );
+    print('Service configured - call startService() when needed');
+  } catch (e) {
+    print('Error initializing service: $e');
+  }
 }
 
 @pragma('vm:entry-point')

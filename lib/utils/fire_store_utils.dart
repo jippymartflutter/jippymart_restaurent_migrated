@@ -237,16 +237,21 @@ class FireStoreUtils {
   }
   static Future<bool> updateDriverUser(UserModel userModel) async {
     try {
+      
       userModel.id = userModel.firebaseId;
       log("updateDriverUser ${'${Constant.baseUrl}restaurant/updateUser'} ");
       log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
-      log("updateDriverUser ${userModel.toJson()}");
+      
+      // Convert Timestamps to JSON-serializable format before encoding
+      Map<String, dynamic> userJson = _convertTimestampsToJson(userModel.toJson());
+      log("updateDriverUser ${userJson}");
+      
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: json.encode(userModel.toJson()),
+        body: json.encode(userJson),
       );
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -313,12 +318,15 @@ class FireStoreUtils {
   static Future<bool?> setWalletTransaction(
       WalletTransactionModel walletTransactionModel) async {
     try {
+      // Convert Timestamps to JSON-serializable format before encoding
+      Map<String, dynamic> transactionJson = _convertTimestampsToJson(walletTransactionModel.toJson());
+      
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/wallet/transaction'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(walletTransactionModel.toJson()),
+        body: jsonEncode(transactionJson),
       );
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -336,7 +344,7 @@ class FireStoreUtils {
         return false;
       }
     } catch (error) {
-      log("Failed to update user: $error");
+      log("Error adding wallet transaction: $error");
       return false;
     }
   }
@@ -822,12 +830,15 @@ class FireStoreUtils {
 
   static Future<bool> addWalletTransaction(WalletTransactionModel historyModel) async {
     try {
+      // Convert Timestamps to JSON-serializable format before encoding
+      Map<String, dynamic> transactionJson = _convertTimestampsToJson(historyModel.toJson());
+      
       final response = await http.post(
         Uri.parse('${Constant.baseUrl}restaurant/wallet/transaction'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: json.encode(historyModel.toJson()),
+        body: json.encode(transactionJson),
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
         log("Wallet transaction added successfully");

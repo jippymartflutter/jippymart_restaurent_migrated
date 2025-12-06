@@ -298,14 +298,25 @@ class HomeController extends GetxController {
           update();
 
           // Detect and notify about new orders
-          if (newOrderList.length > previousNewOrderCount && previousNewOrderCount > 0) {
+          // Play sound when new orders are detected (works for both silent and non-silent polling)
+          if (newOrderList.length > previousNewOrderCount) {
             int newOrdersCount = newOrderList.length - previousNewOrderCount;
-            print('🔔 $newOrdersCount new order(s) detected!');
-            await AudioPlayerService.playSound(true);
+            print('🔔 $newOrdersCount new order(s) detected! Playing sound...');
+            try {
+              await AudioPlayerService.initAudio();
+              await AudioPlayerService.playSound(true);
+            } catch (e) {
+              print('⚠️ Error playing sound: $e');
+            }
           } else if (newOrderList.isNotEmpty && previousNewOrderCount == 0 && !silent) {
-            // First time loading with new orders
+            // First time loading with new orders (only on initial load, not polling)
             print('🔔 Initial load: ${newOrderList.length} new order(s) found');
-            await AudioPlayerService.playSound(true);
+            try {
+              await AudioPlayerService.initAudio();
+              await AudioPlayerService.playSound(true);
+            } catch (e) {
+              print('⚠️ Error playing sound: $e');
+            }
           }
           // Update previous count for next comparison
           _previousNewOrderCount = newOrderList.length;
