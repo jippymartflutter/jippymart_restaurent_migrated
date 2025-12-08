@@ -1843,18 +1843,20 @@ print("acceptedWidget ${orderModel.vendorID}");
                               UserModel? driverModel =
                                   await FireStoreUtils.getUserById(
                                       orderModel.driverID ?? '');
-                              driverModel?.orderRequestData
-                                  ?.remove(orderModel.id);
-                              driverModel?.inProgressOrderID
-                                  ?.remove(orderModel.id);
-                              await FireStoreUtils.updateDriverUser(
-                                  driverModel!);
-                              if (driverModel.fcmToken != null &&
-                                  driverModel.fcmToken!.isNotEmpty) {
-                                SendNotification.sendFcmMessage(
-                                    Constant.driverCancelled,
-                                    driverModel.fcmToken.toString(),
-                                    {'title': 'Cancelled Order'});
+                              if(driverModel!=null){
+                                driverModel.orderRequestData
+                                    ?.remove(orderModel.id);
+                                driverModel.inProgressOrderID
+                                    ?.remove(orderModel.id);
+                                await FireStoreUtils.updateDriverUser(
+                                    driverModel);
+                                if (driverModel.fcmToken != null &&
+                                    driverModel.fcmToken!.isNotEmpty) {
+                                  SendNotification.sendFcmMessage(
+                                      Constant.driverCancelled,
+                                      driverModel.fcmToken.toString(),
+                                      {'title': 'Cancelled Order'});
+                                }
                               }
                             }
                             await FireStoreUtils.updateOrder(orderModel);
@@ -3188,8 +3190,10 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 double radius = Constant.driverSearchRadius ?? 5.0;
                                 Future<void> radiusFuture = Future.value();
                                 if (Constant.driverSearchRadius == null) {
+                                  String getUrl = '${Constant.baseUrl}restaurant/GetDriverNearBy';
+                                  print("getUrl $getUrl ");
                                   radiusFuture = http.get(
-                                    Uri.parse('${Constant.baseUrl}restaurant/GetDriverNearBy'),
+                                    Uri.parse(getUrl),
                                     headers: {
                                       'Content-Type': 'application/json',
                                     },
@@ -3210,23 +3214,14 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     Constant.driverSearchRadius = radius;
                                   });
                                 }
-                                
                                 // Update order and wallet in parallel
                                 final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
                                 final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
-                                
                                 // Wait for radius and order/wallet updates
                                 await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
-                                
-                                ///this for Driver
-                                // Broadcast order to drivers within admin-set radius
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
-                                
-                                // Get available drivers
                                 List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
-                                
-                                // Filter eligible drivers based on distance
                                 List<UserModel> eligibleDrivers = allDrivers.where((driver) {
                                   if (driver.location == null ||
                                       driver.location!.latitude == null ||
@@ -3246,7 +3241,6 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   return isEligible;
                                 }).toList();
                                 print("Total drivers: ${allDrivers.length}, Eligible drivers: ${eligibleDrivers.length}, Radius: ${radius}km");
-                                // OPTIMIZATION: Update all drivers in parallel instead of sequentially
                                 if (eligibleDrivers.isNotEmpty) {
                                   List<Future<bool>> driverUpdateFutures = [];
                                   for (var driver in eligibleDrivers) {
@@ -3260,7 +3254,6 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   // Wait for all driver updates to complete in parallel
                                   await Future.wait(driverUpdateFutures);
                                 }
-                                
                                 // Send notification (non-blocking, don't wait for it)
                                 if (orderModel.author?.fcmToken != null &&
                                     orderModel.author!.fcmToken!.isNotEmpty) {

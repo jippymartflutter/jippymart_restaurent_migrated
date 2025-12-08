@@ -219,7 +219,6 @@ class HomeController extends GetxController {
       print('🔄 Fetching orders for vendor: ${Constant.userModel?.vendorID}');
     }
     isFetchingOrders.value = true;
-    
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -260,11 +259,9 @@ class HomeController extends GetxController {
 
           // Store previous count before updating to detect new orders
           int previousNewOrderCount = _previousNewOrderCount;
-          
           // Update reactive lists
           allOrderList.clear();
           allOrderList.addAll(allOrderTemp);
-
           newOrderList.value = allOrderList
               .where((p0) => p0.status == Constant.orderPlaced || 
                       p0.status?.toLowerCase() == "pending")

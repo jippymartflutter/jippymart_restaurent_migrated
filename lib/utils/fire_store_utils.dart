@@ -142,9 +142,10 @@ class FireStoreUtils {
   }
   static Future<UserModel?> getUserById(String uuid) async {
     try {
-      log("uuid :: $uuid");
+      String url = '${Constant.baseUrl}restaurant/users/$uuid';
+      log("getUserById:: $url");
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}restaurant/users/$uuid'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
