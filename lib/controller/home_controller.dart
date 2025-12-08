@@ -231,14 +231,12 @@ class HomeController extends GetxController {
           throw TimeoutException('Order fetch request timed out');
         },
       );
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         if (jsonResponse['success'] == true) {
           List<OrderModel> allOrderTemp = [];
           int successCount = 0;
           int errorCount = 0;
-          
           for (var element in jsonResponse['data']) {
             try {
               OrderModel orderModel = OrderModel.fromJson(element);
@@ -252,11 +250,9 @@ class HomeController extends GetxController {
               }
             }
           }
-
           if (!silent) {
             print('📊 Order processing summary: $successCount successful, $errorCount failed');
           }
-
           // Store previous count before updating to detect new orders
           int previousNewOrderCount = _previousNewOrderCount;
           // Update reactive lists

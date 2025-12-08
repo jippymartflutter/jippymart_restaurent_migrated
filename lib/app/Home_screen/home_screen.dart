@@ -55,14 +55,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       controller = Get.put(HomeController());
     }
   }
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     // Don't dispose controller here - let it be managed by GetX
     super.dispose();
   }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -76,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       // controller.stopOrderPolling();
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
@@ -3023,131 +3020,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                       const SizedBox(
                         width: 10,
                       ),
-//                       Expanded(
-//                         child: RoundedButtonFill(
-//                           title: "Shipped order".tr,
-//                           color: AppThemeData.secondary300,
-//                           textColor: AppThemeData.grey50,
-//                           onPress: () async {
-//                             if (controller.estimatedTimeController.value.text
-//                                 .isNotEmpty) {
-//                               if ((Constant.isSubscriptionModelApplied ==
-//                                           true ||
-//                                       Constant.adminCommission?.isEnabled ==
-//                                           true) &&
-//                                   controller
-//                                           .vendermodel.value.subscriptionPlan !=
-//                                       null) {
-//                                 if (controller.vendermodel.value
-//                                             .subscriptionTotalOrders !=
-//                                         '-1' &&
-//                                     controller.vendermodel.value
-//                                             .subscriptionTotalOrders !=
-//                                         null) {
-//                                   controller.vendermodel.value
-//                                       .subscriptionTotalOrders = (int.parse(
-//                                               controller.vendermodel.value
-//                                                   .subscriptionTotalOrders!) -
-//                                           1)
-//                                       .toString();
-//                                   await FireStoreUtils.updateVendor(
-//                                       controller.vendermodel.value);
-//                                 }
-//                               }
-//                               if (Constant.isSelfDeliveryFeature == true &&
-//                                   controller.vendermodel.value.isSelfDelivery ==
-//                                       true &&
-//                                   orderModel.takeAway == false) {
-//                                 ShowToastDialog.showLoader('Please wait...'.tr);
-//                                 await controller.getAllDriverList();
-//                                 ShowToastDialog.closeLoader();
-//                                 orderModel.estimatedTimeToPrepare = controller
-//                                     .estimatedTimeController.value.text;
-//                                 Get.back();
-//                                 showDialog(
-//                                   // ignore: use_build_context_synchronously
-//                                   context: context,
-//                                   builder: (BuildContext context) {
-//                                     return showListOfDeliverymenDialog(
-//                                         controller, themeChange, orderModel);
-//                                   },
-//                                 );
-//                               } else {
-//                                 ShowToastDialog.showLoader('Please wait...'.tr);
-//                                 orderModel.estimatedTimeToPrepare = controller
-//                                     .estimatedTimeController.value.text;
-//                                 orderModel.status = Constant.orderAccepted;
-//                                 await AudioPlayerService.playSound(false);
-//                                 await FireStoreUtils.updateOrder(orderModel);
-//                                 await FireStoreUtils.restaurantVendorWalletSet(
-//                                     orderModel);
-//
-//                                 ///this for Driver
-// // Broadcast order to drivers within admin-set radius
-//                                 double radius =
-//                                     Constant.driverSearchRadius ?? 5.0;
-//                                 if (Constant.driverSearchRadius == null) {
-//                                   var doc = await FirebaseFirestore.instance
-//                                       .collection('settings')
-//                                       .doc('DriverNearBy')
-//                                       .get();
-//                                   if (doc.exists &&
-//                                       doc.data() != null &&
-//                                       doc.data()!.containsKey('radius')) {
-//                                     radius = double.tryParse(
-//                                             doc['radius'].toString()) ??
-//                                         5.0;
-//                                     Constant.driverSearchRadius = radius;
-//                                   }
-//                                 }
-//                                 final double restaurantLat =
-//                                     controller.vendermodel.value.latitude ??
-//                                         0.0;
-//                                 final double restaurantLng =
-//                                     controller.vendermodel.value.longitude ??
-//                                         0.0;
-//                                 List<UserModel> allDrivers =
-//                                     await FireStoreUtils.getAvalibleDrivers();
-//                                 List<UserModel> eligibleDrivers =
-//                                     allDrivers.where((driver) {
-//                                   if (driver.location == null ||
-//                                       driver.location!.latitude == null ||
-//                                       driver.location!.longitude == null)
-//                                     return false;
-//                                   final double driverLat =
-//                                       driver.location!.latitude!;
-//                                   final double driverLng =
-//                                       driver.location!.longitude!;
-//                                   double distance = Geolocator.distanceBetween(
-//                                           restaurantLat,
-//                                           restaurantLng,
-//                                           driverLat,
-//                                           driverLng) /
-//                                       1000; // km
-//                                   return distance <= radius;
-//                                 }).toList();
-//                                 for (var driver in eligibleDrivers) {
-//                                   driver.orderRequestData ??= [];
-//                                   if (!driver.orderRequestData!
-//                                       .contains(orderModel.id)) {
-//                                     driver.orderRequestData!.add(orderModel.id);
-//                                     await FireStoreUtils.updateDriverUser(
-//                                         driver);
-//                                   }
-//                                 }
-//                                 SendNotification.sendFcmMessage(
-//                                     Constant.restaurantAccepted,
-//                                     orderModel.author!.fcmToken.toString(), {},);
-//                                 ShowToastDialog.closeLoader();
-//                                 Get.back();
-//                               }
-//                             } else {
-//                               ShowToastDialog.showToast(
-//                                   "Please enter estimated time".tr);
-//                             }
-//                           },
-//                         ),
-//                       ),
+
                       Expanded(
                         child: RoundedButtonFill(
                           title: "Shipped order".tr,
@@ -3214,10 +3087,8 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     Constant.driverSearchRadius = radius;
                                   });
                                 }
-                                // Update order and wallet in parallel
                                 final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
                                 final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
-                                // Wait for radius and order/wallet updates
                                 await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
@@ -3229,11 +3100,11 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     print("Driver ${driver.firebaseId} filtered: No location data");
                                     return false;
                                   }
-                                  final double driverLat = driver.location!.latitude!;
-                                  final double driverLng = driver.location!.longitude!;
+                                  final double driverLat = driver.location?.latitude??0;
+                                  final double driverLng = driver.location?.longitude??0;
                                   double distance = Geolocator.distanceBetween(
                                       restaurantLat, restaurantLng, driverLat, driverLng) /
-                                      1000; // km
+                                      1000;
                                   bool isEligible = distance <= radius;
                                   if (!isEligible) {
                                     print("Driver ${driver.firebaseId} (${driver.firstName} ${driver.lastName}) filtered: Distance ${distance.toStringAsFixed(2)}km exceeds radius ${radius}km");
@@ -3263,7 +3134,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     {},
                                   );
                                 }
-                                
+                             await controller.getOrder(silent: false);
                                 ShowToastDialog.closeLoader();
                                 Get.back();
                               }
