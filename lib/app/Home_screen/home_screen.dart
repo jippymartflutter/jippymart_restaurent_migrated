@@ -58,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // Don't dispose controller here - let it be managed by GetX
     super.dispose();
   }
   @override
@@ -1346,7 +1345,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double taxAmount = 0.0;
     double specialDiscount = 0.0;
     double adminCommission = 0.0;
-
     for (var element in orderModel.products!) {
       if (double.parse(element.discountPrice.toString()) <= 0) {
         subTotal = subTotal +
@@ -1420,7 +1418,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                     ClipOval(
                       child: NetworkImageWidget(
                         imageUrl:
-                            orderModel.author!.profilePictureURL.toString(),
+                            orderModel.author?.profilePictureURL.toString() ?? '',
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
@@ -1434,7 +1432,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            orderModel.author!.fullName().toString().tr,
+                            orderModel.author?.fullName().toString().tr ??'',
                             style: TextStyle(
                               color: themeChange.getThem()
                                   ? AppThemeData.grey50
@@ -3089,6 +3087,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 }
                                 final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
                                 final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
+                                await controller.getOrder(silent: false);
                                 await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
@@ -3113,17 +3112,17 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 }).toList();
                                 print("Total drivers: ${allDrivers.length}, Eligible drivers: ${eligibleDrivers.length}, Radius: ${radius}km");
                                 if (eligibleDrivers.isNotEmpty) {
-                                  List<Future<bool>> driverUpdateFutures = [];
+                                  // Update drivers sequentially with delays to avoid rate limiting
                                   for (var driver in eligibleDrivers) {
                                     driver.orderRequestData ??= [];
                                     if (!driver.orderRequestData!.contains(orderModel.id)) {
                                       driver.orderRequestData!.add(orderModel.id);
-                                      // Add update future without awaiting
-                                      driverUpdateFutures.add(FireStoreUtils.updateDriverUser(driver));
+                                      // Update sequentially to prevent rate limiting (429 errors)
+                                      await FireStoreUtils.updateDriverUser(driver);
+                                      // Small delay between updates to respect rate limits
+                                      await Future.delayed(const Duration(milliseconds: 100));
                                     }
                                   }
-                                  // Wait for all driver updates to complete in parallel
-                                  await Future.wait(driverUpdateFutures);
                                 }
                                 // Send notification (non-blocking, don't wait for it)
                                 if (orderModel.author?.fcmToken != null &&
@@ -3134,7 +3133,6 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     {},
                                   );
                                 }
-                             await controller.getOrder(silent: false);
                                 ShowToastDialog.closeLoader();
                                 Get.back();
                               }

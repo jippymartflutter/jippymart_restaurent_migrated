@@ -20,8 +20,77 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 //import 'package:jippymart_restaurant/utils/send_notification.dart';
 import 'package:http/http.dart' as http;
 
+import '../app/on_boarding_screen.dart' show OnBoardingScreen;
+import '../utils/preferences.dart' show Preferences;
+
 
 class LoginController extends GetxController {
+
+
+  void proceedToMainApp() async {
+    String userId = await FireStoreUtils.getCurrentUid();
+    try {
+      if (Preferences.getBoolean(Preferences.isFinishOnBoardingKey) == false) {
+        Get.offAll(
+              () => const OnBoardingScreen(),
+          transition: Transition.fadeIn,
+          duration: const Duration(milliseconds: 1200),
+        );
+      } else {
+        FireStoreUtils.getAvalibleDrivers();
+        bool isLogin = await FireStoreUtils.isLogin();
+        if (isLogin == true) {
+          await FireStoreUtils.getUserProfile(
+            userId,
+          ).then((value) async {
+            if (value != null) {
+              UserModel userModel = value;
+              if (userModel.role == Constant.userRoleVendor) {
+                if (userModel.active == true) {
+                  userModel.fcmToken = await NotificationService.getToken();
+                  await FireStoreUtils.updateUser(userModel);
+                  Get.offAll(
+                        () => const DashBoardScreen(),
+                    transition: Transition.fadeIn,
+                    duration: const Duration(milliseconds: 1200),
+                  );
+                } else {
+                  clearUserData();
+                  Get.offAll(
+                        () => const LoginScreen(),
+                    transition: Transition.fadeIn,
+                    duration: const Duration(milliseconds: 1200),
+                  );
+                }
+              } else {
+                clearUserData();
+                Get.offAll(
+                      () => const LoginScreen(),
+                  transition: Transition.fadeIn,
+                  duration: const Duration(milliseconds: 1200),
+                );
+              }
+            }
+          });
+        } else {
+          clearUserData();
+          Get.offAll(
+                () => const LoginScreen(),
+            transition: Transition.fadeIn,
+            duration: const Duration(milliseconds: 1200),
+          );
+        }
+      }
+    } catch (e) {
+      Get.offAll(
+            () => const LoginScreen(),
+        transition: Transition.fadeIn,
+        duration: const Duration(milliseconds: 1200),
+      );
+    }
+  }
+
+
   Rx<TextEditingController> emailEditingController =
       TextEditingController().obs;
   Rx<TextEditingController> passwordEditingController =
@@ -73,7 +142,6 @@ class LoginController extends GetxController {
           ShowToastDialog.closeLoader();
           return;
         }
-        
         await _saveUserDataToSharedPreferences(userData);
         UserModel? userModel = await _convertApiResponseToUserModel(userData);
         if (userModel != null) {
@@ -99,13 +167,17 @@ class LoginController extends GetxController {
               if (userModel.subscriptionPlanId == null || isPlanExpire == true) {
                 if (Constant.adminCommission?.isEnabled == false &&
                     Constant.isSubscriptionModelApplied == false) {
-                  Get.offAll(const DashBoardScreen());
+
+                  proceedToMainApp();
+                  // Get.offAll(const DashBoardScreen());
                 } else {
-                  Get.offAll(const DashBoardScreen());
+                  proceedToMainApp();
+                  // Get.offAll(const DashBoardScreen());
                   // Get.offAll(const SubscriptionPlanScreen());
                 }
               } else if (userModel.subscriptionPlan?.features?.restaurantMobileApp == true) {
-                Get.offAll(const DashBoardScreen());
+                proceedToMainApp();
+                // Get.offAll(const DashBoardScreen());
               } else {
                 Get.offAll(const AppNotAccessScreen());
               }

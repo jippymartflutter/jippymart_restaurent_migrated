@@ -236,35 +236,72 @@ class FireStoreUtils {
     }
     return isUpdate;
   }
-  static Future<bool> updateDriverUser(UserModel userModel) async {
-    try {
-      
-      userModel.id = userModel.firebaseId;
-      log("updateDriverUser ${'${Constant.baseUrl}restaurant/updateUser'} ");
-      log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
-      
-      // Convert Timestamps to JSON-serializable format before encoding
-      Map<String, dynamic> userJson = _convertTimestampsToJson(userModel.toJson());
-      log("updateDriverUser ${userJson}");
-      
-      final response = await http.post(
-        Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(userJson),
-      );
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        return responseData['success'] ?? true; // Adjust based on your API response structure
-      } else {
-        log("Failed to update user: ${response.statusCode} - ${response.body}");
-        return false;
+  // Rate limiting: Track last request time and minimum delay between requests
+  static DateTime? _lastUpdateDriverUserRequest;
+  static const Duration _minDelayBetweenRequests = Duration(milliseconds: 200); // 200ms delay between requests
+  
+  static Future<bool> updateDriverUser(UserModel userModel, {int maxRetries = 3}) async {
+    // Rate limiting: Ensure minimum delay between requests
+    if (_lastUpdateDriverUserRequest != null) {
+      final timeSinceLastRequest = DateTime.now().difference(_lastUpdateDriverUserRequest!);
+      if (timeSinceLastRequest < _minDelayBetweenRequests) {
+        final delayNeeded = _minDelayBetweenRequests - timeSinceLastRequest;
+        await Future.delayed(delayNeeded);
       }
-    } catch (error) {
-      log("Failed to update userds: $error");
-      return false;
     }
+    
+    int attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        userModel.id = userModel.firebaseId;
+        log("updateDriverUser ${'${Constant.baseUrl}restaurant/updateUser'} ");
+        log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
+        Map<String, dynamic> userJson = _convertTimestampsToJson(userModel.toJson());
+        log("updateDriverUser ${userJson}");
+        
+        _lastUpdateDriverUserRequest = DateTime.now();
+        
+        final response = await http.post(
+          Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: json.encode(userJson),
+        );
+        
+        if (response.statusCode == 200) {
+          final responseData = json.decode(response.body);
+          return responseData['success'] ?? true; // Adjust based on your API response structure
+        } else if (response.statusCode == 429) {
+          // Rate limited - retry with exponential backoff
+          attempt++;
+          if (attempt < maxRetries) {
+            final backoffDelay = Duration(milliseconds: 500 * (1 << (attempt - 1))); // Exponential backoff: 500ms, 1s, 2s
+            log("Rate limited (429). Retrying in ${backoffDelay.inMilliseconds}ms (attempt $attempt/$maxRetries)");
+            await Future.delayed(backoffDelay);
+            continue;
+          } else {
+            log("Failed to update user after $maxRetries attempts: ${response.statusCode} - ${response.body}");
+            return false;
+          }
+        } else {
+          log("Failed to update user: ${response.statusCode} - ${response.body}");
+          return false;
+        }
+      } catch (error) {
+        attempt++;
+        if (attempt < maxRetries) {
+          final backoffDelay = Duration(milliseconds: 500 * (1 << (attempt - 1)));
+          log("Error updating user. Retrying in ${backoffDelay.inMilliseconds}ms (attempt $attempt/$maxRetries): $error");
+          await Future.delayed(backoffDelay);
+          continue;
+        } else {
+          log("Failed to update userds after $maxRetries attempts: $error");
+          return false;
+        }
+      }
+    }
+    return false;
   }
   static Future<bool> withdrawWalletAmount(WithdrawalModel userModel) async {
     try {

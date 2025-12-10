@@ -42,15 +42,15 @@ class DashBoardController extends GetxController {
   }
 
   getVendor() async {
+    print("getVendorgetVendor  ${Constant.userModel?.vendorID.toString()??''}");
     if (Constant.userModel?.vendorID != null) {
       await FireStoreUtils.getVendorById(
-              Constant.userModel!.vendorID.toString())
+              Constant.userModel?.vendorID.toString()??'')
           .then(
         (value) {
           if (value != null) {
             Constant.vendorAdminCommission = value.adminCommission;
             vendorModel.value = value;
-            // Ensure reststatus and isOpen are synchronized
             if (value.isOpen != null && value.reststatus != value.isOpen) {
               value.reststatus = value.isOpen;
             }

@@ -49,72 +49,10 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
       try {
         bool updateRequired = await AppUpdateService.checkForUpdate();
         if (updateRequired) {
-          return; // Don't proceed to next screen - let user decide
+          return;
         }
       } catch (e) {}
-      _proceedToMainApp();
-    } catch (e) {
-      Get.offAll(
-        () => const LoginScreen(),
-        transition: Transition.fadeIn,
-        duration: const Duration(milliseconds: 1200),
-      );
-    }
-  }
-  void _proceedToMainApp() async {
-    String userId = await FireStoreUtils.getCurrentUid();
-    try {
-      if (Preferences.getBoolean(Preferences.isFinishOnBoardingKey) == false) {
-        Get.offAll(
-          () => const OnBoardingScreen(),
-          transition: Transition.fadeIn,
-          duration: const Duration(milliseconds: 1200),
-        );
-      } else {
-        FireStoreUtils.getAvalibleDrivers();
-        bool isLogin = await FireStoreUtils.isLogin();
-        if (isLogin == true) {
-          await FireStoreUtils.getUserProfile(
-           userId,
-          ).then((value) async {
-            if (value != null) {
-              UserModel userModel = value;
-              if (userModel.role == Constant.userRoleVendor) {
-                if (userModel.active == true) {
-                  userModel.fcmToken = await NotificationService.getToken();
-                  await FireStoreUtils.updateUser(userModel);
-                  Get.offAll(
-                    () => const DashBoardScreen(),
-                    transition: Transition.fadeIn,
-                    duration: const Duration(milliseconds: 1200),
-                  );
-                } else {
-                  loginController.clearUserData();
-                  Get.offAll(
-                    () => const LoginScreen(),
-                    transition: Transition.fadeIn,
-                    duration: const Duration(milliseconds: 1200),
-                  );
-                }
-              } else {
-                loginController.clearUserData();
-                Get.offAll(
-                  () => const LoginScreen(),
-                  transition: Transition.fadeIn,
-                  duration: const Duration(milliseconds: 1200),
-                );
-              }
-            }
-          });
-        } else {
-          loginController.clearUserData();
-          Get.offAll(
-            () => const LoginScreen(),
-            transition: Transition.fadeIn,
-            duration: const Duration(milliseconds: 1200),
-          );
-        }
-      }
+      loginController.proceedToMainApp();
     } catch (e) {
       Get.offAll(
         () => const LoginScreen(),
