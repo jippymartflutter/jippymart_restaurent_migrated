@@ -1267,56 +1267,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   color: AppThemeData.new_green_tog,
                                   textColor: AppThemeData.grey50,
                                   onPress: () async {
-                                    // if ((Constant.isSubscriptionModelApplied == true || Constant.adminCommission?.isEnabled == true) &&
-                                    //     Constant.userModel?.subscriptionPlan?.type != 'free' &&
-                                    //     Constant.userModel?.subscriptionPlan?.orderLimit != '-1' &&
-                                    //     int.parse(Constant.userModel?.subscriptionPlan?.orderLimit ?? '0') <= controller.totalOrderList.length) {
-                                    //   ShowToastDialog.showToast("Your current subscription plan has reached its maximum order limit. Upgrade now to accept more order.".tr);
-                                    //   return;
-                                    // }
-
-                                    // if ((Constant.isSubscriptionModelApplied ==
-                                    //             true ||
-                                    //         Constant.adminCommission
-                                    //                 ?.isEnabled ==
-                                    //             true) &&
-                                    //     controller.vendermodel.value
-                                    //             .subscriptionPlan !=
-                                    //         null) {
-                                    //   if (controller.vendermodel.value
-                                    //               .subscriptionTotalOrders ==
-                                    //           '0' ||
-                                    //       controller.vendermodel.value
-                                    //               .subscriptionTotalOrders ==
-                                    //           null) {
-                                    //     ShowToastDialog.closeLoader();
-                                    //     ShowToastDialog.showToast(
-                                    //         "You have reached the maximum order capacity for your current plan. Upgrade your subscription to continue accepting orders seamlessly!."
-                                    //             .tr);
-                                    //     return;
-                                    //   }
-                                    // }
-                                    // if (orderModel.scheduleTime != null) {
-                                    //   if (DateTime.now().isAtSameMomentOrAfter(
-                                    //       Constant.checkScheduleTime(
-                                    //           scheduleDate: orderModel
-                                    //               .scheduleTime!
-                                    //               .toDate()))) {
-                                    //     showDialog(
-                                    //       context: context,
-                                    //       builder: (BuildContext context) {
-                                    //         return estimatedTimeDialog(
-                                    //             controller,
-                                    //             themeChange,
-                                    //             orderModel,
-                                    //             context);
-                                    //       },
-                                    //     );
-                                    //   } else {
-                                    //     ShowToastDialog.showToast(
-                                    //         "${"You can accept order on".tr} ${Constant.timestampToDateTime(Timestamp.fromDate(Constant.checkScheduleTime(scheduleDate: orderModel.scheduleTime!.toDate())))}.");
-                                    //   }
-                                    // } else {
                                       showDialog(
                                         context: context,
                                         builder: (BuildContext context) {
@@ -3098,8 +3048,14 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 }
                                 final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
                                 final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
-                                await controller.getOrder(silent: false);
                                 await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
+                                await controller.getOrder(silent: false);
+                                // After refreshing orders, check if there are any remaining pending orders
+                                // If not, stop the notification sound
+                                if (controller.newOrderList.isEmpty) {
+                                  await AudioPlayerService.playSound(false);
+                                  print("No pending orders remaining - stopped notification sound");
+                                }
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
                                 List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
