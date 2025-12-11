@@ -2842,8 +2842,19 @@ print("acceptedWidget ${orderModel.vendorID}");
     // Get current duration if exists
     Duration initialDuration = const Duration(minutes: 10);
     if (controller.estimatedTimeController.value.text.isNotEmpty) {
-      final minutes = int.tryParse(controller.estimatedTimeController.value.text) ?? 10;
-      initialDuration = Duration(minutes: minutes.clamp(1, 40)); // Ensure within 1-40 range
+      // Parse "hours:minutes" format (e.g., "1:30" = 90 minutes)
+      final timeText = controller.estimatedTimeController.value.text.trim();
+      final parts = timeText.split(':');
+      if (parts.length == 2) {
+        final hours = int.tryParse(parts[0]) ?? 0;
+        final minutes = int.tryParse(parts[1]) ?? 0;
+        final totalMinutes = (hours * 60) + minutes;
+        initialDuration = Duration(minutes: totalMinutes.clamp(1, 2400)); // Max 40 hours
+      } else {
+        // Fallback: try parsing as just minutes
+        final minutes = int.tryParse(timeText) ?? 10;
+        initialDuration = Duration(minutes: minutes.clamp(1, 40));
+      }
     }
 
     final duration = await showModalBottomSheet<Duration>(

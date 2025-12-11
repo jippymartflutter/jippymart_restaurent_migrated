@@ -10,6 +10,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
+import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
 import 'package:jippymart_restaurant/controller/home_controller.dart';
 import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
@@ -40,7 +41,7 @@ class AddRestaurantController extends GetxController {
       TextEditingController().obs;
   Rx<TextEditingController> minDeliveryChargesWithinKMController =
       TextEditingController().obs;
-
+  final dashBoardController = Get.find<DashBoardController>(); // Finds existing instance
   LatLng? selectedLocation;
 
   RxList images = <dynamic>[].obs;
@@ -376,6 +377,7 @@ class AddRestaurantController extends GetxController {
                       throw TimeoutException('Vendor creation timed out after 30 seconds');
                     },
                   );
+              dashBoardController.getVendor();
               print("✅ Vendor created successfully with ID: ${createdVendor.id}");
               ShowToastDialog.showToast(
                   "Restaurant details save successfully".tr);

@@ -322,8 +322,17 @@ class UserLocation {
   UserLocation({this.latitude, this.longitude});
 
   UserLocation.fromJson(Map<String, dynamic> json) {
-    latitude = json['latitude'];
-    longitude = json['longitude'];
+    // Handle both int and double types from API
+    if (json['latitude'] != null) {
+      latitude = (json['latitude'] is int) 
+          ? (json['latitude'] as int).toDouble() 
+          : (json['latitude'] as num?)?.toDouble();
+    }
+    if (json['longitude'] != null) {
+      longitude = (json['longitude'] is int) 
+          ? (json['longitude'] as int).toDouble() 
+          : (json['longitude'] as num?)?.toDouble();
+    }
   }
 
   Map<String, dynamic> toJson() {

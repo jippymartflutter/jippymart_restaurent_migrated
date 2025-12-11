@@ -258,9 +258,7 @@ class FireStoreUtils {
         log("updateDriverUser ${userModel.firebaseId} ${userModel.id} ");
         Map<String, dynamic> userJson = _convertTimestampsToJson(userModel.toJson());
         log("updateDriverUser ${userJson}");
-        
         _lastUpdateDriverUserRequest = DateTime.now();
-        
         final response = await http.post(
           Uri.parse('${Constant.baseUrl}restaurant/updateUser'),
           headers: {
@@ -1389,15 +1387,18 @@ class FireStoreUtils {
   static Future<VendorModel?> getVendorById(String vendorId) async {
     VendorModel? vendorModel;
     try {
+      print("getVendorById  ");
       if (vendorId.isNotEmpty) {
         final response = await http.get(
           Uri.parse('${Constant.baseUrl}restaurant/vendors/$vendorId'),
           headers: {'Content-Type': 'application/json'},
         );
         if (response.statusCode == 200) {
+          print("getVendorById  ${response.body}");
           final Map<String, dynamic> responseData = jsonDecode(response.body);
           if (responseData['success'] == true && responseData['data'] != null) {
             vendorModel = VendorModel.fromJson(responseData['data']);
+            print("getVendorById  ${response.body}");
           }
         } else if (response.statusCode == 404) {
           return null;

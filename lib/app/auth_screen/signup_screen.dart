@@ -262,7 +262,7 @@ class SignupScreen extends StatelessWidget {
                             ],
                           ),
                     RoundedButtonFill(
-                      title: "Signup".tr,
+                      title: "Sign Up".tr,
                       color: AppThemeData.secondary300,
                       textColor: AppThemeData.grey50,
                       onPress: () async {
@@ -288,19 +288,43 @@ class SignupScreen extends StatelessWidget {
                           } else if (controller.lastNameEditingController.value.text.trim().isEmpty) {
                             ShowToastDialog.showToast("Please enter last name".tr);
                           } else if (controller.emailEditingController.value.text.trim().isEmpty) {
+                            ShowToastDialog.showToast("Please enter email".tr);
+                          } else if (!isValidEmail(controller.emailEditingController.value.text.trim())) {
                             ShowToastDialog.showToast("Please enter valid email".tr);
                           } else if (controller.phoneNUmberEditingController.value.text.trim().isEmpty) {
                             ShowToastDialog.showToast("Please enter Phone number".tr);
+                          } else if (controller.phoneNUmberEditingController.value.text.length != 10) {
+                            ShowToastDialog.showToast("Number must be 10 digits".tr);
                           } else if (controller.passwordEditingController.value.text.trim().isEmpty) {
                             ShowToastDialog.showToast("Please enter password".tr);
                           } else if (controller.conformPasswordEditingController.value.text.trim().isEmpty) {
-                            ShowToastDialog.showToast("Please enter conform password".tr);
+                            ShowToastDialog.showToast("Please enter confirm password".tr);
                           } else if (controller.passwordEditingController.value.text.trim() !=
                               controller.conformPasswordEditingController.value.text.trim()) {
-                            ShowToastDialog.showToast("Password and conform password doesn't match".tr);
+                            ShowToastDialog.showToast("Password and confirm password don't match".tr);
                           } else {
                             controller.signUpWithEmailAndPassword();
                           }
+                          // if (controller.firstNameEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter first name".tr);
+                          // } else if (controller.lastNameEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter last name".tr);
+                          // } else if (controller.emailEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter valid email".tr);
+                          // } else if (controller.phoneNUmberEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter Phone number".tr);
+                          // } else if (controller.passwordEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter password".tr);
+                          // } else if (controller.conformPasswordEditingController.value.text.trim().isEmpty) {
+                          //   ShowToastDialog.showToast("Please enter conform password".tr);
+                          // } else if (controller.passwordEditingController.value.text.trim() !=
+                          //     controller.conformPasswordEditingController.value.text.trim()) {
+                          //   ShowToastDialog.showToast("Password and confirm password doesn't match".tr);
+                          // }else if (controller.phoneNUmberEditingController.value.text.length !=10) {
+                          //   ShowToastDialog.showToast("Number Must Be 10".tr);
+                          // } else {
+                          //   controller.signUpWithEmailAndPassword();
+                          // }
                         }
                       },
                     ),
@@ -396,4 +420,11 @@ class SignupScreen extends StatelessWidget {
           );
         });
   }
+  bool isValidEmail(String email) {
+    final RegExp emailRegExp = RegExp(
+        r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    );
+    return emailRegExp.hasMatch(email);
+  }
+
 }

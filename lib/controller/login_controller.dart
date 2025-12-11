@@ -55,7 +55,6 @@ class LoginController extends GetxController {
                     duration: const Duration(milliseconds: 1200),
                   );
                 } else {
-                  clearUserData();
                   Get.offAll(
                         () => const LoginScreen(),
                     transition: Transition.fadeIn,
@@ -63,7 +62,6 @@ class LoginController extends GetxController {
                   );
                 }
               } else {
-                clearUserData();
                 Get.offAll(
                       () => const LoginScreen(),
                   transition: Transition.fadeIn,
@@ -73,7 +71,6 @@ class LoginController extends GetxController {
             }
           });
         } else {
-          clearUserData();
           Get.offAll(
                 () => const LoginScreen(),
             transition: Transition.fadeIn,
