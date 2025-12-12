@@ -38,5 +38,4 @@ class ForgotPasswordController extends GetxController {
       ShowToastDialog.showToast("Something went wrong: $e");
     }
   }
-
 }

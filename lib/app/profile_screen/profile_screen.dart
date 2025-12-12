@@ -36,6 +36,7 @@ import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/network_image_widget.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -442,91 +443,71 @@ class ProfileScreen extends StatelessWidget {
                                                   });
                                                 },
                                               ),
-                                  (Constant.isRestaurantVerification == true &&
-                                              controller.userModel.value
-                                                      .isDocumentVerify ==
-                                                  false) ||
-                                          (controller.userModel.value
-                                                      .vendorID ==
-                                                  null ||
-                                              controller.userModel.value
-                                                  .vendorID!.isEmpty)
-                                      ? const SizedBox()
-                                      : cardDecoration(
-                                          themeChange,
-                                          controller,
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: ShapeDecoration(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.secondary600
-                                                  : AppThemeData.secondary50,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(120),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(12),
-                                              child: SvgPicture.asset(
-                                                  "assets/icons/ic_manage_product.svg"),
-                                            ),
-                                          ),
-                                          "Manage Products",
-                                          () {
-                                            DashBoardController
-                                                dashBoardController =
-                                                Get.find<DashBoardController>();
-                                            dashBoardController
-                                                .selectedIndex.value = Constant
-                                                        .isDineInEnable &&
-                                                    Constant
-                                                            .userModel!
-                                                            .subscriptionPlan
-                                                            ?.features
-                                                            ?.dineIn !=
-                                                        false
-                                                ? 2
-                                                : 1;
-                                          },
+                                  cardDecoration(
+                                    themeChange,
+                                    controller,
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: ShapeDecoration(
+                                        color: themeChange.getThem()
+                                            ? AppThemeData.secondary600
+                                            : AppThemeData.secondary50,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(120),
                                         ),
-                                  (Constant.isRestaurantVerification == true &&
-                                              controller.userModel.value
-                                                      .isDocumentVerify ==
-                                                  false) ||
-                                          (controller.userModel.value
-                                                      .vendorID ==
-                                                  null ||
-                                              controller.userModel.value
-                                                  .vendorID!.isEmpty)
-                                      ? const SizedBox()
-                                      : cardDecoration(
-                                          themeChange,
-                                          controller,
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: ShapeDecoration(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.secondary600
-                                                  : AppThemeData.secondary50,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(120),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10),
-                                              child: SvgPicture.asset(
-                                                  "assets/icons/ic_alarm-clock.svg"),
-                                            ),
-                                          ),
-                                          "Working Hours",
-                                          () {
-                                            Get.to(const WorkingHoursScreen());
-                                          },
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: SvgPicture.asset(
+                                            "assets/icons/ic_manage_product.svg"),
+                                      ),
+                                    ),
+                                    "Manage Products",
+                                    () {
+                                      DashBoardController
+                                          dashBoardController =
+                                          Get.find<DashBoardController>();
+                                      dashBoardController
+                                          .selectedIndex.value = Constant
+                                                  .isDineInEnable &&
+                                              Constant
+                                                      .userModel!
+                                                      .subscriptionPlan
+                                                      ?.features
+                                                      ?.dineIn !=
+                                                  false
+                                          ? 2
+                                          : 1;
+                                    },
+                                  ),
+                                  cardDecoration(
+                                    themeChange,
+                                    controller,
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: ShapeDecoration(
+                                        color: themeChange.getThem()
+                                            ? AppThemeData.secondary600
+                                            : AppThemeData.secondary50,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(120),
                                         ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10),
+                                        child: SvgPicture.asset(
+                                            "assets/icons/ic_alarm-clock.svg"),
+                                      ),
+                                    ),
+                                    "Working Hours",
+                                    () {
+                                      Get.to(const WorkingHoursScreen());
+                                    },
+                                  ),
                                   cardDecoration(
                                     themeChange,
                                     controller,
@@ -974,10 +955,45 @@ class ProfileScreen extends StatelessWidget {
                                       ),
                                     ),
                                     "Rate the app",
-                                    () {
+                                    () async {
                                       final InAppReview inAppReview =
                                           InAppReview.instance;
-                                      inAppReview.requestReview();
+                                      
+                                      try {
+                                        // Open store listing directly - this is more reliable
+                                        // than requestReview() which has strict quotas and may not show
+                                        // For Android: automatically uses packageName from the app
+                                        // For iOS: uses appStoreId if provided
+                                        await inAppReview.openStoreListing(
+                                          appStoreId: Constant.appStoreId.isEmpty 
+                                              ? null 
+                                              : Constant.appStoreId,
+                                        );
+                                      } catch (e) {
+                                        print('Error opening store listing: $e');
+                                        // Fallback: Use url_launcher to open Play Store/App Store
+                                        try {
+                                          if (Constant.googlePlayLink.isNotEmpty) {
+                                            await launchUrl(
+                                              Uri.parse(Constant.googlePlayLink),
+                                              mode: LaunchMode.externalApplication,
+                                            );
+                                          } else if (Constant.appStoreLink.isNotEmpty) {
+                                            await launchUrl(
+                                              Uri.parse(Constant.appStoreLink),
+                                              mode: LaunchMode.externalApplication,
+                                            );
+                                          } else {
+                                            // Last resort: Use package name for Android
+                                            await launchUrl(
+                                              Uri.parse('https://play.google.com/store/apps/details?id=${Constant.packageName}'),
+                                              mode: LaunchMode.externalApplication,
+                                            );
+                                          }
+                                        } catch (fallbackError) {
+                                          print('Error with fallback URL launcher: $fallbackError');
+                                        }
+                                      }
                                     },
                                   ),
                                 ],
@@ -1265,9 +1281,20 @@ class ProfileScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           FocusManager.instance.primaryFocus?.unfocus();
-          onPress!();
+          if (onPress != null) {
+            final result = onPress();
+            // If the function returns a Future, await it
+            if (result is Future) {
+              try {
+                await result;
+              } catch (error) {
+                // Handle any errors silently or log them
+                print('Error in onPress callback: $error');
+              }
+            }
+          }
         },
         child: Row(
           children: [

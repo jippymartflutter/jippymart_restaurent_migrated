@@ -180,6 +180,7 @@ class HomeController extends GetxController {
   //             acceptedOrderList.value = allOrderList
   //                 .where((p0) =>
   //                     p0.status == Constant.orderAccepted ||
+  //                     p0.status == Constant.driverAccepted ||
   //                     p0.status == Constant.driverPending ||
   //                     p0.status == Constant.driverRejected ||
   //                     p0.status == Constant.orderShipped ||
@@ -266,6 +267,7 @@ class HomeController extends GetxController {
           acceptedOrderList.value = allOrderList
               .where((p0) =>
                   p0.status == Constant.orderAccepted ||
+                  p0.status == Constant.driverAccepted ||
                   p0.status == Constant.driverPending ||
                   p0.status == Constant.driverRejected ||
                   p0.status == Constant.orderShipped ||

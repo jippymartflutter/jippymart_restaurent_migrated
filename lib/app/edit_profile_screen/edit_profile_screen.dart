@@ -19,138 +19,140 @@ class EditProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
-    return GetX(
-        init: EditProfileController(),
-        builder: (controller) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: AppThemeData.secondary300,
-              centerTitle: false,
-              titleSpacing: 0,
-              iconTheme:
-                  const IconThemeData(color: AppThemeData.grey50, size: 20),
-            ),
-            body: SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          controller.profileImage.isEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(60),
-                                  child: Image.asset(
-                                    Constant.userPlaceHolder,
-                                    height: Responsive.width(24, context),
-                                    width: Responsive.width(24, context),
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : Constant().hasValidUrl(
-                                          controller.profileImage.value) ==
-                                      false
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(60),
-                                      child: Image.file(
-                                        File(controller.profileImage.value),
-                                        height: Responsive.width(24, context),
-                                        width: Responsive.width(24, context),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : ClipRRect(
-                                      borderRadius: BorderRadius.circular(60),
-                                      child: NetworkImageWidget(
-                                        fit: BoxFit.cover,
-                                        imageUrl: controller.profileImage.value,
-                                        height: Responsive.width(24, context),
-                                        width: Responsive.width(24, context),
-                                        errorWidget: Image.asset(
-                                          Constant.userPlaceHolder,
-                                          fit: BoxFit.cover,
+    return SafeArea(
+      child: GetX(
+          init: EditProfileController(),
+          builder: (controller) {
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: AppThemeData.secondary300,
+                centerTitle: false,
+                titleSpacing: 0,
+                iconTheme:
+                    const IconThemeData(color: AppThemeData.grey50, size: 20),
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Stack(
+                          children: [
+                            controller.profileImage.isEmpty
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(60),
+                                    child: Image.asset(
+                                      Constant.userPlaceHolder,
+                                      height: Responsive.width(24, context),
+                                      width: Responsive.width(24, context),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Constant().hasValidUrl(
+                                            controller.profileImage.value) ==
+                                        false
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(60),
+                                        child: Image.file(
+                                          File(controller.profileImage.value),
                                           height: Responsive.width(24, context),
                                           width: Responsive.width(24, context),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(60),
+                                        child: NetworkImageWidget(
+                                          fit: BoxFit.cover,
+                                          imageUrl: controller.profileImage.value,
+                                          height: Responsive.width(24, context),
+                                          width: Responsive.width(24, context),
+                                          errorWidget: Image.asset(
+                                            Constant.userPlaceHolder,
+                                            fit: BoxFit.cover,
+                                            height: Responsive.width(24, context),
+                                            width: Responsive.width(24, context),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                          Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: InkWell(
-                                  onTap: () {
-                                    buildBottomSheet(context, controller);
-                                  },
-                                  child: SvgPicture.asset(
-                                      "assets/icons/ic_edit.svg")))
+                            Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: InkWell(
+                                    onTap: () {
+                                      buildBottomSheet(context, controller);
+                                    },
+                                    child: SvgPicture.asset(
+                                        "assets/icons/ic_edit.svg")))
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 40,
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFieldWidget(
+                              title: 'First Name'.tr,
+                              controller: controller.firstNameController.value,
+                              hintText: 'First Name'.tr,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Expanded(
+                            child: TextFieldWidget(
+                              title: 'Last Name'.tr,
+                              controller: controller.lastNameController.value,
+                              hintText: 'Last Name'.tr,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: 40,
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFieldWidget(
-                            title: 'First Name'.tr,
-                            controller: controller.firstNameController.value,
-                            hintText: 'First Name'.tr,
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                          child: TextFieldWidget(
-                            title: 'Last Name'.tr,
-                            controller: controller.lastNameController.value,
-                            hintText: 'Last Name'.tr,
-                          ),
-                        ),
-                      ],
-                    ),
-                    TextFieldWidget(
-                      title: 'Email'.tr,
-                      textInputType: TextInputType.emailAddress,
-                      controller: controller.emailController.value,
-                      hintText: 'Email'.tr,
-                      enable: false,
-                    ),
-                    TextFieldWidget(
-                      title: 'Phone Number'.tr,
-                      textInputType: TextInputType.emailAddress,
-                      controller: controller.phoneNumberController.value,
-                      hintText: 'Phone Number'.tr,
-                      enable: false,
-                    ),
-                  ],
+                      TextFieldWidget(
+                        title: 'Email'.tr,
+                        textInputType: TextInputType.emailAddress,
+                        controller: controller.emailController.value,
+                        hintText: 'Email'.tr,
+                        enable: false,
+                      ),
+                      TextFieldWidget(
+                        title: 'Phone Number'.tr,
+                        textInputType: TextInputType.emailAddress,
+                        controller: controller.phoneNumberController.value,
+                        hintText: 'Phone Number'.tr,
+                        enable: false,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            bottomNavigationBar: Container(
-              color: themeChange.getThem()
-                  ? AppThemeData.grey900
-                  : AppThemeData.grey50,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: RoundedButtonFill(
-                    title: "Save Details".tr,
-                    height: 5.5,
-                    color: AppThemeData.secondary300,
-                    textColor: AppThemeData.grey50,
-                    fontSizes: 16,
-                    onPress: () async {
-                      controller.saveData();
-                    },
-                  )),
-            ),
-          );
-        });
+              bottomNavigationBar: Container(
+                color: themeChange.getThem()
+                    ? AppThemeData.grey900
+                    : AppThemeData.grey50,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: RoundedButtonFill(
+                      title: "Save Details".tr,
+                      height: 5.5,
+                      color: AppThemeData.secondary300,
+                      textColor: AppThemeData.grey50,
+                      fontSizes: 16,
+                      onPress: () async {
+                        controller.saveData();
+                      },
+                    )),
+              ),
+            );
+          }),
+    );
   }
 
   buildBottomSheet(BuildContext context, EditProfileController controller) {

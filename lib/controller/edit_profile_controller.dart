@@ -56,7 +56,6 @@ class EditProfileController extends GetxController {
         File(profileImage.value).path.split('/').last,
       );
     }
-
     userModel.value.firstName = firstNameController.value.text;
     userModel.value.lastName = lastNameController.value.text;
     userModel.value.profilePictureURL = profileImage.value;

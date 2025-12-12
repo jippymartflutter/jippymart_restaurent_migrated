@@ -1139,11 +1139,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             await AudioPlayerService.playSound(false);
                             orderModel.status = Constant.orderRejected;
                             await FireStoreUtils.updateOrder(orderModel);
+                            print("Rejecttr ${  orderModel.author?.fcmToken.toString()}   ${orderModel.toJson()}");
                             if (orderModel.author?.fcmToken != null &&
                                 orderModel.author!.fcmToken!.isNotEmpty) {
                               SendNotification.sendFcmMessage(
                                 Constant.restaurantRejected,
-                                orderModel.author!.fcmToken.toString(),
+                                orderModel.author?.fcmToken.toString() ??'',
                                 {
                                   'orderId': orderModel.id ?? '',
                                   'status': Constant.orderRejected,
@@ -1160,7 +1161,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   double.parse(
                                       orderModel.deliveryCharge.toString()) +
                                   double.parse(orderModel.tipAmount.toString());
-
                               WalletTransactionModel historyModel =
                                   WalletTransactionModel(
                                       amount: finalAmount,
@@ -1180,7 +1180,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               //     .set(historyModel.toJson());
                               await FireStoreUtils.updateUserWallet(
                                   amount: finalAmount.toString(),
-                                  userId: orderModel.author!.firebaseId.toString()
+                                  userId: orderModel.author?.firebaseId.toString()??''
                               );
                             }
 
