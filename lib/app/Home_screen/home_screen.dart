@@ -507,8 +507,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     ),
                                   ],
                                 ),
-                              ),floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-                    floatingActionButton:   GestureDetector(
+                              ),
+                    floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+                    floatingActionButton:GestureDetector(
                       onTap: () async {
                         const String phoneNumber = '+916301931498';
                         const String message =
@@ -2792,18 +2793,27 @@ print("acceptedWidget ${orderModel.vendorID}");
     // Get current duration if exists
     Duration initialDuration = const Duration(minutes: 10);
     if (controller.estimatedTimeController.value.text.isNotEmpty) {
-      // Parse "hours:minutes" format (e.g., "1:30" = 90 minutes)
       final timeText = controller.estimatedTimeController.value.text.trim();
-      final parts = timeText.split(':');
-      if (parts.length == 2) {
-        final hours = int.tryParse(parts[0]) ?? 0;
-        final minutes = int.tryParse(parts[1]) ?? 0;
-        final totalMinutes = (hours * 60) + minutes;
-        initialDuration = Duration(minutes: totalMinutes.clamp(1, 2400)); // Max 40 hours
+      // Check if it's in "X minutes" format
+      if (timeText.toLowerCase().contains('minutes') || timeText.toLowerCase().contains('minute')) {
+        final minutesMatch = RegExp(r'(\d+)\s*(?:minutes?|min)', caseSensitive: false).firstMatch(timeText);
+        if (minutesMatch != null) {
+          final minutes = int.tryParse(minutesMatch.group(1) ?? '') ?? 10;
+          initialDuration = Duration(minutes: minutes.clamp(1, 2400));
+        }
       } else {
-        // Fallback: try parsing as just minutes
-        final minutes = int.tryParse(timeText) ?? 10;
-        initialDuration = Duration(minutes: minutes.clamp(1, 40));
+        // Parse "hours:minutes" format (e.g., "1:30" = 90 minutes)
+        final parts = timeText.split(':');
+        if (parts.length == 2) {
+          final hours = int.tryParse(parts[0]) ?? 0;
+          final minutes = int.tryParse(parts[1]) ?? 0;
+          final totalMinutes = (hours * 60) + minutes;
+          initialDuration = Duration(minutes: totalMinutes.clamp(1, 2400)); // Max 40 hours
+        } else {
+          // Fallback: try parsing as just minutes
+          final minutes = int.tryParse(timeText) ?? 10;
+          initialDuration = Duration(minutes: minutes.clamp(1, 2400));
+        }
       }
     }
 
@@ -2825,7 +2835,14 @@ print("acceptedWidget ${orderModel.vendorID}");
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     final hours = duration.inHours;
     final mins = duration.inMinutes.remainder(60);
-    controller.estimatedTimeController.value.text = '$hours:${twoDigits(mins)}';
+    final totalMinutes = duration.inMinutes;
+    
+    // If less than 1 hour, show as "X minutes", otherwise show as "H:MM"
+    if (hours == 0) {
+      controller.estimatedTimeController.value.text = '$totalMinutes minutes';
+    } else {
+      controller.estimatedTimeController.value.text = '$hours:${twoDigits(mins)}';
+    }
     print("${controller.estimatedTimeController.value.text} _updateDuration");
     controller.estimatedTimeController.refresh();
   }
