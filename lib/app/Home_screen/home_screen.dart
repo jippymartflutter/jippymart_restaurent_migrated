@@ -473,7 +473,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                                     themeChange,
                                                     context,
                                                     orderModel,
-                                                    controller);
+                                                    controller
+                                                  ,);
                                               },
                                             ),
                                     ),
@@ -2766,7 +2767,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   orderModel.driver!.fcmToken!.isNotEmpty) {
                                 SendNotification.sendFcmMessage(
                                     Constant.newDeliveryOrder,
-                                    orderModel.driver!.fcmToken.toString(), {});
+                                    orderModel.driver?.fcmToken.toString() ??'', {});
                               }
                               ShowToastDialog.closeLoader();
                             } else {
@@ -3051,6 +3052,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                       final data = json.decode(response.body);
                                       if (data['success'] == true) {
                                         radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 5.0;
+                                        print("GetDriverNearByGetDriverNearBy ${radius} ");
                                         Constant.driverSearchRadius = radius;
                                       }
                                     } else {
@@ -3098,12 +3100,14 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 if (eligibleDrivers.isNotEmpty) {
                                   // Update drivers sequentially with delays to avoid rate limiting
                                   for (var driver in eligibleDrivers) {
+                                    print("driverfcmtoken ${driver.fcmToken} ${driver.email}");
                                     driver.orderRequestData ??= [];
                                     if (!driver.orderRequestData!.contains(orderModel.id)) {
                                       driver.orderRequestData!.add(orderModel.id);
-                                      // Update sequentially to prevent rate limiting (429 errors)
                                       await FireStoreUtils.updateDriverUser(driver);
-                                      // Small delay between updates to respect rate limits
+                                      SendNotification.sendFcmMessage(
+                                          Constant.restaurantAccepted,
+                                          driver.fcmToken.toString(), {},);
                                       await Future.delayed(const Duration(milliseconds: 100));
                                     }
                                   }

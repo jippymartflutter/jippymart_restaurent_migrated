@@ -26,7 +26,6 @@ class SendNotification {
         await clientViaServiceAccount(serviceAccountCredentials, _scopes);
     return client.credentials.accessToken.data;
   }
-
   static Future<bool> sendFcmMessage(
       String type, String token, Map<String, dynamic>? payload) async {
     print('[FCM DEBUG] sendFcmMessage: type=$type, token=$token, payload=$payload');
@@ -159,4 +158,7 @@ class SendNotification {
       return false;
     }
   }
+
 }
+
+

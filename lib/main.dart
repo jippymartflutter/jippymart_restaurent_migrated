@@ -79,12 +79,10 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     await initializeFirebase();
     await Preferences.initPref();
-    
     // Stop any existing background service to prevent notifications on startup
     // We need to configure it first to be able to check/stop it, but we won't start it
     try {
       final service = FlutterBackgroundService();
-      // Configure service (but don't start it) so we can check if it's running
       service.configure(
         androidConfiguration: AndroidConfiguration(
           onStart: onStartService,
@@ -97,8 +95,6 @@ void main() async {
         ),
         iosConfiguration: IosConfiguration(),
       );
-      
-      // Check if service is already running and stop it
       final isRunning = await service.isRunning();
       if (isRunning) {
         print('Stopping existing background service...');
@@ -109,7 +105,6 @@ void main() async {
       print('Error checking/stopping service: $e');
       // Continue even if service stop fails
     }
-    
     // Don't start the service on startup - it will be started when needed
     final notificationService = NotificationService();
     await notificationService.initInfo();
@@ -126,7 +121,6 @@ void main() async {
 Future<void> initializeService() async {
   try {
     final service = FlutterBackgroundService();
-    
     // Configure service but don't start it automatically
     service.configure(
       androidConfiguration: AndroidConfiguration(
