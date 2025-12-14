@@ -121,6 +121,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // ElevatedButton(onPressed: (){
+                              //   SendNotification.sendFcmMessage(
+                              //     Constant.restaurantAccepted,
+                              //     "d2LKZfj2RCuLGf77v_Pa0J:APA91bEvZDEjTa3sF221Id_0DhcAQi57SQ6QqPPnbg8hWoJNpapGw2dpUKm1U4ImMp4GixVc4wBIVrP3NGQlU31kqJ8jlHDc815BQRu7WUNStrOIiSGG4-U", {},
+                              //   );
+                              // }, child: Text("Send Notification"),),
                               SizedBox(width: 270,
                                 child: RichText(
                                   text: TextSpan(
@@ -510,83 +516,94 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                     floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-                    floatingActionButton:GestureDetector(
-                      onTap: () async {
-                        const String phoneNumber = '+916301931498';
-                        const String message =
-                            "I'm interested to upgrade my plan to premium services";
-                        final Uri whatsappUrl = Uri.parse(
-                            'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
-                        try {
-                          if (await canLaunchUrl(whatsappUrl)) {
-                            await launchUrl(whatsappUrl,
-                                mode: LaunchMode.externalApplication);
-                          } else {
-                            final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
-                            if (await canLaunchUrl(phoneUrl)) {
-                              await launchUrl(phoneUrl,
-                                  mode: LaunchMode.externalApplication);
-                            }
-                          }
-                        } catch (e) {
-                          debugPrint('Error launching WhatsApp: $e');
-                        }
-                      },
-                      child: Container(
-                        margin: EdgeInsets.all(20),padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: ColorConst.lightBlue,borderRadius: BorderRadius.circular(40),
-                        ),
-                        height: 70,
-                        width: double.infinity,
-                        child: Row(children: [
-                          SizedBox(width: 10,),
-                          GestureDetector(
-                            onTap: () async {
-                              const String phoneNumber = '+916301931498';
-                              const String message =
-                                  "I'm interested to upgrade my plan to premium services";
-                              final Uri whatsappUrl = Uri.parse(
-                                  'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
-                              try {
-                                if (await canLaunchUrl(whatsappUrl)) {
-                                  await launchUrl(whatsappUrl,
+                    floatingActionButton:
+                    Obx(
+                       () {
+                        return controller.isFloating.value?
+                        SizedBox():GestureDetector(
+                          onTap: () async {
+                            const String phoneNumber = '+916301931498';
+                            const String message =
+                                "I'm interested to upgrade my plan to premium services";
+                            final Uri whatsappUrl = Uri.parse(
+                                'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}'
+                              ,);
+                            try {
+                              if (await canLaunchUrl(whatsappUrl)) {
+                                await launchUrl(whatsappUrl,
+                                    mode: LaunchMode.externalApplication);
+                              } else {
+                                final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
+                                if (await canLaunchUrl(phoneUrl)) {
+                                  await launchUrl(phoneUrl,
                                       mode: LaunchMode.externalApplication);
-                                } else {
-                                  final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
-                                  if (await canLaunchUrl(phoneUrl)) {
-                                    await launchUrl(phoneUrl,
-                                        mode: LaunchMode.externalApplication);
-                                  }
                                 }
-                              } catch (e) {
-                                debugPrint('Error launching WhatsApp: $e');
                               }
-                            },
-                            child: SvgPicture.asset(
-                              ImageConst.whatsApp,
+                            } catch (e) {
+                              debugPrint('Error launching WhatsApp: $e');
+                            }
+                          },
+                          child: Container(
+                            margin: EdgeInsets.all(20),padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: ColorConst.lightBlue,borderRadius: BorderRadius.circular(40),
                             ),
-                          ),
-                          SizedBox(width: 10,),
-                          SizedBox(
-                            width: 240,
-                            child: RichText(
-                              text: TextSpan(
-                                style: TextStyleConst.blackMedium15,
-                                children: [
-                                  const TextSpan(
-                                    text: "Upgrade to our ₹499 or ₹999 Plan and unlock  ",
-                                  ),
-                                  TextSpan(
-                                    text: "premium features",
-                                    style: TextStyleConst.blueMedium15,
-                                  ),
-                                ],
+                            height: 70,
+                            width: double.infinity,
+                            child: Row(children: [
+                              SizedBox(width: 10,),
+                              GestureDetector(
+                                onTap: () async {
+                                  const String phoneNumber = '+916301931498';
+                                  const String message =
+                                      "I'm interested to upgrade my plan to premium services";
+                                  final Uri whatsappUrl = Uri.parse(
+                                      'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+                                  try {
+                                    if (await canLaunchUrl(whatsappUrl)) {
+                                      await launchUrl(whatsappUrl,
+                                          mode: LaunchMode.externalApplication);
+                                    } else {
+                                      final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
+                                      if (await canLaunchUrl(phoneUrl)) {
+                                        await launchUrl(phoneUrl,
+                                            mode: LaunchMode.externalApplication);
+                                      }
+                                    }
+                                  } catch (e) {
+                                    debugPrint('Error launching WhatsApp: $e');
+                                  }
+                                },
+                                child: SvgPicture.asset(
+                                  ImageConst.whatsApp,
+                                ),
                               ),
-                            ),
-                          )
-                        ],),
-                      ),
+                              SizedBox(width: 10,),
+                              SizedBox(
+                                width: 200,
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: TextStyleConst.blackMedium15,
+                                    children: [
+                                      const TextSpan(
+                                        text: "Upgrade to our ₹499 or ₹999 Plan and unlock ",
+                                      ),
+                                      TextSpan(
+                                        text: "premium features",
+                                        style: TextStyleConst.blueMedium15,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                           IconButton(icon: Icon(Icons.close),onPressed: (){
+                                controller.isFloatingFunction();
+                              }
+                                ,),
+                            ],),
+                          ),
+                        );
+                      }
                     ),
                   ),
                 );
@@ -3077,6 +3094,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 }
                                 final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
                                 final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
+                                print("controller.vendermodel.value ${controller.vendermodel.value.zoneId}");
                                 List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
                                 List<UserModel> eligibleDrivers = allDrivers.where((driver) {
                                   if (driver.location == null ||
@@ -3100,13 +3118,13 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 if (eligibleDrivers.isNotEmpty) {
                                   // Update drivers sequentially with delays to avoid rate limiting
                                   for (var driver in eligibleDrivers) {
-                                    print("driverfcmtoken ${driver.fcmToken} ${driver.email}");
+                                    print("driverfcmtoken ${driver.email} ${driver.fcmToken} ");
                                     driver.orderRequestData ??= [];
                                     if (!driver.orderRequestData!.contains(orderModel.id)) {
                                       driver.orderRequestData!.add(orderModel.id);
                                       await FireStoreUtils.updateDriverUser(driver);
                                       SendNotification.sendFcmMessage(
-                                          Constant.restaurantAccepted,
+                                          "New Order",
                                           driver.fcmToken.toString(), {},);
                                       await Future.delayed(const Duration(milliseconds: 100));
                                     }

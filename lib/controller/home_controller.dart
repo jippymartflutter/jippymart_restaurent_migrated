@@ -13,6 +13,16 @@ import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
 class HomeController extends GetxController {
+
+  RxBool isFloating= false.obs;
+
+  void isFloatingFunction(){
+    if(isFloating.value){
+      isFloating.value = false;
+    }else{
+      isFloating.value=true;
+    }
+  }
   RxBool isLoading = true.obs;
   RxBool isFetchingOrders = false.obs;
 

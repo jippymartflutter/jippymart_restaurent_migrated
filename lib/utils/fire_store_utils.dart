@@ -3065,14 +3065,20 @@ class FireStoreUtils {
     return ratingModelList;
   }
 
-  static Future<List<UserModel>> getAvalibleDrivers() async {
+  static Future<List<UserModel>> getAvalibleDrivers({String? zoneId}) async {
     List<UserModel> driverList = [];
     try {
       String? userId = await getFirebaseId();
       log("getAvalibleDrivers :: 22  $userId");
       // Make API call
+      String url = "";
+      if(zoneId==null){
+        url = '${Constant.baseUrl}drivers/available';
+      }else{
+        url = '${Constant.baseUrl}drivers/available?zoneId=$zoneId';
+      }
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}drivers/available'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
