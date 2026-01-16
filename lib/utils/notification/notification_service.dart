@@ -3,11 +3,13 @@ import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:jippymart_restaurant/firebase_options.dart';
 import 'package:jippymart_restaurant/service/audio_player_service.dart';
 import 'package:jippymart_restaurant/utils/notification/daily_notification_service.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
+import 'package:jippymart_restaurant/controller/home_controller.dart';
 
 // "Good Morning! Are you opening your restaurant today? ",
 // "శుభోదయం!ఈరోజు మీ రెస్టారెంట్ తెరవాలా?",
@@ -15,12 +17,14 @@ Future<void> firebaseMessageBackgroundHandle(RemoteMessage message) async {
   log("BackGround Message :: ${message.messageId}");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Preferences.initPref();
-  // Only play sound for new order notifications
-  bool shouldPlaySound = NotificationService.shouldPlaySoundForNotification(message);
-  if (shouldPlaySound) {
-    await AudioPlayerService.initAudio();
-    await AudioPlayerService.playSound(true);
-  }
+      // Always check actual order state before playing sound (most reliable method)
+      bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
+      await AudioPlayerService.initAudio();
+        if (hasNewOrders) {
+          await AudioPlayerService.playSound(true);
+        } else {
+          await AudioPlayerService.playSound(false);
+        }
   final notificationService = NotificationService();
   await notificationService.initInfo();
 }
@@ -88,13 +92,15 @@ class NotificationService {
       if (message.notification != null) {
         log(message.notification.toString());
         display(message);
-        // Only play sound for new order notifications, not for already accepted/rejected orders
-        bool shouldPlaySound = NotificationService.shouldPlaySoundForNotification(message);
-        if (shouldPlaySound) {
-          await AudioPlayerService.initAudio();
-          await AudioPlayerService.playSound(true); // 🔊 Start continuous sound
+        // Always check actual order state before playing sound (most reliable method)
+        // This prevents sound from restarting when orders are accepted from admin panel
+        bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
+        await AudioPlayerService.initAudio();
+        if (hasNewOrders) {
+          await AudioPlayerService.playSound(true);
         } else {
-          log("Skipping sound - notification is not for a new pending order");
+          // Stop sound if no new orders
+          await AudioPlayerService.playSound(false);
         }
       }
     });
@@ -102,12 +108,14 @@ class NotificationService {
       if (message.notification != null) {
         log(message.notification.toString());
       }
-      // Only play sound for new order notifications
-      bool shouldPlaySound = NotificationService.shouldPlaySoundForNotification(message);
-      if (shouldPlaySound) {
-        await AudioPlayerService.initAudio();
-        await AudioPlayerService.playSound(true);
-      }
+      // Always check actual order state before playing sound (most reliable method)
+      bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
+      await AudioPlayerService.initAudio();
+        if (hasNewOrders) {
+          await AudioPlayerService.playSound(true);
+        } else {
+          await AudioPlayerService.playSound(false);
+        }
     });
     log("::::::::::::Permission authorized:::::::::::::::::");
     await FirebaseMessaging.instance.subscribeToTopic("restaurant");
@@ -116,6 +124,28 @@ class NotificationService {
   static getToken() async {
     String? token = await FirebaseMessaging.instance.getToken();
     return token!;
+  }
+
+  /// Check if there are actually new orders in the system
+  /// This prevents sound from playing when orders have been accepted/rejected
+  static Future<bool> checkIfHasNewOrders() async {
+    try {
+      // Try to get HomeController if it's registered
+      if (Get.isRegistered<HomeController>()) {
+        HomeController controller = Get.find<HomeController>();
+        if (controller.newOrderList.isNotEmpty) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        // If controller not available (e.g., in background isolate), default to false
+        return false;
+      }
+    } catch (e) {
+      // On error, default to false (don't play sound)
+      return false;
+    }
   }
 
   /// Check if sound should be played for this notification (static version for background handler)
@@ -134,36 +164,28 @@ class NotificationService {
             status == Constant.orderCompleted ||
             status == Constant.orderInTransit ||
             status == Constant.orderShipped) {
-          log("Skipping sound - order status is: $status");
           return false;
         }
         
         // Play sound for new/pending orders
         if (status == Constant.orderPlaced || 
             status?.toLowerCase() == Constant.orderPending.toLowerCase()) {
-          log("Playing sound - new order detected with status: $status");
           return true;
         }
       }
       
       // Check if notification type indicates a new order
-      // If no status is provided but it's a new order notification, play sound
-      // This handles cases where status might not be in the data payload
       String? notificationType = message.data['type']?.toString();
       if (notificationType == Constant.newOrderPlaced || 
           notificationType == Constant.newDeliveryOrder) {
-        log("Playing sound - new order notification type: $notificationType");
         return true;
       }
       
-      // Default: play sound if we can't determine the status
-      // This ensures backward compatibility but logs a warning
-      log("Warning: Could not determine order status from notification data. Playing sound by default.");
-      return true;
+      // Default: don't play sound if we can't determine the status
+      return false;
     } catch (e) {
-      log("Error checking notification status: $e");
-      // On error, default to playing sound for backward compatibility
-      return true;
+      // On error, default to false (don't play sound)
+      return false;
     }
   }
 

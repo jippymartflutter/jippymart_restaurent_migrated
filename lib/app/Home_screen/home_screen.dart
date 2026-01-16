@@ -1203,8 +1203,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               );
                             }
 
+                            // Immediately refresh orders to update count
+                            await controller.getOrder(silent: false);
                             ShowToastDialog.closeLoader();
-                            controller.getOrder();
                             Get.back();
                           },
                         ),
@@ -1929,9 +1930,10 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 amount: (-finalAmountdata).toString(),
                                 userId:
                                     FireStoreUtils.getCurrentUid().toString());
-                            await controller.getOrder();
-                            Get.back();
+                            // Immediately refresh orders to update count
+                            await controller.getOrder(silent: false);
                             ShowToastDialog.closeLoader();
+                            Get.back();
                           },
                         ),
                       ),
@@ -1960,7 +1962,9 @@ print("acceptedWidget ${orderModel.vendorID}");
                                         orderModel.author!.fcmToken.toString(),
                                         {});
                                   }
-
+                                  
+                                  // Immediately refresh orders to update count
+                                  await controller.getOrder(silent: false);
                                   ShowToastDialog.closeLoader();
                                 },
                               )
@@ -3049,98 +3053,185 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 );
                               } else {
                                 ShowToastDialog.showLoader('Please wait...'.tr);
-                                orderModel.estimatedTimeToPrepare = controller.estimatedTimeController.value.text;
-                                orderModel.status = Constant.orderAccepted;
-                                // Play sound (quick operation)
-                                await AudioPlayerService.playSound(false);
-                                // Get driver radius in parallel with other operations
-                                double radius = Constant.driverSearchRadius ?? 5.0;
-                                Future<void> radiusFuture = Future.value();
-                                if (Constant.driverSearchRadius == null) {
-                                  String getUrl = '${Constant.baseUrl}restaurant/GetDriverNearBy';
-                                  print("getUrl $getUrl ");
-                                  radiusFuture = http.get(
-                                    Uri.parse(getUrl),
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                  ).then((response) {
-                                    if (response.statusCode == 200) {
-                                      final data = json.decode(response.body);
-                                      if (data['success'] == true) {
-                                        radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 5.0;
-                                        print("GetDriverNearByGetDriverNearBy ${radius} ");
+                                try {
+                                  orderModel.estimatedTimeToPrepare = controller.estimatedTimeController.value.text;
+                                  orderModel.status = Constant.orderAccepted;
+                                  
+                                  // Stop notification sound immediately when order is accepted
+                                  await AudioPlayerService.playSound(false);
+                                  
+                                  // Get driver radius (fetch if not cached)
+                                  double radius = Constant.driverSearchRadius ?? 5.0;
+                                  Future<void> radiusFuture = Future.value();
+                                  if (Constant.driverSearchRadius == null) {
+                                    String getUrl = '${Constant.baseUrl}restaurant/GetDriverNearBy';
+                                    print("getUrl $getUrl ");
+                                    radiusFuture = http.get(
+                                      Uri.parse(getUrl),
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                      },
+                                    ).then((response) {
+                                      if (response.statusCode == 200) {
+                                        final data = json.decode(response.body);
+                                        if (data['success'] == true) {
+                                          radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 5.0;
+                                          print("GetDriverNearBy radius: ${radius}km");
+                                          Constant.driverSearchRadius = radius;
+                                        }
+                                      } else {
+                                        radius = 5.0;
                                         Constant.driverSearchRadius = radius;
                                       }
-                                    } else {
+                                    }).catchError((e) {
+                                      print('Error fetching driver radius: $e');
                                       radius = 5.0;
                                       Constant.driverSearchRadius = radius;
+                                    });
+                                  }
+                                  
+                                  // Update order and wallet in parallel with radius fetch
+                                  final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
+                                  final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
+                                  await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
+                                  
+                                  // Get restaurant location and zone ID for driver filtering
+                                  final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
+                                  final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
+                                  final String? zoneId = controller.vendermodel.value.zoneId;
+                                  print("Restaurant zoneId: $zoneId, location: ($restaurantLat, $restaurantLng)");
+                                  
+                                  // Fetch available drivers (use zoneId if available to get all eligible drivers)
+                                  List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers(zoneId: zoneId);
+                                  
+                                  // Filter drivers by distance within radius with detailed logging
+                                  List<UserModel> eligibleDrivers = [];
+                                  int driversWithoutLocation = 0;
+                                  int driversOutOfRange = 0;
+                                  
+                                  for (var driver in allDrivers) {
+                                    // Check if driver has valid location data
+                                    if (driver.location == null) {
+                                      driversWithoutLocation++;
+                                      print("Driver ${driver.firebaseId} (${driver.email}) filtered: No location data");
+                                      continue;
                                     }
-                                  }).catchError((e) {
-                                    print('Error fetching driver radius: $e');
-                                    radius = 5.0;
-                                    Constant.driverSearchRadius = radius;
-                                  });
-                                }
-                                final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
-                                final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
-                                await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
-                                await controller.getOrder(silent: false);
-                                // After refreshing orders, check if there are any remaining pending orders
-                                // If not, stop the notification sound
-                                if (controller.newOrderList.isEmpty) {
-                                  await AudioPlayerService.playSound(false);
-                                  print("No pending orders remaining - stopped notification sound");
-                                }
-                                final double restaurantLat = controller.vendermodel.value.latitude ?? 0.0;
-                                final double restaurantLng = controller.vendermodel.value.longitude ?? 0.0;
-                                print("controller.vendermodel.value ${controller.vendermodel.value.zoneId}");
-                                List<UserModel> allDrivers = await FireStoreUtils.getAvalibleDrivers();
-                                List<UserModel> eligibleDrivers = allDrivers.where((driver) {
-                                  if (driver.location == null ||
-                                      driver.location!.latitude == null ||
-                                      driver.location!.longitude == null) {
-                                    print("Driver ${driver.firebaseId} filtered: No location data");
-                                    return false;
-                                  }
-                                  final double driverLat = driver.location?.latitude??0;
-                                  final double driverLng = driver.location?.longitude??0;
-                                  double distance = Geolocator.distanceBetween(
-                                      restaurantLat, restaurantLng, driverLat, driverLng) /
-                                      1000;
-                                  bool isEligible = distance <= radius;
-                                  if (!isEligible) {
-                                    print("Driver ${driver.firebaseId} (${driver.firstName} ${driver.lastName}) filtered: Distance ${distance.toStringAsFixed(2)}km exceeds radius ${radius}km");
-                                  }
-                                  return isEligible;
-                                }).toList();
-                                print("Total drivers: ${allDrivers.length}, Eligible drivers: ${eligibleDrivers.length}, Radius: ${radius}km");
-                                if (eligibleDrivers.isNotEmpty) {
-                                  // Update drivers sequentially with delays to avoid rate limiting
-                                  for (var driver in eligibleDrivers) {
-                                    print("driverfcmtoken ${driver.email} ${driver.fcmToken} ");
-                                    driver.orderRequestData ??= [];
-                                    if (!driver.orderRequestData!.contains(orderModel.id)) {
-                                      driver.orderRequestData!.add(orderModel.id);
-                                      await FireStoreUtils.updateDriverUser(driver);
-                                      SendNotification.sendFcmMessage(
-                                          "New Order",
-                                          driver.fcmToken.toString(), {},);
-                                      await Future.delayed(const Duration(milliseconds: 100));
+                                    
+                                    // Safely extract latitude and longitude
+                                    double? driverLat;
+                                    double? driverLng;
+                                    
+                                    try {
+                                      if (driver.location!.latitude == null || driver.location!.longitude == null) {
+                                        driversWithoutLocation++;
+                                        print("Driver ${driver.firebaseId} (${driver.email}) filtered: Missing latitude/longitude");
+                                        continue;
+                                      }
+                                      
+                                      // UserLocation.fromJson now handles string conversion, so these should be doubles
+                                      driverLat = driver.location!.latitude;
+                                      driverLng = driver.location!.longitude;
+                                      
+                                      if (driverLat == null || driverLng == null) {
+                                        driversWithoutLocation++;
+                                        print("Driver ${driver.firebaseId} (${driver.email}) filtered: Invalid latitude/longitude values");
+                                        continue;
+                                      }
+                                    } catch (e) {
+                                      driversWithoutLocation++;
+                                      print("Driver ${driver.firebaseId} (${driver.email}) filtered: Error parsing location - $e");
+                                      continue;
+                                    }
+                                    
+                                    // Calculate distance
+                                    try {
+                                      double distance = Geolocator.distanceBetween(
+                                          restaurantLat, restaurantLng, driverLat, driverLng) / 1000;
+                                      
+                                      if (distance <= radius) {
+                                        eligibleDrivers.add(driver);
+                                        print("Driver ${driver.firebaseId} (${driver.fullName()}) eligible: Distance ${distance.toStringAsFixed(2)}km <= ${radius}km");
+                                      } else {
+                                        driversOutOfRange++;
+                                        print("Driver ${driver.firebaseId} (${driver.fullName()}) filtered: Distance ${distance.toStringAsFixed(2)}km > ${radius}km");
+                                      }
+                                    } catch (e) {
+                                      print("Driver ${driver.firebaseId} (${driver.email}) filtered: Error calculating distance - $e");
+                                      continue;
                                     }
                                   }
+                                  
+                                  print("Driver filtering summary: Total=${allDrivers.length}, Eligible=${eligibleDrivers.length}, NoLocation=$driversWithoutLocation, OutOfRange=$driversOutOfRange, Radius=${radius}km");
+                                  
+                                  // Update eligible drivers and send notifications in parallel (batched)
+                                  if (eligibleDrivers.isNotEmpty) {
+                                    // Prepare drivers that need to be updated (those who don't already have this order)
+                                    List<UserModel> driversToUpdate = [];
+                                    int driversAlreadyHaveOrder = 0;
+                                    
+                                    for (var driver in eligibleDrivers) {
+                                      driver.orderRequestData ??= [];
+                                      if (!driver.orderRequestData!.contains(orderModel.id)) {
+                                        driversToUpdate.add(driver);
+                                      } else {
+                                        driversAlreadyHaveOrder++;
+                                        print("Driver ${driver.firebaseId} (${driver.fullName()}) already has order ${orderModel.id} - skipping");
+                                      }
+                                    }
+                                    
+                                    print("Drivers to update: ${driversToUpdate.length}, Already have order: $driversAlreadyHaveOrder");
+                                    
+                                    // Update drivers in parallel batches (5 at a time to avoid overwhelming the API)
+                                    const int batchSize = 5;
+                                    for (int i = 0; i < driversToUpdate.length; i += batchSize) {
+                                      final batch = driversToUpdate.skip(i).take(batchSize).toList();
+                                      await Future.wait(
+                                        batch.map((driver) async {
+                                          try {
+                                            driver.orderRequestData!.add(orderModel.id);
+                                            await FireStoreUtils.updateDriverUser(driver);
+                                            // Send notification (non-blocking, fire and forget)
+                                            if (driver.fcmToken != null && driver.fcmToken!.isNotEmpty) {
+                                              SendNotification.sendFcmMessage(
+                                                "New Order",
+                                                driver.fcmToken!,
+                                                {},
+                                              ).catchError((e) {
+                                                print("Error sending FCM to driver ${driver.firebaseId}: $e");
+                                                return false;
+                                              });
+                                            }
+                                          } catch (e) {
+                                            print("Error updating driver ${driver.firebaseId}: $e");
+                                          }
+                                        }),
+                                      );
+                                    }
+                                  }
+                                  
+                                  // Send customer notification (non-blocking)
+                                  if (orderModel.author?.fcmToken != null &&
+                                      orderModel.author!.fcmToken!.isNotEmpty) {
+                                    SendNotification.sendFcmMessage(
+                                      Constant.restaurantAccepted,
+                                      orderModel.author!.fcmToken.toString(),
+                                      {},
+                                    ).catchError((e) {
+                                      print("Error sending FCM to customer: $e");
+                                      return false;
+                                    });
+                                  }
+                                  
+                                  // Immediately refresh orders to update count and stop sound if needed
+                                  await controller.getOrder(silent: false);
+                                  
+                                } catch (e) {
+                                  print("Error accepting order: $e");
+                                  ShowToastDialog.showToast("Error processing order. Please try again.".tr);
+                                } finally {
+                                  ShowToastDialog.closeLoader();
+                                  Get.back();
                                 }
-                                // Send notification (non-blocking, don't wait for it)
-                                if (orderModel.author?.fcmToken != null &&
-                                    orderModel.author!.fcmToken!.isNotEmpty) {
-                                  SendNotification.sendFcmMessage(
-                                    Constant.restaurantAccepted,
-                                    orderModel.author!.fcmToken.toString(),
-                                    {},
-                                  );
-                                }
-                                ShowToastDialog.closeLoader();
-                                Get.back();
                               }
                             } else {
                               ShowToastDialog.showToast("Please enter estimated time".tr);

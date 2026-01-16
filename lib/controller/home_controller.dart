@@ -120,7 +120,6 @@ class HomeController extends GetxController {
         getOrder(silent: true);
       }
     });
-    print('🔄 Started order polling (every 10 seconds)');
   }
 
   // Stop polling (useful when app goes to background)
@@ -302,29 +301,35 @@ class HomeController extends GetxController {
 
           update();
 
-          // Detect and notify about new orders
-          // Play sound when new orders are detected (works for both silent and non-silent polling)
-          if (newOrderList.length > previousNewOrderCount) {
-            int newOrdersCount = newOrderList.length - previousNewOrderCount;
-            print('🔔 $newOrdersCount new order(s) detected! Playing sound...');
-            try {
-              await AudioPlayerService.initAudio();
-              await AudioPlayerService.playSound(true);
-            } catch (e) {
-              print('⚠️ Error playing sound: $e');
+          // Always enforce correct sound state based on current new order count
+          int currentNewOrderCount = newOrderList.length;
+          
+          try {
+            await AudioPlayerService.initAudio();
+            
+            // CRITICAL: ALWAYS stop sound if NO new orders exist (regardless of previous state)
+            if (currentNewOrderCount == 0) {
+              await AudioPlayerService.playSound(false);
             }
-          } else if (newOrderList.isNotEmpty && previousNewOrderCount == 0 && !silent) {
-            // First time loading with new orders (only on initial load, not polling)
-            print('🔔 Initial load: ${newOrderList.length} new order(s) found');
-            try {
-              await AudioPlayerService.initAudio();
-              await AudioPlayerService.playSound(true);
-            } catch (e) {
-              print('⚠️ Error playing sound: $e');
+            // Stop sound if order count decreased (orders moved to Accepted/Rejected/etc)
+            // This handles cases where admin accepts orders from admin panel
+            else if (previousNewOrderCount > 0 && currentNewOrderCount < previousNewOrderCount) {
+              await AudioPlayerService.playSound(false);
             }
+            // Play sound when new orders are detected (count increased)
+            else if (currentNewOrderCount > previousNewOrderCount) {
+              await AudioPlayerService.playSound(true);
+            }
+            // Play sound on initial load if there are new orders
+            else if (currentNewOrderCount > 0 && previousNewOrderCount == 0 && !silent) {
+              await AudioPlayerService.playSound(true);
+            }
+          } catch (e) {
+            print('⚠️ Error managing sound: $e');
           }
+          
           // Update previous count for next comparison
-          _previousNewOrderCount = newOrderList.length;
+          _previousNewOrderCount = currentNewOrderCount;
         } else {
           if (!silent) {
             print('⚠️ API returned success=false: ${jsonResponse['message'] ?? 'Unknown error'}');
