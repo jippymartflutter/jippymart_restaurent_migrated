@@ -13,6 +13,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/app/splash_screen.dart';
 import 'package:jippymart_restaurant/firebase_options.dart';
+import 'package:jippymart_restaurant/widget/osm_map/map_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/global_setting_controller.dart';
@@ -75,46 +76,26 @@ Future<void> initializeFirebase() async {
 // Replace your _testNotifications function with this:
 
 void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
-    await initializeFirebase();
-    await Preferences.initPref();
-    // Stop any existing background service to prevent notifications on startup
-    // We need to configure it first to be able to check/stop it, but we won't start it
-    try {
-      final service = FlutterBackgroundService();
-      service.configure(
-        androidConfiguration: AndroidConfiguration(
-          onStart: onStartService,
-          autoStart: false, // Don't auto-start
-          isForegroundMode: true,
-          notificationChannelId: 'order_channel',
-          initialNotificationTitle: 'Jippymart Restaurant',
-          initialNotificationContent: 'Listening for new orders...',
-          foregroundServiceTypes: [AndroidForegroundType.mediaPlayback],
-        ),
-        iosConfiguration: IosConfiguration(),
-      );
-      final isRunning = await service.isRunning();
-      if (isRunning) {
-        print('Stopping existing background service...');
-        // Send stop signal to the service
-        service.invoke('stopService');
-      }
-    } catch (e) {
-      print('Error checking/stopping service: $e');
-      // Continue even if service stop fails
-    }
-    // Don't start the service on startup - it will be started when needed
-    final notificationService = NotificationService();
-    await notificationService.initInfo();
-    FirebaseMessaging.onBackgroundMessage(firebaseMessageBackgroundHandle);
-    runApp(const MyApp());
-  } catch (e) {
-    print('Error in main: $e');
-    runApp(const MyApp());
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🔥 Firebase MUST initialize or app should NOT continue
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.debug,
+  );
+
+  await Preferences.initPref();
+
+  // Background handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessageBackgroundHandle);
+
+  runApp(const MyApp());
 }
+
 
 // Service initialization function - call this when you actually need the service
 // (e.g., after user login or when restaurant is open)
@@ -200,6 +181,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Notifications are already initialized in main() via notificationService.initInfo()
     // No need to initialize again here to avoid duplicate notifications
     super.initState();
+    Get.put(OSMMapController()); // Add this line
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

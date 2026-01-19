@@ -28,62 +28,54 @@ class LoginController extends GetxController {
 
 
   void proceedToMainApp() async {
-    String userId = await FireStoreUtils.getCurrentUid();
     try {
+      String userId = await FireStoreUtils.getCurrentUid();
+
       if (Preferences.getBoolean(Preferences.isFinishOnBoardingKey) == false) {
         Get.offAll(
               () => const OnBoardingScreen(),
           transition: Transition.fadeIn,
           duration: const Duration(milliseconds: 1200),
         );
-      } else {
-        FireStoreUtils.getAvalibleDrivers();
-        bool isLogin = await FireStoreUtils.isLogin();
-        if (isLogin == true) {
-          await FireStoreUtils.getUserProfile(
-            userId,
-          ).then((value) async {
-            if (value != null) {
-              UserModel userModel = value;
-              if (userModel.role == Constant.userRoleVendor) {
-                if (userModel.active == true) {
-                  userModel.fcmToken = await NotificationService.getToken();
-                  await FireStoreUtils.updateUser(userModel);
-                  Get.offAll(
-                        () => const DashBoardScreen(),
-                    transition: Transition.fadeIn,
-                    duration: const Duration(milliseconds: 1200),
-                  );
-                } else {
-                  Get.offAll(
-                        () => const LoginScreen(),
-                    transition: Transition.fadeIn,
-                    duration: const Duration(milliseconds: 1200),
-                  );
-                }
-              } else {
-                Get.offAll(
-                      () => const LoginScreen(),
-                  transition: Transition.fadeIn,
-                  duration: const Duration(milliseconds: 1200),
-                );
-              }
-            }
-          });
-        } else {
-          Get.offAll(
-                () => const LoginScreen(),
-            transition: Transition.fadeIn,
-            duration: const Duration(milliseconds: 1200),
-          );
-        }
+        return;
       }
-    } catch (e) {
+
+      FireStoreUtils.getAvalibleDrivers();
+
+      bool isLogin = await FireStoreUtils.isLogin();
+      if (!isLogin) {
+        Get.offAll(() => const LoginScreen());
+        return;
+      }
+
+      final userModel = await FireStoreUtils.getUserProfile(userId);
+      if (userModel == null) {
+        Get.offAll(() => const LoginScreen());
+        return;
+      }
+
+      if (userModel.role != Constant.userRoleVendor || userModel.active != true) {
+        Get.offAll(() => const LoginScreen());
+        return;
+      }
+
+      // 🔐 Navigate FIRST — never block UI with FCM
       Get.offAll(
-            () => const LoginScreen(),
+            () => const DashBoardScreen(),
         transition: Transition.fadeIn,
-        duration: const Duration(milliseconds: 1200),
+        duration: const Duration(milliseconds: 3000),
       );
+
+      // 🔔 Update FCM token safely in background
+      final fcmToken = await NotificationService.getToken();
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        userModel.fcmToken = fcmToken;
+        await FireStoreUtils.updateUser(userModel);
+      }
+
+    } catch (e) {
+      print("proceedToMainApp error: $e");
+      Get.offAll(() => const LoginScreen());
     }
   }
 
@@ -131,7 +123,7 @@ class LoginController extends GetxController {
       );
       if (response['success'] == true) {
         final userData = response['data'];
-        
+
         // Validate that we have a firebase_id before proceeding
         if (userData['firebase_id'] == null || userData['firebase_id'].toString().isEmpty) {
           print("⚠️ Login error: firebase_id is missing or empty");
@@ -226,7 +218,8 @@ class LoginController extends GetxController {
     await prefs.setString('phone_number', userData['phoneNumber'] ?? '');
     await prefs.setString('country_code', userData['countryCode'] ?? '');
     await prefs.setString('role', userData['role'] ?? '');
-    await prefs.setBool('is_active', _parseBoolValue(userData['isActive'] ?? userData['active']));
+    await prefs.setString('vendorID', userData['vendorID'] ?? '');
+    await prefs.setBool('is_active', _parseBoolValue(userData['active'] ?? userData['active']));
     await prefs.setString('user_id', userData['id'].toString());
     await prefs.setString('profile_picture', userData['profilePictureURL'] ?? '');
     await prefs.setString('zone_id', userData['zoneId'] ?? '');
@@ -266,10 +259,11 @@ class LoginController extends GetxController {
         phoneNumber: userData['phoneNumber'],
         countryCode: userData['countryCode'],
         role: userData['role'],
-        active: _parseBoolValue(userData['isActive'] ?? userData['active']),
+        active: _parseBoolValue(userData['active'] ?? userData['active']),
         profilePictureURL: userData['profilePictureURL'],
         fcmToken: userData['fcmToken'],
         zoneId: userData['zoneId'],
+        vendorID: userData['vendorID']?.toString() ?? userData['vendorID'],
         isDocumentVerify: _parseBoolValue(userData['isDocumentVerify']),
         subscriptionPlanId: userData['subscriptionPlanId'],
         subscriptionExpiryDate:_parseTimestamp(userData['subscriptionExpiryDate'],),
@@ -284,16 +278,16 @@ class LoginController extends GetxController {
       return null;
     }
   }
-void logoutFunction()async{
-  await AudioPlayerService
-      .playSound(false);
-  Constant.userModel!.fcmToken = "";
-  await FireStoreUtils.updateUser(
-      Constant.userModel!);
-  Constant.userModel = null;
-  clearUserData();
-  Get.offAll(const LoginScreen());
-}
+  void logoutFunction()async{
+    await AudioPlayerService
+        .playSound(false);
+    Constant.userModel!.fcmToken = "";
+    await FireStoreUtils.updateUser(
+        Constant.userModel!);
+    Constant.userModel = null;
+    clearUserData();
+    Get.offAll(const LoginScreen());
+  }
 // Helper method to clear user data on logout/error
   Future<void> clearUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -305,6 +299,7 @@ void logoutFunction()async{
     await prefs.remove('phone_number');
     await prefs.remove('country_code');
     await prefs.remove('role');
+    await prefs.remove('vendorID');
     await prefs.remove('is_active');
     await prefs.remove('user_id');
     await prefs.remove('profile_picture');
@@ -313,107 +308,108 @@ void logoutFunction()async{
     await prefs.setBool('is_logged_in', false);
 
   }
-  // loginWithEmailAndPassword() async {
-  //   ShowToastDialog.showLoader("Please wait.".tr);
-  //   try {
-  //     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-  //       email: emailEditingController.value.text.toLowerCase().trim(),
-  //       password: passwordEditingController.value.text.trim(),
-  //     );
-  //     UserModel? userModel =
-  //         await FireStoreUtils.getUserProfile(credential.user!.uid);
-  //     if (userModel != null) {
-  //       if (userModel.role == Constant.userRoleVendor) {
-  //         if (userModel.active == true) {
-  //           userModel.fcmToken = await NotificationService.getToken();
-  //           await FireStoreUtils.updateUser(userModel);
-  //           bool isPlanExpire = false;
-  //           if (userModel.subscriptionPlan?.id != null) {
-  //             if (userModel.subscriptionExpiryDate == null) {
-  //               if (userModel.subscriptionPlan?.expiryDay == '-1') {
-  //                 isPlanExpire = false;
-  //               } else {
-  //                 isPlanExpire = true;
-  //               }
-  //             } else {
-  //               DateTime expiryDate =
-  //                   userModel.subscriptionExpiryDate!.toDate();
-  //               isPlanExpire = expiryDate.isBefore(DateTime.now());
-  //             }
-  //           } else {
-  //             isPlanExpire = true;
-  //           }
-  //           if (userModel.subscriptionPlanId == null || isPlanExpire == true) {
-  //             if (Constant.adminCommission?.isEnabled == false &&
-  //                 Constant.isSubscriptionModelApplied == false) {
-  //               Get.offAll(const DashBoardScreen());
-  //             } else {
-  //               Get.offAll(const SubscriptionPlanScreen());
-  //             }
-  //           } else if (userModel
-  //                   .subscriptionPlan?.features?.restaurantMobileApp ==
-  //               true) {
-  //             Get.offAll(const DashBoardScreen());
-  //           } else {
-  //             Get.offAll(const AppNotAccessScreen());
-  //           }
-  //         } else {
-  //           await FirebaseAuth.instance.signOut();
-  //           ShowToastDialog.showToast(
-  //               "This user is disable please contact to administrator".tr);
-  //         }
-  //       } else {
-  //         await FirebaseAuth.instance.signOut();
-  //         // ShowToastDialog.showToast("This user is disable please contact to administrator".tr);
-  //       }
-  //     }
-  //   } on FirebaseAuthException catch (e) {
-  //     print(e.code);
-  //     if (e.code == 'user-not-found') {
-  //       ShowToastDialog.showToast("No user found for that email.".tr);
-  //     } else if (e.code == 'wrong-password') {
-  //       ShowToastDialog.showToast("Wrong password provided for that user.".tr);
-  //     } else if (e.code == 'invalid-email') {
-  //       ShowToastDialog.showToast("Invalid Email.".tr);
-  //     } else {
-  //       ShowToastDialog.showToast("${e.message}");
-  //     }
-  //   }
-  //   ShowToastDialog.closeLoader();
-  // }
+// loginWithEmailAndPassword() async {
+//   ShowToastDialog.showLoader("Please wait.".tr);
+//   try {
+//     final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+//       email: emailEditingController.value.text.toLowerCase().trim(),
+//       password: passwordEditingController.value.text.trim(),
+//     );
+//     UserModel? userModel =
+//         await FireStoreUtils.getUserProfile(credential.user!.uid);
+//     if (userModel != null) {
+//       if (userModel.role == Constant.userRoleVendor) {
+//         if (userModel.active == true) {
+//           userModel.fcmToken = await NotificationService.getToken();
+//           await FireStoreUtils.updateUser(userModel);
+//           bool isPlanExpire = false;
+//           if (userModel.subscriptionPlan?.id != null) {
+//             if (userModel.subscriptionExpiryDate == null) {
+//               if (userModel.subscriptionPlan?.expiryDay == '-1') {
+//                 isPlanExpire = false;
+//               } else {
+//                 isPlanExpire = true;
+//               }
+//             } else {
+//               DateTime expiryDate =
+//                   userModel.subscriptionExpiryDate!.toDate();
+//               isPlanExpire = expiryDate.isBefore(DateTime.now());
+//             }
+//           } else {
+//             isPlanExpire = true;
+//           }
+//           if (userModel.subscriptionPlanId == null || isPlanExpire == true) {
+//             if (Constant.adminCommission?.isEnabled == false &&
+//                 Constant.isSubscriptionModelApplied == false) {
+//               Get.offAll(const DashBoardScreen());
+//             } else {
+//               Get.offAll(const SubscriptionPlanScreen());
+//             }
+//           } else if (userModel
+//                   .subscriptionPlan?.features?.restaurantMobileApp ==
+//               true) {
+//             Get.offAll(const DashBoardScreen());
+//           } else {
+//             Get.offAll(const AppNotAccessScreen());
+//           }
+//         } else {
+//           await FirebaseAuth.instance.signOut();
+//           ShowToastDialog.showToast(
+//               "This user is disable please contact to administrator".tr);
+//         }
+//       } else {
+//         await FirebaseAuth.instance.signOut();
+//         // ShowToastDialog.showToast("This user is disable please contact to administrator".tr);
+//       }
+//     }
+//   } on FirebaseAuthException catch (e) {
+//     print(e.code);
+//     if (e.code == 'user-not-found') {
+//       ShowToastDialog.showToast("No user found for that email.".tr);
+//     } else if (e.code == 'wrong-password') {
+//       ShowToastDialog.showToast("Wrong password provided for that user.".tr);
+//     } else if (e.code == 'invalid-email') {
+//       ShowToastDialog.showToast("Invalid Email.".tr);
+//     } else {
+//       ShowToastDialog.showToast("${e.message}");
+//     }
+//   }
+//   ShowToastDialog.closeLoader();
+// }
 
 }
 
-   Future<Map<String, dynamic>> getUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    return {
-      'firebase_id': prefs.getString('firebase_id') ?? '',
-      'email': prefs.getString('email') ?? '',
-      'fcm_token': prefs.getString('fcm_token') ?? '',
-      'first_name': prefs.getString('first_name') ?? '',
-      'last_name': prefs.getString('last_name') ?? '',
-      'phone_number': prefs.getString('phone_number') ?? '',
-      'country_code': prefs.getString('country_code') ?? '',
-      'role': prefs.getString('role') ?? '',
-      'is_active': prefs.getBool('is_active') ?? false,
-      'user_id': prefs.getString('user_id') ?? '',
-      'profile_picture': prefs.getString('profile_picture') ?? '',
-      'zone_id': prefs.getString('zone_id') ?? '',
-      'is_document_verify': prefs.getBool('is_document_verify') ?? false,
-      'is_logged_in': prefs.getBool('is_logged_in') ?? false,
-    };
-  }
+Future<Map<String, dynamic>> getUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  return {
+    'firebase_id': prefs.getString('firebase_id') ?? '',
+    'email': prefs.getString('email') ?? '',
+    'fcm_token': prefs.getString('fcm_token') ?? '',
+    'first_name': prefs.getString('first_name') ?? '',
+    'last_name': prefs.getString('last_name') ?? '',
+    'phone_number': prefs.getString('phone_number') ?? '',
+    'country_code': prefs.getString('country_code') ?? '',
+    'role': prefs.getString('role') ?? '',
+    'is_active': prefs.getBool('is_active') ?? false,
+    'user_id': prefs.getString('user_id') ?? '',
+    'profile_picture': prefs.getString('profile_picture') ?? '',
+    'zone_id': prefs.getString('zone_id') ?? '',
+    'vendorID': prefs.getString('vendorID') ?? '',
+    'is_document_verify': prefs.getBool('is_document_verify') ?? false,
+    'is_logged_in': prefs.getBool('is_logged_in') ?? false,
+  };
+}
 Future<String>? getFirebaseId() async {
   final prefs = await SharedPreferences.getInstance();
   return  prefs.getString('firebase_id')??'' ;
 }
 
 Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('is_logged_in') ?? false;
-  }
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getBool('is_logged_in') ?? false;
+}
 
-   Future<void> clearUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-  }
+Future<void> clearUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+}

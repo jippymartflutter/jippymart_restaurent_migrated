@@ -25,21 +25,33 @@ class NetworkImageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Check if the imageUrl is invalid (empty or the string "null")
+    if (imageUrl.isEmpty || imageUrl == "null") {
+      return errorWidget ??
+          Container(
+            height: height ?? Responsive.height(8, context),
+            width: width ?? Responsive.width(15, context),
+            color: Colors.grey[300],
+            child: Icon(Icons.error_outline, color: Colors.grey),
+          );
+    }
+
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: fit ?? BoxFit.fitWidth,
       height: height ?? Responsive.height(8, context),
       width: width ?? Responsive.width(15, context),
       color: color,
-      progressIndicatorBuilder: (context, url, downloadProgress) => Constant.loader(),
+      progressIndicatorBuilder: (context, url, downloadProgress) =>
+          Constant.loader(),
       errorWidget: (context, url, error) =>
-          errorWidget ??
-              Image.network(
-                Constant.placeholderImage,
-                fit: fit ?? BoxFit.cover,
-                height: height ?? Responsive.height(8, context),
-                width: width ?? Responsive.width(15, context),
-              ),
+      errorWidget ??
+          Container(
+            height: height ?? Responsive.height(8, context),
+            width: width ?? Responsive.width(15, context),
+            color: Colors.grey[300],
+            child: Icon(Icons.error_outline, color: Colors.grey),
+          ),
     );
   }
 }

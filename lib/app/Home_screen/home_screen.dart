@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             child: ClipOval(
                               child: NetworkImageWidget(
                                 imageUrl: controller
-                                    .userModel.value.profilePictureURL
+                                    .vendermodel.value.photo
                                     .toString(),
                                 height: 42,
                                 width: 42,
@@ -586,7 +586,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                     style: TextStyleConst.blackMedium15,
                                     children: [
                                       const TextSpan(
-                                        text: "Upgrade to our ₹499 or ₹999 Plan and unlock ",
+                                        text: "Upgrade to our ₹1299 or ₹2999 Plan and unlock ",
                                       ),
                                       TextSpan(
                                         text: "premium features",
@@ -1952,9 +1952,11 @@ print("acceptedWidget ${orderModel.vendorID}");
                                       'Please wait...'.tr);
                                   await AudioPlayerService.playSound(false);
                                   orderModel.status = Constant.orderCompleted;
-                                  await FireStoreUtils.updateOrder(orderModel);
-                                  await FireStoreUtils
-                                      .restaurantVendorWalletSet(orderModel);
+                                  // Performance Optimization: Run updateOrder and restaurantVendorWalletSet in parallel
+                                  await Future.wait([
+                                    FireStoreUtils.updateOrder(orderModel),
+                                    FireStoreUtils.restaurantVendorWalletSet(orderModel),
+                                  ]);
                                   if (orderModel.author?.fcmToken != null &&
                                       orderModel.author!.fcmToken!.isNotEmpty) {
                                     SendNotification.sendFcmMessage(
@@ -2774,10 +2776,11 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   .selectDriverUser.value.inProgressOrderID!
                                   .add(orderModel.id);
                               await FireStoreUtils.updateOrder(orderModel);
-                              await FireStoreUtils.updateDriverUser(
-                                  controller.selectDriverUser.value);
-                              await FireStoreUtils.restaurantVendorWalletSet(
-                                  orderModel);
+                              // Performance Optimization: Run updateDriverUser and restaurantVendorWalletSet in parallel
+                              await Future.wait([
+                                FireStoreUtils.updateDriverUser(controller.selectDriverUser.value),
+                                FireStoreUtils.restaurantVendorWalletSet(orderModel),
+                              ]);
                               if (orderModel.author?.fcmToken != null &&
                                   orderModel.author!.fcmToken!.isNotEmpty) {
                                 SendNotification.sendFcmMessage(

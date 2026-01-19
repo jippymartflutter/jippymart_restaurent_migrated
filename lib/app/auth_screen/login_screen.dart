@@ -15,6 +15,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
+import '../terms_and_condition/terms_and_condition_screen.dart';
+
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -209,10 +211,11 @@ class LoginScreen extends StatelessWidget {
             ),
             bottomNavigationBar: Padding(
               padding:
-                  EdgeInsets.symmetric(vertical: Platform.isAndroid ? 60 : 30),
+              EdgeInsets.symmetric(vertical: Platform.isAndroid ? 60 : 30),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Existing sign up text
                   Text.rich(
                     TextSpan(
                       children: [
@@ -227,8 +230,8 @@ class LoginScreen extends StatelessWidget {
                             )),
                         const WidgetSpan(
                             child: SizedBox(
-                          width: 10,
-                        )),
+                              width: 10,
+                            )),
                         TextSpan(
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
@@ -236,18 +239,124 @@ class LoginScreen extends StatelessWidget {
                               },
                             text: 'Sign up'.tr,
                             style: TextStyle(
-                                color: AppThemeData.secondary300,
-                                fontFamily: AppThemeData.bold,
-                                fontWeight: FontWeight.w500,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppThemeData.secondary300,),),
+                              color: AppThemeData.secondary300,
+                              fontFamily: AppThemeData.bold,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                              decorationColor: AppThemeData.secondary300,
+                            )),
                       ],
                     ),
                   ),
+                  // Terms and Privacy buttons
+                  const SizedBox(height: 20),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Terms and Conditions button
+                      InkWell(
+                        onTap: () {
+                          Get.to(const TermsAndConditionScreen(
+                            type: "termAndCondition",
+                          ));
+                        },
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: ShapeDecoration(
+                                color: themeChange.getThem()
+                                    ? AppThemeData.grey800
+                                    : AppThemeData.grey100,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(120),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: SvgPicture.asset(
+                                  "assets/icons/ic_terms_condition.svg",
+                                  colorFilter: ColorFilter.mode(
+                                    themeChange.getThem()
+                                        ? AppThemeData.grey300
+                                        : AppThemeData.grey600,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Terms and Conditions".tr,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: themeChange.getThem()
+                                    ? AppThemeData.grey50
+                                    : AppThemeData.grey900,
+                                fontFamily: AppThemeData.medium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      // Privacy Policy button
+                      InkWell(
+                        onTap: () {
+                          Get.to(const TermsAndConditionScreen(
+                            type: "privacy",
+                          ));
+                        },
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: ShapeDecoration(
+                                color: themeChange.getThem()
+                                    ? AppThemeData.grey800
+                                    : AppThemeData.grey100,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(120),
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: SvgPicture.asset(
+                                  "assets/icons/ic_privacyPolicy.svg",
+                                  colorFilter: ColorFilter.mode(
+                                    themeChange.getThem()
+                                        ? AppThemeData.grey300
+                                        : AppThemeData.grey600,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Privacy Policy".tr,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: themeChange.getThem()
+                                    ? AppThemeData.grey50
+                                    : AppThemeData.grey900,
+                                fontFamily: AppThemeData.medium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
                 ],
               ),
-            ),
-          );
+            ),          );
         });
   }
+
+
 }

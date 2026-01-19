@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "jippymart_restaurant",
-      "version": "2.2.7+16",
+      "version": "1.0.0+1",
       "dependencies": [
         "audioplayers",
         "bottom_picker",
@@ -42,6 +42,7 @@
         "get",
         "google_maps_flutter",
         "google_maps_place_picker_mb",
+        "google_maps_webservice",
         "google_sign_in",
         "googleapis_auth",
         "http",
@@ -168,6 +169,15 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "google_maps_webservice",
+      "version": "0.0.20-nullsafety.5",
+      "dependencies": [
+        "http",
+        "json_annotation",
+        "meta"
       ]
     },
     {

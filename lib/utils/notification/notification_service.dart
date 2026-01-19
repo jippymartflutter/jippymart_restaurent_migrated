@@ -121,10 +121,20 @@ class NotificationService {
     await FirebaseMessaging.instance.subscribeToTopic("restaurant");
   }
 
-  static getToken() async {
-    String? token = await FirebaseMessaging.instance.getToken();
-    return token!;
+  static Future<String?> getToken() async {
+    if (Firebase.apps.isEmpty) {
+      print("❌ Firebase not initialized yet — skipping FCM token");
+      return null;
+    }
+
+    try {
+      return await FirebaseMessaging.instance.getToken();
+    } catch (e) {
+      print("❌ FCM getToken error: $e");
+      return null;
+    }
   }
+
 
   /// Check if there are actually new orders in the system
   /// This prevents sound from playing when orders have been accepted/rejected

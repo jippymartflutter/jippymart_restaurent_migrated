@@ -1,10 +1,9 @@
 import 'dart:io';
-
+import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_place_picker_mb/google_maps_place_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -25,8 +24,10 @@ import 'package:jippymart_restaurant/themes/round_button_fill.dart';
 import 'package:jippymart_restaurant/themes/text_field_widget.dart';
 import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
 import 'package:jippymart_restaurant/utils/network_image_widget.dart';
-import 'package:jippymart_restaurant/widget/osm_map/map_picker_page.dart';
+import 'package:jippymart_restaurant/widget/osm_map/map_picker_page.dart' hide MapPickerPage;
 import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'locationselection.dart';
 
 class AddRestaurantScreen extends StatelessWidget {
   const AddRestaurantScreen({super.key});
@@ -282,174 +283,119 @@ class AddRestaurantScreen extends StatelessWidget {
                                     RegExp('[0-9]')),
                               ],
                             ),
+// Use this alternative in your onTap
                             InkWell(
-                              onTap: () {
-                                if (controller
-                                    .addressController.value.text.isEmpty) {
-                                  Constant.checkPermission(
-                                      onTap: () async {
-                                        ShowToastDialog.showLoader(
-                                            "Please wait".tr);
-                                        try {
-                                          await Geolocator.requestPermission();
-                                          await Geolocator.getCurrentPosition();
-                                          ShowToastDialog.closeLoader();
-                                          if (Constant.selectedMapType == 'osm') {
-                                            final result = await Get.to(
-                                                () => MapPickerPage());
-                                            if (result != null) {
-                                              final firstPlace = result;
-                                              final lat =
-                                                  firstPlace.coordinates.latitude;
-                                              final lng = firstPlace
-                                                  .coordinates.longitude;
-                                              final address = firstPlace.address;
-      
-                                              controller.selectedLocation =
-                                                  LatLng(lat, lng);
-                                              controller.addressController.value
-                                                  .text = address.toString();
-                                              controller.isAddressEnable.value =
-                                                  true;
-                                            }
-                                          } else {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => PlacePicker(
-                                                  apiKey: Constant.mapAPIKey,
-                                                  onPlacePicked: (result) async {
-                                                    controller.selectedLocation =
-                                                        LatLng(
-                                                            result.geometry!
-                                                                .location.lat,
-                                                            result.geometry!
-                                                                .location.lng);
-                                                    controller.addressController
-                                                            .value.text =
-                                                        result.formattedAddress
-                                                            .toString();
-                                                    controller.isAddressEnable
-                                                        .value = true;
-                                                    Get.back();
-                                                  },
-                                                  initialPosition: const LatLng(
-                                                      -33.8567844, 151.213108),
-                                                  useCurrentLocation: true,
-                                                  selectInitialPosition: true,
-                                                  usePinPointingSearch: true,
-                                                  usePlaceDetailSearch: true,
-                                                  zoomGesturesEnabled: true,
-                                                  zoomControlsEnabled: true,
-                                                  resizeToAvoidBottomInset:
-                                                      false, // only works in page mode, less flickery, remove if wrong offsets
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        } catch (e) {
-                                          ShowToastDialog.closeLoader();
+                              onTap: () async {
+                                Constant.checkPermission(
+                                  onTap: () async {
+                                    ShowToastDialog.showLoader("Getting location...".tr);
+                                    try {
+                                      await Geolocator.requestPermission();
+                                      Position position = await Geolocator.getCurrentPosition();
+                                      ShowToastDialog.closeLoader();
+
+                                      if (Constant.selectedMapType == 'osm') {
+                                        final result = await Get.to(() => MapPickerPage(initialPosition: LatLng(20.5937, 78.9629),));
+                                        if (result != null) {
+                                          final firstPlace = result;
+                                          final lat = firstPlace.coordinates.latitude;
+                                          final lng = firstPlace.coordinates.longitude;
+                                          final address = firstPlace.address;
+
+                                          controller.selectedLocation = LatLng(lat, lng);
+                                          controller.addressController.value.text = address.toString();
+                                          controller.isAddressEnable.value = true;
                                         }
-                                      },
-                                      context: context);
-                                }
+                                      } else {
+                                        // Use the improved MapSelectionScreen
+                                        final result = await Get.to(
+                                              () => MapPickerPage(
+                                            initialPosition: LatLng(position.latitude, position.longitude),
+                                          ),
+                                          fullscreenDialog: true,
+                                        );
+
+                                        if (result != null) {
+                                          final Map<String, dynamic> data = result;
+                                          controller.selectedLocation = data['location'] as LatLng;
+                                          controller.addressController.value.text = data['address'] as String;
+                                          controller.isAddressEnable.value = true;
+                                        }
+                                      }
+                                    } catch (e) {
+                                      ShowToastDialog.closeLoader();
+                                      ShowToastDialog.showToast("Failed to get location: ${e.toString()}".tr);
+                                    }
+                                  },
+                                  context: context,
+                                );
                               },
                               child: TextFieldWidget(
                                 title: 'Address'.tr,
                                 controller: controller.addressController.value,
                                 hintText: 'Enter address'.tr,
-                                enable: controller.isAddressEnable.value,
+                                enable: false,
                                 suffix: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 14, horizontal: 10),
+                                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                                   child: InkWell(
-                                    onTap: () {
+                                    onTap: () async {
                                       Constant.checkPermission(
                                         context: context,
                                         onTap: () async {
-                                          ShowToastDialog.showToast(
-                                              "Please wait...".tr);
+                                          ShowToastDialog.showLoader("Getting location...".tr);
                                           try {
                                             await Geolocator.requestPermission();
-                                            await Geolocator.getCurrentPosition(
-                                                desiredAccuracy:
-                                                    LocationAccuracy.high);
-                                            if (Constant.selectedMapType ==
-                                                'osm') {
-                                              final result = await Get.to(
-                                                  () => MapPickerPage());
+                                            Position position = await Geolocator.getCurrentPosition();
+                                            ShowToastDialog.closeLoader();
+
+                                            if (Constant.selectedMapType == 'osm') {
+                                              final result = await Get.to(() => MapPickerPage(initialPosition: LatLng(20.5937, 78.9629),));
                                               if (result != null) {
                                                 final firstPlace = result;
-                                                final lat = firstPlace
-                                                    .coordinates.latitude;
-                                                final lng = firstPlace
-                                                    .coordinates.longitude;
-                                                final address =
-                                                    firstPlace.address;
-      
-                                                controller.selectedLocation =
-                                                    LatLng(lat, lng);
-                                                controller.addressController.value
-                                                    .text = address.toString();
-                                                controller.isAddressEnable.value =
-                                                    true;
+                                                final lat = firstPlace.coordinates.latitude;
+                                                final lng = firstPlace.coordinates.longitude;
+                                                final address = firstPlace.address;
+
+                                                controller.selectedLocation = LatLng(lat, lng);
+                                                controller.addressController.value.text = address.toString();
+                                                controller.isAddressEnable.value = true;
                                               }
                                             } else {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      PlacePicker(
-                                                    apiKey: Constant.mapAPIKey,
-                                                    onPlacePicked:
-                                                        (result) async {
-                                                      controller
-                                                              .selectedLocation =
-                                                          LatLng(
-                                                              result.geometry!
-                                                                  .location.lat,
-                                                              result.geometry!
-                                                                  .location.lng);
-                                                      controller.addressController
-                                                              .value.text =
-                                                          result.formattedAddress
-                                                              .toString();
-                                                      controller.isAddressEnable
-                                                          .value = true;
-                                                      Get.back();
-                                                    },
-                                                    initialPosition: const LatLng(
-                                                        -33.8567844, 151.213108),
-                                                    useCurrentLocation: true,
-                                                    selectInitialPosition: true,
-                                                    usePinPointingSearch: true,
-                                                    usePlaceDetailSearch: true,
-                                                    zoomGesturesEnabled: true,
-                                                    zoomControlsEnabled: true,
-                                                    resizeToAvoidBottomInset:
-                                                        false, // only works in page mode, less flickery, remove if wrong offsets
-                                                  ),
+                                              // Use the improved MapSelectionScreen
+                                              final result = await Get.to(
+                                                    () => MapPickerPage(
+                                                  initialPosition: LatLng(position.latitude, position.longitude),
                                                 ),
+                                                fullscreenDialog: true,
                                               );
+
+                                              if (result != null) {
+                                                final Map<String, dynamic> data = result;
+                                                controller.selectedLocation = data['location'] as LatLng;
+                                                controller.addressController.value.text = data['address'] as String;
+                                                controller.isAddressEnable.value = true;
+                                              }
                                             }
                                           } catch (e) {
-                                            print(e.toString());
+                                            ShowToastDialog.closeLoader();
+                                            ShowToastDialog.showToast("Failed to get location: ${e.toString()}".tr);
                                           }
                                         },
                                       );
                                     },
                                     child: Text("change".tr,
-                                        style: TextStyle(
-                                            fontFamily: AppThemeData.semiBold,
-                                            fontSize: 14,
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.primary300
-                                                : AppThemeData.primary300)),
+                                      style: TextStyle(
+                                        fontFamily: AppThemeData.semiBold,
+                                        fontSize: 14,
+                                        color: themeChange.getThem()
+                                            ? AppThemeData.primary300
+                                            : AppThemeData.primary300,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Column(
+                            ),                            Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -1061,7 +1007,14 @@ class AddRestaurantScreen extends StatelessWidget {
                         : AppThemeData.grey50,
                     fontSizes: 16,
                     onPress: () async {
-                      controller.saveDetails();
+                      print("🟢 Save Details button pressed!");
+                      try {
+                        await controller.saveDetails();
+                        print("🟢 saveDetails() completed");
+                      } catch (e) {
+                        print("❌ Error in button onPress: $e");
+                        ShowToastDialog.showToast("Error: ${e.toString()}".tr);
+                      }
                     },
                   ),
                 ),

@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+    <key>GoogleMapsApiKey</key>
+    <string>AIzaSyCKCRzqaR1-uzbnEmB-JqVkbUKNGOJHv34</string>
+
+	<!-- App Basics -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -18,22 +25,19 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
+
+	<!-- Orientation -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -41,9 +45,68 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
+
+	<!-- Launch -->
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- 🔔 Notifications (Firebase FCM) -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Notifications are used to keep you updated on new orders and order status.</string>
+
+	<!-- 📍 Location (Delivery / Tracking) -->
+	<!-- iOS 10+ -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to show nearby restaurants and enable delivery services.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to provide delivery services even when the app is in background.</string>
+
+	<!-- For iOS 11+ -->
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>We need your location to provide delivery services even when the app is in background.</string>
+
+	<!-- Optional: For more precise location (iOS 14+) -->
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>PreciseLocation</key>
+		<string>We need precise location for accurate restaurant location selection and delivery services.</string>
+	</dict>
+
+	<!-- For background location updates -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- 📷 Camera -->
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to upload images and documents.</string>
+
+	<!-- 🖼 Photo Library -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is required to upload images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Photo library access is required to save images.</string>
+
+	<!-- 🌐 Network -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- Google Maps SDK -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>googlechromes</string>
+		<string>comgooglemaps</string>
+	</array>
+
 </dict>
 </plist>

@@ -68,6 +68,47 @@ final headers = {
 class FireStoreUtils {
   static FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
+  // Performance Optimization: Transparent caching layer
+  // Cache variables for frequently accessed, rarely-changing data
+  static UserModel? _cachedUserProfile;
+  static String? _cachedUserProfileUuid;
+  static DateTime? _userProfileCacheTime;
+  static const Duration _userProfileCacheTTL = Duration(minutes: 5);
+
+  static VendorModel? _cachedVendor;
+  static String? _cachedVendorId;
+  static DateTime? _vendorCacheTime;
+  static const Duration _vendorCacheTTL = Duration(minutes: 5);
+
+  static DateTime? _settingsCacheTime;
+  static const Duration _settingsCacheTTL = Duration(minutes: 30);
+
+  static DeliveryCharge? _cachedDeliveryCharge;
+  static DateTime? _deliveryChargeCacheTime;
+  static const Duration _deliveryChargeCacheTTL = Duration(minutes: 15);
+
+  // Cache invalidation methods (called on updates)
+  static void _invalidateUserProfileCache() {
+    _cachedUserProfile = null;
+    _cachedUserProfileUuid = null;
+    _userProfileCacheTime = null;
+  }
+
+  static void _invalidateVendorCache() {
+    _cachedVendor = null;
+    _cachedVendorId = null;
+    _vendorCacheTime = null;
+  }
+
+  static void _invalidateSettingsCache() {
+    _settingsCacheTime = null;
+  }
+
+  static void _invalidateDeliveryChargeCache() {
+    _cachedDeliveryCharge = null;
+    _deliveryChargeCacheTime = null;
+  }
+
   static Future<String> getCurrentUid() async{
     return await getFirebaseId()??'';
   }
@@ -108,8 +149,21 @@ class FireStoreUtils {
   }
 
 
-  static Future<UserModel?> getUserProfile(String uuid) async {
+  static Future<UserModel?> getUserProfile(String uuid, {bool forceRefresh = false}) async {
     try {
+      // Performance Optimization: Check cache first (transparent to caller)
+      if (!forceRefresh && 
+          _cachedUserProfile != null && 
+          _cachedUserProfileUuid == uuid && 
+          _userProfileCacheTime != null) {
+        final cacheAge = DateTime.now().difference(_userProfileCacheTime!);
+        if (cacheAge < _userProfileCacheTTL) {
+          log("getUserProfile: Returning cached data (age: ${cacheAge.inSeconds}s)");
+          Constant.userModel = _cachedUserProfile;
+          return _cachedUserProfile;
+        }
+      }
+
       String url = '${Constant.baseUrl}restaurant/users/$uuid';
       print(" getUserProfile $url");
       final response = await http.get(
@@ -126,6 +180,12 @@ class FireStoreUtils {
           final userModel = UserModel.fromJson(userData);
           Constant.userModel = userModel;
           print(" getUserProfile  ${  Constant.userModel?.toJson()} ");
+          
+          // Performance Optimization: Cache the result
+          _cachedUserProfile = userModel;
+          _cachedUserProfileUuid = uuid;
+          _userProfileCacheTime = DateTime.now();
+          
           return userModel;
         } else {
           log("API returned error: ${responseData['message']}");
@@ -225,6 +285,12 @@ class FireStoreUtils {
       );
       if (response.statusCode == 200) {
         Constant.userModel = userModel;
+        // Performance Optimization: Invalidate user profile cache after update
+        _invalidateUserProfileCache();
+        // Update cache with new data
+        _cachedUserProfile = userModel;
+        _cachedUserProfileUuid = userModel.id;
+        _userProfileCacheTime = DateTime.now();
         isUpdate = true;
       } else {
         log("Failed to update user: ${response.statusCode} - ${response.body}");
@@ -269,6 +335,8 @@ class FireStoreUtils {
         
         if (response.statusCode == 200) {
           final responseData = json.decode(response.body);
+          // Performance Optimization: Invalidate user profile cache after update
+          _invalidateUserProfileCache();
           return responseData['success'] ?? true; // Adjust based on your API response structure
         } else if (response.statusCode == 429) {
           // Rate limited - retry with exponential backoff
@@ -385,8 +453,17 @@ class FireStoreUtils {
     }
   }
 
-  getSettings() async {
+  getSettings({bool forceRefresh = false}) async {
     try {
+      // Performance Optimization: Check cache first (transparent to caller)
+      if (!forceRefresh && _settingsCacheTime != null) {
+        final cacheAge = DateTime.now().difference(_settingsCacheTime!);
+        if (cacheAge < _settingsCacheTTL) {
+          log("getSettings: Returning cached data (age: ${cacheAge.inSeconds}s)");
+          return; // Use cached settings (Constants already set)
+        }
+      }
+
       final response = await http.get(Uri.parse('${Constant.baseUrl}settings/mobile'));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body)['data'];
@@ -520,6 +597,9 @@ class FireStoreUtils {
         Constant.storyEnable = derived['storyEnable'] ?? Constant.storyEnable;
         Constant.placeholderImage = derived['placeholderImage'] ?? Constant.placeholderImage;
         Constant.specialDiscountOfferEnable = derived['specialDiscountOffer'] ?? Constant.specialDiscountOfferEnable;
+
+        // Performance Optimization: Cache the settings load time
+        _settingsCacheTime = DateTime.now();
 
       } else {
         throw Exception('Failed to load settings: ${response.statusCode}');
@@ -773,56 +853,67 @@ class FireStoreUtils {
   // }
 
   static Future restaurantVendorWalletSet(OrderModel orderModel) async {
+    // Performance Optimization: Add null safety checks
+    if (orderModel.products == null || orderModel.products!.isEmpty) {
+      log("Warning: Order has no products, skipping wallet transaction. Order ID: ${orderModel.id}");
+      return;
+    }
+
     double subTotal = 0.0;
     double specialDiscount = 0.0;
     double taxAmount = 0.0;
     // double adminCommission = 0.0;
 
     for (var element in orderModel.products!) {
-      if (double.parse(element.discountPrice.toString()) <= 0) {
+      final discountPrice = double.tryParse(element.discountPrice?.toString() ?? '0') ?? 0.0;
+      
+      if (discountPrice <= 0) {
         subTotal = subTotal +
-            double.parse(element.price.toString()) *
-                double.parse(element.quantity.toString()) +
-            (double.parse(element.extrasPrice.toString()) *
-                double.parse(element.quantity.toString()));
+            (double.tryParse(element.price?.toString() ?? '0') ?? 0) *
+                (double.tryParse(element.quantity?.toString() ?? '0') ?? 0) +
+            ((double.tryParse(element.extrasPrice?.toString() ?? '0') ?? 0) *
+                (double.tryParse(element.quantity?.toString() ?? '0') ?? 0));
       } else {
         subTotal = subTotal +
-            double.parse(element.discountPrice.toString()) *
-                double.parse(element.quantity.toString()) +
-            (double.parse(element.extrasPrice.toString()) *
-                double.parse(element.quantity.toString()));
+            discountPrice *
+                (double.tryParse(element.quantity?.toString() ?? '0') ?? 0) +
+            ((double.tryParse(element.extrasPrice?.toString() ?? '0') ?? 0) *
+                (double.tryParse(element.quantity?.toString() ?? '0') ?? 0));
       }
     }
 
     if (orderModel.specialDiscount != null &&
         orderModel.specialDiscount!['special_discount'] != null) {
-      specialDiscount = double.parse(
-          orderModel.specialDiscount!['special_discount'].toString());
+      specialDiscount = double.tryParse(
+          orderModel.specialDiscount!['special_discount'].toString()) ?? 0.0;
     }
 
     if (orderModel.taxSetting != null) {
+      final discount = double.tryParse(orderModel.discount?.toString() ?? '0') ?? 0.0;
       for (var element in orderModel.taxSetting!) {
         taxAmount = taxAmount +
             Constant.calculateTax(
-                amount: (subTotal -
-                        double.parse(orderModel.discount.toString()) -
-                        specialDiscount)
-                    .toString(),
+                amount: (subTotal - discount - specialDiscount).toString(),
                 taxModel: element);
       }
     }
 
     double basePrice = 0;
-    // var totalamount = (subTotal + taxAmount) - double.parse(orderModel.discount.toString()) - specialDiscount;
-    if (Constant.adminCommission!.isEnabled == true) {
-      basePrice =
-          (subTotal / (1 + (double.parse(orderModel.adminCommission!) / 100))) -
-              double.parse(orderModel.discount.toString()) -
-              specialDiscount;
+    final discount = double.tryParse(orderModel.discount?.toString() ?? '0') ?? 0.0;
+    
+    // var totalamount = (subTotal + taxAmount) - discount - specialDiscount;
+    if (Constant.adminCommission != null && Constant.adminCommission!.isEnabled == true) {
+      final adminCommissionPercent = double.tryParse(orderModel.adminCommission?.toString() ?? '0') ?? 0.0;
+      if (adminCommissionPercent > 0) {
+        basePrice =
+            (subTotal / (1 + (adminCommissionPercent / 100))) -
+                discount -
+                specialDiscount;
+      } else {
+        basePrice = subTotal - discount - specialDiscount;
+      }
     } else {
-      basePrice = subTotal -
-          double.parse(orderModel.discount.toString()) -
-          specialDiscount;
+      basePrice = subTotal - discount - specialDiscount;
     }
     // if (Constant.isAdminCommissionModelApplied == true) {
     //   if (orderModel.adminCommissionType == 'Percent') {
@@ -831,11 +922,42 @@ class FireStoreUtils {
     //     adminCommission = double.parse(orderModel.adminCommission!);
     //   }
     // }
+    // Performance Optimization: Handle null vendor case (can happen when running in parallel)
+    String? vendorAuthorId;
+    
+    if (orderModel.vendor != null && orderModel.vendor!.author != null) {
+      vendorAuthorId = orderModel.vendor!.author.toString();
+    } else if (orderModel.vendorID != null) {
+      // Try to get vendor author from cached vendor data or fetch it
+      try {
+        // Check if cached vendor matches
+        if (_cachedVendor != null && _cachedVendorId == orderModel.vendorID && _cachedVendor!.author != null) {
+          vendorAuthorId = _cachedVendor!.author;
+          log("Using cached vendor data for wallet transaction. Order ID: ${orderModel.id}");
+        } else {
+          // Fetch vendor data (using cache if available)
+          VendorModel? vendor = await getVendorById(orderModel.vendorID!);
+          if (vendor != null && vendor.author != null) {
+            vendorAuthorId = vendor.author;
+            log("Fetched vendor data for wallet transaction. Order ID: ${orderModel.id}");
+          }
+        }
+      } catch (e) {
+        log("Error fetching vendor for wallet transaction: $e");
+      }
+    }
+    
+    if (vendorAuthorId == null || vendorAuthorId.isEmpty) {
+      log("Warning: Cannot determine vendor author ID, skipping wallet transaction. Order ID: ${orderModel.id}");
+      // Don't throw error - order update should still succeed
+      return;
+    }
+
     WalletTransactionModel historyModel = WalletTransactionModel(
         amount: basePrice,
         id: const Uuid().v4(),
         orderId: orderModel.id,
-        userId: orderModel.vendor!.author,
+        userId: vendorAuthorId,
         date: Timestamp.now(),
         isTopup: true,
         note: "Order Amount credited",
@@ -848,7 +970,7 @@ class FireStoreUtils {
         amount: taxAmount,
         id: const Uuid().v4(),
         orderId: orderModel.id,
-        userId: orderModel.vendor!.author,
+        userId: vendorAuthorId,
         date: Timestamp.now(),
         isTopup: true,
         note: "Order Tax credited",
@@ -861,7 +983,7 @@ class FireStoreUtils {
 
     await updateUserWallet(
         amount: (basePrice + taxAmount).toString(),
-        userId: orderModel.vendor!.author.toString());
+        userId: vendorAuthorId);
   }
 
   static Future<bool> addWalletTransaction(WalletTransactionModel historyModel) async {
@@ -1384,9 +1506,21 @@ class FireStoreUtils {
       rethrow;
     }
   }
-  static Future<VendorModel?> getVendorById(String vendorId) async {
+  static Future<VendorModel?> getVendorById(String vendorId, {bool forceRefresh = false}) async {
     VendorModel? vendorModel;
     try {
+      // Performance Optimization: Check cache first (transparent to caller)
+      if (!forceRefresh &&
+          _cachedVendor != null &&
+          _cachedVendorId == vendorId &&
+          _vendorCacheTime != null) {
+        final cacheAge = DateTime.now().difference(_vendorCacheTime!);
+        if (cacheAge < _vendorCacheTTL) {
+          log("getVendorById: Returning cached data (age: ${cacheAge.inSeconds}s)");
+          return _cachedVendor;
+        }
+      }
+
       print("getVendorById  ");
       if (vendorId.isNotEmpty) {
         final response = await http.get(
@@ -1399,6 +1533,11 @@ class FireStoreUtils {
           if (responseData['success'] == true && responseData['data'] != null) {
             vendorModel = VendorModel.fromJson(responseData['data']);
             print("getVendorById  ${response.body}");
+
+            // Performance Optimization: Cache the result
+            _cachedVendor = vendorModel;
+            _cachedVendorId = vendorId;
+            _vendorCacheTime = DateTime.now();
           }
         } else if (response.statusCode == 404) {
           return null;
@@ -1555,9 +1694,20 @@ class FireStoreUtils {
     return attributeList;
   }
 
-  static Future<DeliveryCharge?> getDeliveryCharge() async {
+  static Future<DeliveryCharge?> getDeliveryCharge({bool forceRefresh = false}) async {
     DeliveryCharge? deliveryCharge;
     try {
+      // Performance Optimization: Check cache first (transparent to caller)
+      if (!forceRefresh && 
+          _cachedDeliveryCharge != null && 
+          _deliveryChargeCacheTime != null) {
+        final cacheAge = DateTime.now().difference(_deliveryChargeCacheTime!);
+        if (cacheAge < _deliveryChargeCacheTTL) {
+          log("getDeliveryCharge: Returning cached data (age: ${cacheAge.inSeconds}s)");
+          return _cachedDeliveryCharge;
+        }
+      }
+
       final response = await http.get(
         Uri.parse('${Constant.baseUrl}restaurant/delivery-charge'),
         headers: {'Content-Type': 'application/json'},
@@ -1566,6 +1716,10 @@ class FireStoreUtils {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
         if (responseData['success'] == true && responseData['data'] != null) {
           deliveryCharge = DeliveryCharge.fromJson(responseData['data']);
+          
+          // Performance Optimization: Cache the result
+          _cachedDeliveryCharge = deliveryCharge;
+          _deliveryChargeCacheTime = DateTime.now();
         }
       } else {
         throw Exception('Failed to load delivery charge: ${response.statusCode}');
@@ -2293,11 +2447,19 @@ class FireStoreUtils {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
           Constant.vendorAdminCommission = vendor.adminCommission;
+          VendorModel? updatedVendor;
           if (responseData['data'] != null) {
-            return VendorModel.fromJson(responseData['data']);
+            updatedVendor = VendorModel.fromJson(responseData['data']);
           } else {
-            return vendor;
+            updatedVendor = vendor;
           }
+          
+          // Performance Optimization: Invalidate vendor cache and update with new data
+          _cachedVendor = updatedVendor;
+          _cachedVendorId = updatedVendor.id;
+          _vendorCacheTime = DateTime.now();
+          
+          return updatedVendor;
         } else {
           throw Exception('API returned success: false: ${responseData['message']}');
         }

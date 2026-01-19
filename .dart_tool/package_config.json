@@ -680,6 +680,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "google_maps_webservice",
+      "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/google_maps_webservice-0.0.20-nullsafety.5",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "google_sign_in",
       "rootUri": "file:///Users/jippymart/.pub-cache/hosted/pub.dev/google_sign_in-6.3.0",
       "packageUri": "lib/",

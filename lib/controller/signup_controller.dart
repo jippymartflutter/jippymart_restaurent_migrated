@@ -153,7 +153,7 @@ class SignupController extends GetxController {
           Constant.isSubscriptionModelApplied == false) {
         Get.offAll(const DashBoardScreen());
       } else {
-        Get.offAll(const SubscriptionPlanScreen());
+        Get.offAll(const LoginScreen());
       }
     } else if (userModel.value.subscriptionPlan?.features?.restaurantMobileApp != false ||
         userModel.value.subscriptionPlan?.type == 'free') {

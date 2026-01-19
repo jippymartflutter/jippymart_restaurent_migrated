@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/models/currency_model.dart';
@@ -54,18 +55,37 @@ class GlobalSettingController extends GetxController {
 
   NotificationService notificationService = NotificationService();
 
-  notificationInit() {
-    notificationService.initInfo().then((value) async {
-      String userId = await FireStoreUtils.getCurrentUid();
-      String token = await NotificationService.getToken();
-      await FireStoreUtils.getUserProfile(userId)
-          .then((value) {
-        if (value != null) {
-          UserModel driverUserModel = value;
-          driverUserModel.fcmToken = token;
-          FireStoreUtils.updateUser(driverUserModel);
-        }
-      });
-        });
+  Future<void> notificationInit() async {
+    try {
+      // Ensure Firebase is ready
+      if (Firebase.apps.isEmpty) {
+        print("❌ Firebase not initialized, skipping notificationInit");
+        return;
+      }
+
+      // Initialize notifications (permissions, listeners, etc.)
+      await notificationService.initInfo();
+
+      final userId = await FireStoreUtils.getCurrentUid();
+      if (userId.isEmpty) return;
+
+      // Get FCM token safely
+      final token = await NotificationService.getToken();
+      if (token == null || token.isEmpty) {
+        print("⚠️ FCM token not available, skipping update");
+        return;
+      }
+
+      final userModel = await FireStoreUtils.getUserProfile(userId);
+      if (userModel == null) return;
+
+      // Update token without blocking anything
+      userModel.fcmToken = token;
+      await FireStoreUtils.updateUser(userModel);
+
+    } catch (e) {
+      // Never crash or redirect from here
+      print("notificationInit error: $e");
+    }
   }
 }
