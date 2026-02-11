@@ -30,8 +30,8 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 class Constant {
-  // static String baseUrl  = "http://192.168.0.21:8000/api/";
-  static String baseUrl = "https://web.jippymart.in/api/";
+  static String baseUrl  = "http://192.168.0.23:8000/api/";
+  // static String baseUrl = "https://web.jippymart.in/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
   static String userRoleVendor = 'vendor';

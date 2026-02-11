@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
-import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
 
 class UserModel {
   String? id;
@@ -35,7 +34,7 @@ class UserModel {
   String? provider;
   String? subscriptionPlanId;
   Timestamp? subscriptionExpiryDate;
-  SubscriptionPlanModel? subscriptionPlan;
+  Map<String, dynamic>? subscriptionPlan;
 
   UserModel(
       {this.id,
@@ -156,24 +155,9 @@ class UserModel {
     provider = json['provider'];
     subscriptionPlanId = json['subscriptionPlanId'];
     subscriptionExpiryDate = _parseTimestamp(json['subscriptionExpiryDate']);
-    try {
-      if (json['subscription_plan'] != null) {
-        if (json['subscription_plan'] is Map<String, dynamic>) {
-          subscriptionPlan = SubscriptionPlanModel.fromJson(json['subscription_plan'] as Map<String, dynamic>);
-        } else if (json['subscription_plan'] is Map) {
-          subscriptionPlan = SubscriptionPlanModel.fromJson(Map<String, dynamic>.from(json['subscription_plan']));
-        } else if (json['subscription_plan'] is String) {
-          subscriptionPlan = SubscriptionPlanModel(
-            id: json['subscriptionPlanId']?.toString(),
-            name: json['subscription_plan'] as String,
-            // Add other default properties as needed
-          );
-        }
-      } else {
-        subscriptionPlan = null;
-      }
-    } catch (e) {
-      print('Error parsing subscription_plan: $e');
+    if (json['subscription_plan'] != null && json['subscription_plan'] is Map) {
+      subscriptionPlan = Map<String, dynamic>.from(json['subscription_plan']);
+    } else {
       subscriptionPlan = null;
     }
   }
@@ -306,7 +290,7 @@ class UserModel {
       data['vendorID'] = vendorID;
       data['subscriptionPlanId'] = subscriptionPlanId;
       data['subscriptionExpiryDate'] = subscriptionExpiryDate;
-      data['subscription_plan'] = subscriptionPlan?.toJson();
+      data['subscription_plan'] = subscriptionPlan;
     }
     data['appIdentifier'] = appIdentifier;
     data['provider'] = provider;

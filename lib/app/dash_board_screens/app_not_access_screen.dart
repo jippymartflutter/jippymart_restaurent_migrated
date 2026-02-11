@@ -1,7 +1,6 @@
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_plan_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/themes/round_button_fill.dart';
@@ -39,7 +38,7 @@ class AppNotAccessScreen extends StatelessWidget {
               height: 20,
             ),
             Text(
-              "Access denied".tr,
+              "Access restricted".tr,
               style: TextStyle(
                 color: themeChange.getThem()
                     ? AppThemeData.grey100
@@ -53,18 +52,18 @@ class AppNotAccessScreen extends StatelessWidget {
             ),
             Constant.showEmptyView(
                 message:
-                    "Your current plan doesn’t include this feature. Upgrade to get access now."
+                    "This feature requires an account. Please sign in or create an account to continue."
                         .tr),
             const SizedBox(
               height: 40,
             ),
             RoundedButtonFill(
               width: 60,
-              title: "Upgrade Plan".tr,
+              title: "Go to Login".tr,
               color: AppThemeData.secondary300,
               textColor: AppThemeData.grey50,
               onPress: () async {
-                Get.to(const SubscriptionPlanScreen());
+                Get.back();
               },
             ),
           ],

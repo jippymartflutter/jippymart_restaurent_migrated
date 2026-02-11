@@ -516,95 +516,95 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 ),
                               ),
                     floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-                    floatingActionButton:
-                    Obx(
-                       () {
-                        return controller.isFloating.value?
-                        SizedBox():GestureDetector(
-                          onTap: () async {
-                            const String phoneNumber = '+916301931498';
-                            const String message =
-                                "I'm interested to upgrade my plan to premium services";
-                            final Uri whatsappUrl = Uri.parse(
-                                'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}'
-                              ,);
-                            try {
-                              if (await canLaunchUrl(whatsappUrl)) {
-                                await launchUrl(whatsappUrl,
-                                    mode: LaunchMode.externalApplication);
-                              } else {
-                                final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
-                                if (await canLaunchUrl(phoneUrl)) {
-                                  await launchUrl(phoneUrl,
-                                      mode: LaunchMode.externalApplication);
-                                }
-                              }
-                            } catch (e) {
-                              debugPrint('Error launching WhatsApp: $e');
-                            }
-                          },
-                          child: Container(
-                            margin: EdgeInsets.all(20),padding: EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: ColorConst.lightBlue,borderRadius: BorderRadius.circular(40),
-                            ),
-                            height: 70,
-                            width: double.infinity,
-                            child: Row(children: [
-                              SizedBox(width: 10,),
-                              GestureDetector(
-                                onTap: () async {
-                                  const String phoneNumber = '+916301931498';
-                                  const String message =
-                                      "I'm interested to upgrade my plan to premium services";
-                                  final Uri whatsappUrl = Uri.parse(
-                                      'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
-                                  try {
-                                    if (await canLaunchUrl(whatsappUrl)) {
-                                      await launchUrl(whatsappUrl,
-                                          mode: LaunchMode.externalApplication);
-                                    } else {
-                                      final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
-                                      if (await canLaunchUrl(phoneUrl)) {
-                                        await launchUrl(phoneUrl,
-                                            mode: LaunchMode.externalApplication);
-                                      }
-                                    }
-                                  } catch (e) {
-                                    debugPrint('Error launching WhatsApp: $e');
-                                  }
-                                },
-                                child: SvgPicture.asset(
-                                  ImageConst.whatsApp,
-                                ),
-                              ),
-                              SizedBox(width: 10,),
-                              SizedBox(
-                                width: 200,
-                                child: RichText(
-                                  text: TextSpan(
-                                    style: TextStyleConst.blackMedium15,
-                                    children: [
-                                      const TextSpan(
-                                        text: "Upgrade to our ₹1299 or ₹2999 Plan and unlock ",
-                                      ),
-                                      TextSpan(
-                                        text: "premium features",
-                                        style: TextStyleConst.blueMedium15,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                           IconButton(icon: Icon(Icons.close),onPressed: (){
-                                controller.isFloatingFunction();
-                              }
-                                ,),
-                            ],),
-                          ),
-                        );
-                      }
-                    ),
+                    // floatingActionButton:
+                    // Obx(
+                    //    () {
+                    //     return controller.isFloating.value?
+                    //     SizedBox():GestureDetector(
+                    //       onTap: () async {
+                    //         const String phoneNumber = '+916301931498';
+                    //         const String message =
+                    //             "I'm interested to upgrade my plan to premium services";
+                    //         final Uri whatsappUrl = Uri.parse(
+                    //             'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}'
+                    //           ,);
+                    //         try {
+                    //           if (await canLaunchUrl(whatsappUrl)) {
+                    //             await launchUrl(whatsappUrl,
+                    //                 mode: LaunchMode.externalApplication);
+                    //           } else {
+                    //             final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
+                    //             if (await canLaunchUrl(phoneUrl)) {
+                    //               await launchUrl(phoneUrl,
+                    //                   mode: LaunchMode.externalApplication);
+                    //             }
+                    //           }
+                    //         } catch (e) {
+                    //           debugPrint('Error launching WhatsApp: $e');
+                    //         }
+                    //       },
+                    //       child: Container(
+                    //         margin: EdgeInsets.all(20),padding: EdgeInsets.all(10),
+                    //         decoration: BoxDecoration(
+                    //           color: ColorConst.lightBlue,borderRadius: BorderRadius.circular(40),
+                    //         ),
+                    //         height: 70,
+                    //         width: double.infinity,
+                    //         child: Row(children: [
+                    //           SizedBox(width: 10,),
+                    //           GestureDetector(
+                    //             onTap: () async {
+                    //               const String phoneNumber = '+916301931498';
+                    //               const String message =
+                    //                   "I'm interested to upgrade my plan to premium services";
+                    //               final Uri whatsappUrl = Uri.parse(
+                    //                   'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}');
+                    //               try {
+                    //                 if (await canLaunchUrl(whatsappUrl)) {
+                    //                   await launchUrl(whatsappUrl,
+                    //                       mode: LaunchMode.externalApplication);
+                    //                 } else {
+                    //                   final Uri phoneUrl = Uri.parse('tel:$phoneNumber');
+                    //                   if (await canLaunchUrl(phoneUrl)) {
+                    //                     await launchUrl(phoneUrl,
+                    //                         mode: LaunchMode.externalApplication);
+                    //                   }
+                    //                 }
+                    //               } catch (e) {
+                    //                 debugPrint('Error launching WhatsApp: $e');
+                    //               }
+                    //             },
+                    //             child: SvgPicture.asset(
+                    //               ImageConst.whatsApp,
+                    //             ),
+                    //           ),
+                    //           SizedBox(width: 10,),
+                    //           SizedBox(
+                    //             width: 200,
+                    //             child: RichText(
+                    //               text: TextSpan(
+                    //                 style: TextStyleConst.blackMedium15,
+                    //                 children: [
+                    //                   const TextSpan(
+                    //                     text: "Upgrade to our ₹1299 or ₹2999 Plan and unlock ",
+                    //                   ),
+                    //                   TextSpan(
+                    //                     text: "premium features",
+                    //                     style: TextStyleConst.blueMedium15,
+                    //                   ),
+                    //                 ],
+                    //               ),
+                    //             ),
+                    //           ),
+                    //        IconButton(icon: Icon(Icons.close),onPressed: (){
+                    //             controller.isFloatingFunction();
+                    //           }
+                    //             ,),
+                    //         ],),
+                    //       ),
+                    //     );
+                    //   }
+                    // ),
                   ),
                 );
         });
@@ -1224,27 +1224,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   color: AppThemeData.success400,
                                   textColor: AppThemeData.grey50,
                                   onPress: () async {
-                                    if ((Constant.isSubscriptionModelApplied ==
-                                                true ||
-                                            Constant.adminCommission
-                                                    ?.isEnabled ==
-                                                true) &&
-                                        controller.vendermodel.value
-                                                .subscriptionPlan !=
-                                            null) {
-                                      if (controller.vendermodel.value
-                                                  .subscriptionTotalOrders ==
-                                              '0' ||
-                                          controller.vendermodel.value
-                                                  .subscriptionTotalOrders ==
-                                              null) {
-                                        ShowToastDialog.closeLoader();
-                                        ShowToastDialog.showToast(
-                                            "You have reached the maximum order capacity for your current plan. Upgrade your subscription to continue accepting orders seamlessly!."
-                                                .tr);
-                                        return;
-                                      }
-                                    }
+                                    // ✅ REMOVED: Subscription check - App is now 100% free
+                                    // All restaurants can accept orders without subscription limits
 
                                     if (orderModel.scheduleTime != null) {
                                       if (DateTime.now().isAtSameMomentOrAfter(
@@ -2743,29 +2724,9 @@ print("acceptedWidget ${orderModel.vendorID}");
                               Get.back();
                               ShowToastDialog.showLoader('Please wait...'.tr);
                               await AudioPlayerService.playSound(false);
-                              if ((Constant.isSubscriptionModelApplied ==
-                                          true ||
-                                      Constant.adminCommission?.isEnabled ==
-                                          true) &&
-                                  controller
-                                          .vendermodel.value.subscriptionPlan !=
-                                      null) {
-                                if (controller.vendermodel.value
-                                            .subscriptionTotalOrders !=
-                                        '-1' &&
-                                    controller.vendermodel.value
-                                            .subscriptionTotalOrders !=
-                                        null) {
-                                  controller.vendermodel.value
-                                      .subscriptionTotalOrders = (int.parse(
-                                              controller.vendermodel.value
-                                                  .subscriptionTotalOrders!) -
-                                          1)
-                                      .toString();
-                                  await FireStoreUtils.updateVendor(
-                                      controller.vendermodel.value);
-                                }
-                              }
+                              // ✅ REMOVED: Subscription order limit decrement - App is now 100% free
+                              // No need to track subscription order limits
+
                               orderModel.notes = "";
                               orderModel.driverID =
                                   controller.selectDriverUser.value.id;
@@ -3029,17 +2990,9 @@ print("acceptedWidget ${orderModel.vendorID}");
                           textColor: AppThemeData.grey50,
                           onPress: () async {
                             if (controller.estimatedTimeController.value.text.isNotEmpty) {
-                              if ((Constant.isSubscriptionModelApplied == true ||
-                                  Constant.adminCommission?.isEnabled == true) &&
-                                  controller.vendermodel.value.subscriptionPlan != null) {
-                                if (controller.vendermodel.value.subscriptionTotalOrders != '-1' &&
-                                    controller.vendermodel.value.subscriptionTotalOrders != null) {
-                                  controller.vendermodel.value.subscriptionTotalOrders = (int.parse(
-                                      controller.vendermodel.value.subscriptionTotalOrders!) -
-                                      1).toString();
-                                  await FireStoreUtils.updateVendor(controller.vendermodel.value);
-                                }
-                              }
+                              // ✅ REMOVED: Subscription order limit decrement - App is now 100% free
+                              // No need to track subscription order limits
+
                               if (Constant.isSelfDeliveryFeature == true &&
                                   controller.vendermodel.value.isSelfDelivery == true &&
                                   orderModel.takeAway == false) {

@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
-import 'package:jippymart_restaurant/app/dash_board_screens/app_not_access_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
+import 'package:jippymart_restaurant/app/landing_screen.dart';
 import 'package:jippymart_restaurant/app/on_boarding_screen.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_plan_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/notification/notification_service.dart';
@@ -76,14 +75,14 @@ class SplashController extends GetxController {
       bool isLogin = await FireStoreUtils.isLogin();
       if (!isLogin) {
         loginController.clearUserData();
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
       String userId = await FireStoreUtils.getCurrentUid();
       final userProfile = await FireStoreUtils.getUserProfile(userId);
       if (userProfile == null) {
         loginController.clearUserData();
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
 
@@ -91,12 +90,12 @@ class SplashController extends GetxController {
       print( "getUserProfilegetUserProfile  ${Constant.userModel?.toJson()} ");
       if (Constant.userModel?.role != Constant.userRoleVendor) {
         loginController.clearUserData();
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
       if (Constant.userModel?.active != true) {
         loginController.clearUserData();
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
       // Update FCM token
@@ -108,35 +107,13 @@ class SplashController extends GetxController {
         // Continue even if FCM token update fails
       }
 
-      bool isPlanExpire = false;
-      if (Constant.userModel?.subscriptionPlan?.id != null) {
-        if (Constant.userModel?.subscriptionExpiryDate == null) {
-          isPlanExpire = Constant.userModel?.subscriptionPlan?.expiryDay != '-1';
-        } else {
-          DateTime expiryDate = Constant.userModel!.subscriptionExpiryDate!.toDate();
-          isPlanExpire = expiryDate.isBefore(DateTime.now());
-        }
-      } else {
-        isPlanExpire = true;
-      }
-
-      if (Constant.userModel?.subscriptionPlanId == null || isPlanExpire) {
-        if (Constant.adminCommission?.isEnabled == false && 
-            Constant.isSubscriptionModelApplied == false) {
-          Get.offAll(() => const DashBoardScreen());
-        } else {
-          Get.offAll(() => const SubscriptionPlanScreen());
-        }
-      } else if (Constant.userModel?.subscriptionPlan?.features?.restaurantMobileApp == true) {
-        Get.offAll(() => const DashBoardScreen());
-      } else {
-        Get.offAll(() => const AppNotAccessScreen());
-      }
+      // App is now 100% free - no subscription checks needed
+      Get.offAll(() => const DashBoardScreen());
     } catch (e) {
       print('Error in redirectScreen: $e');
       ShowToastDialog.showToast('An error occurred. Please try again.');
       loginController.clearUserData();
-      Get.offAll(() => const LoginScreen());
+      Get.offAll(() => const LandingScreen());
     } finally {
       isRedirecting = false;
     }

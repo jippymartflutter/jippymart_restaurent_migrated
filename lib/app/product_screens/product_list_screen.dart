@@ -148,7 +148,7 @@ class ProductListScreen extends StatelessWidget {
               backgroundColor: ColorConst.orange,
               centerTitle: false,
               title: Text(
-                "Manage Productsdd".tr,
+                "Restaurant Inventory".tr,
                 style: TextStyle(
                     color: themeChange.getThem()
                         ? AppThemeData.grey50
@@ -542,8 +542,6 @@ class ProductListScreen extends StatelessWidget {
                         print("🔄 Fallback to direct prices - Price: $price, DisPrice: $disPrice");
                       }
 
-                      bool isDisplayItemAlert = false;
-
                       return InkWell(
                         onTap: product.isAvailable == false
                             ? null
@@ -687,17 +685,7 @@ class ProductListScreen extends StatelessWidget {
                                       onPublishChanged: (val) => controller.updateList(product.id!, product.publish!),
                                       onAvailableChanged: (val) => controller.updateAvailableStatus(product.id!, product.isAvailable ?? true),
                                     ),
-                                    Visibility(
-                                      visible: isDisplayItemAlert,
-                                      child: Text(
-                                        "This product will not be displayed to customers due to your current subscription limitations.".tr,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: themeChange.getThem() ? AppThemeData.danger300 : AppThemeData.danger300,
-                                            fontSize: 12,
-                                            fontFamily: AppThemeData.regular),
-                                      ),
-                                    ),
+                                    // App Store: Subscription limitations removed - app is 100% free
                                   ],
                                 ),
                               ),

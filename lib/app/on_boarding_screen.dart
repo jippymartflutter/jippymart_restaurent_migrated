@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
+import 'package:jippymart_restaurant/app/landing_screen.dart';
 import 'package:jippymart_restaurant/controller/on_boarding_controller.dart';
 import 'package:jippymart_restaurant/themes/app_them_data.dart';
 import 'package:jippymart_restaurant/themes/round_button_fill.dart';
@@ -115,7 +115,7 @@ class OnBoardingScreen extends StatelessWidget {
                             if (controller.selectedPageIndex.value == 2) {
                               Preferences.setBoolean(
                                   Preferences.isFinishOnBoardingKey, true);
-                              Get.offAll(const LoginScreen());
+                              Get.offAll(const LandingScreen());
                             } else {
                               controller.pageController.jumpToPage(
                                   controller.selectedPageIndex.value + 1);

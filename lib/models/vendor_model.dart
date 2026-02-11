@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/models/admin_commission.dart';
-import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
 
 class VendorModel {
   String? author;
@@ -44,7 +43,7 @@ class VendorModel {
   double? latitude;
   String? subscriptionPlanId;
   Timestamp? subscriptionExpiryDate;
-  SubscriptionPlanModel? subscriptionPlan;
+  Map<String, dynamic>? subscriptionPlan;
   String? subscriptionTotalOrders;
   bool? isSelfDelivery;
   // Add missing fields
@@ -268,17 +267,10 @@ class VendorModel {
       subscriptionExpiryDate = json['subscriptionExpiryDate'];
     }
 
-    // Handle subscription_plan - it might be a string or object
-    if (json['subscription_plan'] is String) {
-      try {
-        subscriptionPlan = SubscriptionPlanModel.fromJson(jsonDecode(json['subscription_plan']));
-      } catch (e) {
-        subscriptionPlan = null;
-      }
+    if (json['subscription_plan'] != null && json['subscription_plan'] is Map) {
+      subscriptionPlan = Map<String, dynamic>.from(json['subscription_plan']);
     } else {
-      subscriptionPlan = json['subscription_plan'] != null
-          ? SubscriptionPlanModel.fromJson(json['subscription_plan'])
-          : null;
+      subscriptionPlan = null;
     }
 
     subscriptionTotalOrders = json['subscriptionTotalOrders'];
@@ -320,7 +312,7 @@ class VendorModel {
       data['subscriptionExpiryDate'] = null;
     }
 
-    data['subscription_plan'] = subscriptionPlan?.toJson();
+    data['subscription_plan'] = subscriptionPlan;
     data['subscriptionTotalOrders'] = subscriptionTotalOrders;
 
     if (workingHours != null) {

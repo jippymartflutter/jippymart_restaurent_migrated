@@ -15,8 +15,7 @@ import 'package:jippymart_restaurant/app/driver_screens/driver_list_screen.dart'
 import 'package:jippymart_restaurant/app/edit_profile_screen/edit_profile_screen.dart';
 import 'package:jippymart_restaurant/app/offer_screens/offer_screen.dart';
 import 'package:jippymart_restaurant/app/special_discount_screen/special_discount_screen.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_history_screen.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_plan_screen.dart';
+
 import 'package:jippymart_restaurant/app/terms_and_condition/terms_and_condition_screen.dart';
 import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
 import 'package:jippymart_restaurant/app/withdraw_method_setup_screens/withdraw_method_setup_screen.dart';
@@ -142,22 +141,22 @@ class ProfileScreen extends StatelessWidget {
                             ),
                           ),
                           // Subscription Management Section
-                          Visibility(
-                            visible: false,
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: SubscriptionPlanWidget(
-                                onClick: () {
-                                  Get.to(const SubscriptionPlanScreen(), arguments: {'isProfile': true})?.then((value) {
-                                    if (value == true) {
-                                      controller.getUserProfile();
-                                    }
-                                  });
-                                },
-                                userModel: controller.userModel.value,
-                              ),
-                            ),
-                          ),
+                          // Visibility(
+                          //   visible: false,
+                          //   child: Padding(
+                          //     padding: const EdgeInsets.only(bottom: 10),
+                          //     child: SubscriptionPlanWidget(
+                          //       onClick: () {
+                          //         Get.to(const SubscriptionPlanScreen(), arguments: {'isProfile': true})?.then((value) {
+                          //           if (value == true) {
+                          //             controller.getUserProfile();
+                          //           }
+                          //         });
+                          //       },
+                          //       userModel: controller.userModel.value,
+                          //     ),
+                          //   ),
+                          // ),
                           // Add Story Section
                           Visibility(
                             visible: false,
@@ -471,13 +470,7 @@ class ProfileScreen extends StatelessWidget {
                                           Get.find<DashBoardController>();
                                       dashBoardController
                                           .selectedIndex.value = Constant
-                                                  .isDineInEnable &&
-                                              Constant
-                                                      .userModel!
-                                                      .subscriptionPlan
-                                                      ?.features
-                                                      ?.dineIn !=
-                                                  false
+                                                  .isDineInEnable
                                           ? 2
                                           : 1;
                                     },
@@ -549,10 +542,7 @@ class ProfileScreen extends StatelessWidget {
                                     (controller.userModel.value.vendorID ==
                                             null ||
                                         controller
-                                            .userModel.value.vendorID!.isEmpty) ||
-                                    (controller.userModel.value.subscriptionPlan
-                                            ?.features?.dineIn ==
-                                        false)
+                                            .userModel.value.vendorID!.isEmpty)
                                 ? const SizedBox()
                                 : Constant.isDineInEnable
                                     ? Column(
@@ -692,97 +682,97 @@ class ProfileScreen extends StatelessWidget {
                                 const SizedBox(
                                   height: 10,
                                 ),
-                                Container(
-                                  width: Responsive.width(100, context),
-                                  decoration: ShapeDecoration(
-                                    color: themeChange.getThem()
-                                        ? AppThemeData.grey900
-                                        : AppThemeData.grey50,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 8),
-                                    child: Column(
-                                      children: [
-                                        (Constant.isSubscriptionModelApplied ==
-                                                    true ||
-                                                Constant.adminCommission
-                                                        ?.isEnabled ==
-                                                    true)
-                                            ? cardDecoration(
-                                                themeChange,
-                                                controller,
-                                                Container(
-                                                  width: 44,
-                                                  height: 44,
-                                                  decoration: ShapeDecoration(
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData.driverApp50
-                                                            .withAlpha(20)
-                                                        : AppThemeData
-                                                            .driverApp50,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              120),
-                                                    ),
-                                                  ),
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(10),
-                                                    child: SvgPicture.asset(
-                                                        "assets/icons/ic_subscription.svg"),
-                                                  ),
-                                                ),
-                                                "Subscription Packages",
-                                                () {
-                                                  Get.to(
-                                                      const SubscriptionPlanScreen(),
-                                                      arguments: {
-                                                        'isProfile': true
-                                                      })?.then((value) {
-                                                    if (value == true) {
-                                                      controller.getUserProfile();
-                                                    }
-                                                  });
-                                                },
-                                              )
-                                            : SizedBox(),
-                                        cardDecoration(
-                                          themeChange,
-                                          controller,
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: ShapeDecoration(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.driverApp50
-                                                      .withAlpha(20)
-                                                  : AppThemeData.driverApp50,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(120),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10),
-                                              child: SvgPicture.asset(
-                                                "assets/icons/ic_history.svg",
-                                              ),
-                                            ),
-                                          ),
-                                          "Subscription History",
-                                          () {
-                                            Get.to(
-                                                const SubscriptionHistoryScreen());
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                // Container(
+                                //   width: Responsive.width(100, context),
+                                //   decoration: ShapeDecoration(
+                                //     color: themeChange.getThem()
+                                //         ? AppThemeData.grey900
+                                //         : AppThemeData.grey50,
+                                //     shape: RoundedRectangleBorder(
+                                //         borderRadius: BorderRadius.circular(12)),
+                                //   ),
+                                //   child: Padding(
+                                //     padding: const EdgeInsets.symmetric(
+                                //         horizontal: 10, vertical: 8),
+                                //     child: Column(
+                                //       children: [
+                                //         (Constant.isSubscriptionModelApplied ==
+                                //                     true ||
+                                //                 Constant.adminCommission
+                                //                         ?.isEnabled ==
+                                //                     true)
+                                //             ? cardDecoration(
+                                //                 themeChange,
+                                //                 controller,
+                                //                 Container(
+                                //                   width: 44,
+                                //                   height: 44,
+                                //                   decoration: ShapeDecoration(
+                                //                     color: themeChange.getThem()
+                                //                         ? AppThemeData.driverApp50
+                                //                             .withAlpha(20)
+                                //                         : AppThemeData
+                                //                             .driverApp50,
+                                //                     shape: RoundedRectangleBorder(
+                                //                       borderRadius:
+                                //                           BorderRadius.circular(
+                                //                               120),
+                                //                     ),
+                                //                   ),
+                                //                   child: Padding(
+                                //                     padding:
+                                //                         const EdgeInsets.all(10),
+                                //                     child: SvgPicture.asset(
+                                //                         "assets/icons/ic_subscription.svg"),
+                                //                   ),
+                                //                 ),
+                                //                 "Subscription Packages",
+                                //                 () {
+                                //                   Get.to(
+                                //                       const SubscriptionPlanScreen(),
+                                //                       arguments: {
+                                //                         'isProfile': true
+                                //                       })?.then((value) {
+                                //                     if (value == true) {
+                                //                       controller.getUserProfile();
+                                //                     }
+                                //                   });
+                                //                 },
+                                //               )
+                                //             : SizedBox(),
+                                //         cardDecoration(
+                                //           themeChange,
+                                //           controller,
+                                //           Container(
+                                //             width: 44,
+                                //             height: 44,
+                                //             decoration: ShapeDecoration(
+                                //               color: themeChange.getThem()
+                                //                   ? AppThemeData.driverApp50
+                                //                       .withAlpha(20)
+                                //                   : AppThemeData.driverApp50,
+                                //               shape: RoundedRectangleBorder(
+                                //                 borderRadius:
+                                //                     BorderRadius.circular(120),
+                                //               ),
+                                //             ),
+                                //             child: Padding(
+                                //               padding: const EdgeInsets.all(10),
+                                //               child: SvgPicture.asset(
+                                //                 "assets/icons/ic_history.svg",
+                                //               ),
+                                //             ),
+                                //           ),
+                                //           "Subscription History",
+                                //           () {
+                                //             Get.to(
+                                //                 const SubscriptionHistoryScreen());
+                                //           },
+                                //         ),
+                                //       ],
+                                //     ),
+                                //   ),
+                                // ),
                               ],
                             ),
                           ),
@@ -1346,154 +1336,4 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class SubscriptionPlanWidget extends StatelessWidget {
-  final VoidCallback onClick;
-  final UserModel userModel;
 
-  const SubscriptionPlanWidget({
-    super.key,
-    required this.onClick,
-    required this.userModel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final themeChange = Provider.of<DarkThemeProvider>(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-      decoration: BoxDecoration(
-        border: Border.all(
-            color: themeChange.getThem()
-                ? AppThemeData.grey800
-                : AppThemeData.grey200),
-        color:
-            themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey800,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-              bottom: 0,
-              top: 10,
-              child: Opacity(
-                  opacity: 0.8,
-                  child: Image.asset(
-                    width: Responsive.width(100, context),
-                    height: Responsive.height(100, context),
-                    "assets/images/ic_gradient.png",
-                    color: AppThemeData.secondary300,
-                    fit: BoxFit.fill,
-                  ))),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    NetworkImageWidget(
-                      imageUrl: userModel.subscriptionPlan?.image ?? '',
-                      fit: BoxFit.cover,
-                      width: 50,
-                      height: 50,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                userModel.subscriptionPlan?.name ?? '',
-                                style: TextStyle(
-                                  color: themeChange.getThem()
-                                      ? AppThemeData.grey900
-                                      : AppThemeData.grey50,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: AppThemeData.semiBold,
-                                ),
-                              ),
-                              Text(
-                                userModel.subscriptionPlan?.type == 'free'
-                                    ? userModel.subscriptionPlan?.description ??
-                                        ''
-                                    : Constant.amountShow(
-                                        amount:
-                                            userModel.subscriptionPlan?.price),
-                                style: const TextStyle(
-                                  fontFamily: AppThemeData.medium,
-                                  fontSize: 14,
-                                  color: AppThemeData.grey400,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (userModel.subscriptionPlan?.type == 'paid')
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Expiry Date'.tr,
-                                  style: TextStyle(
-                                    fontFamily: AppThemeData.medium,
-                                    fontSize: 12,
-                                    color: themeChange.getThem()
-                                        ? AppThemeData.grey900
-                                        : AppThemeData.grey50,
-                                  ),
-                                ),
-                                Text(
-                                  userModel.subscriptionPlan!.expiryDay == "-1"
-                                      ? "LifeTime"
-                                      : Constant.timestampToDate(
-                                          userModel.subscriptionExpiryDate!),
-                                  style: const TextStyle(
-                                    fontFamily: AppThemeData.regular,
-                                    fontSize: 12,
-                                    color: AppThemeData.grey400,
-                                  ),
-                                ),
-                              ],
-                            )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-                RoundedButtonFill(
-                  radius: 14,
-                  textColor: AppThemeData.grey200,
-                  title: "Change Plan".tr,
-                  color: AppThemeData.secondary300,
-                  width: 80,
-                  height: 5,
-                  onPress: onClick,
-                ),
-                if (Constant.adminCommission?.isEnabled == true)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      Constant.userModel!.vendorID != null &&
-                              Constant.userModel!.vendorID!.isNotEmpty
-                          ? "${Constant.vendorAdminCommission?.commissionType == 'Percent' ? "${Constant.vendorAdminCommission?.amount} %" : "${Constant.amountShow(amount: Constant.vendorAdminCommission?.amount)} Flat"} ${"admin commission will be charged from customer billing orders and the admin charge will be earned after the order is accepted by the restaurant.".tr}"
-                          : "${Constant.adminCommission?.commissionType == 'Percent' ? "${Constant.adminCommission?.amount} %" : "${Constant.amountShow(amount: Constant.adminCommission?.amount)} Flat"} ${"admin commission will be charged from customer billing orders and the admin charge will be earned after the order is accepted by the restaurant.".tr}",
-                      style: const TextStyle(
-                        fontFamily: AppThemeData.medium,
-                        fontSize: 9,
-                        color: AppThemeData.grey400,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

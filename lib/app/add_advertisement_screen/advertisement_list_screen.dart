@@ -98,9 +98,7 @@ class AdvertisementListScreen extends StatelessWidget {
                 ),
                 actions: [
                   Visibility(
-                    visible:
-                        Constant.userModel?.subscriptionPlan?.features?.chat !=
-                            false,
+                    visible: true,
                     child: InkWell(
                       onTap: () async {
                         Get.to(const AdminInboxScreen());

@@ -6,7 +6,7 @@ import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/auth_screen/signup_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/app_not_access_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_plan_screen.dart';
+import 'package:jippymart_restaurant/app/landing_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
@@ -44,18 +44,18 @@ class LoginController extends GetxController {
 
       bool isLogin = await FireStoreUtils.isLogin();
       if (!isLogin) {
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
 
       final userModel = await FireStoreUtils.getUserProfile(userId);
       if (userModel == null) {
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
 
       if (userModel.role != Constant.userRoleVendor || userModel.active != true) {
-        Get.offAll(() => const LoginScreen());
+        Get.offAll(() => const LandingScreen());
         return;
       }
 
@@ -75,7 +75,7 @@ class LoginController extends GetxController {
 
     } catch (e) {
       print("proceedToMainApp error: $e");
-      Get.offAll(() => const LoginScreen());
+      Get.offAll(() => const LandingScreen());
     }
   }
 
@@ -138,38 +138,8 @@ class LoginController extends GetxController {
             if (userModel.active == true) {
               userModel.fcmToken = await NotificationService.getToken();
               await FireStoreUtils.updateUser(userModel);
-              bool isPlanExpire = false;
-              if (userModel.subscriptionPlan?.id != null) {
-                if (userModel.subscriptionExpiryDate == null) {
-                  if (userModel.subscriptionPlan?.expiryDay == '-1') {
-                    isPlanExpire = false;
-                  } else {
-                    isPlanExpire = true;
-                  }
-                } else {
-                  DateTime expiryDate = userModel.subscriptionExpiryDate!.toDate();
-                  isPlanExpire = expiryDate.isBefore(DateTime.now());
-                }
-              } else {
-                isPlanExpire = true;
-              }
-              if (userModel.subscriptionPlanId == null || isPlanExpire == true) {
-                if (Constant.adminCommission?.isEnabled == false &&
-                    Constant.isSubscriptionModelApplied == false) {
-
-                  proceedToMainApp();
-                  // Get.offAll(const DashBoardScreen());
-                } else {
-                  proceedToMainApp();
-                  // Get.offAll(const DashBoardScreen());
-                  // Get.offAll(const SubscriptionPlanScreen());
-                }
-              } else if (userModel.subscriptionPlan?.features?.restaurantMobileApp == true) {
-                proceedToMainApp();
-                // Get.offAll(const DashBoardScreen());
-              } else {
-                Get.offAll(const AppNotAccessScreen());
-              }
+              // App is now 100% free - no subscription checks needed
+              proceedToMainApp();
             } else {
               await clearUserData();
               ShowToastDialog.showToast(
@@ -286,7 +256,7 @@ class LoginController extends GetxController {
         Constant.userModel!);
     Constant.userModel = null;
     clearUserData();
-    Get.offAll(const LoginScreen());
+    Get.offAll(() => const LandingScreen());
   }
 // Helper method to clear user data on logout/error
   Future<void> clearUserData() async {

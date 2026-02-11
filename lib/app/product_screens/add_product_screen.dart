@@ -1592,18 +1592,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   : AppThemeData.grey50,
                               fontSizes: 16,
                               onPress: () async {
-                                print(
-                                    "========${Constant.userModel?.subscriptionPlan?.itemLimit.runtimeType}");
-                                // if ((Constant.isSubscriptionModelApplied == true || Constant.adminCommission?.isEnabled == true) &&
-                                //     Constant.userModel?.subscriptionPlan?.itemLimit != '-1' &&
-                                //     int.parse(Constant.userModel?.subscriptionPlan?.itemLimit != null && Constant.userModel?.subscriptionPlan?.itemLimit.toString() != "null"
-                                //             ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
-                                //             ? "${Constant.userModel?.subscriptionPlan?.itemLimit}"
-                                //             : '0') <=
-                                //         controller.productList.length) {
-                                //   ShowToastDialog.showToast("Your current subscription plan has reached its maximum product limit. Upgrade now to add more products.".tr);
-                                //   return;
-                                // }
+                                // App is now 100% free - no subscription checks needed
       
                                 if (controller.itemAttributes.value != null) {
                                   if (controller.itemAttributes.value!.attributes !=

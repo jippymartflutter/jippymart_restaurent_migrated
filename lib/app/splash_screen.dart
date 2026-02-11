@@ -1,6 +1,7 @@
 import 'package:flutter_svg/svg.dart';
 import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
+import 'package:jippymart_restaurant/app/landing_screen.dart';
 import 'package:jippymart_restaurant/app/on_boarding_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/login_controller.dart';
@@ -29,35 +30,47 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
     _initializeVideo();
   }
   final loginController = Get.put(LoginController());
+
   void _initializeVideo() async {
-    try {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          _navigateToMainApp();
-        }
-      });
-    } catch (e) {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          _navigateToMainApp();
-        }
-      });
-    }
+    // Navigate after a short splash - don't block first-time install
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        _navigateToMainApp();
+      }
+    });
   }
+
   void _navigateToMainApp() async {
+    if (!mounted) return;
     try {
+      // First install: skip update check - go straight to OnBoarding/Landing
+      final bool onboardingDone = Preferences.getBoolean(Preferences.isFinishOnBoardingKey);
+      if (!onboardingDone) {
+        Get.offAll(
+          () => const OnBoardingScreen(),
+          transition: Transition.fadeIn,
+          duration: const Duration(milliseconds: 500),
+        );
+        return;
+      }
+
+      // Returning user: check for updates with timeout (don't block if API is slow)
+      bool updateRequired = false;
       try {
-        bool updateRequired = await AppUpdateService.checkForUpdate();
-        if (updateRequired) {
-          return;
-        }
-      } catch (e) {}
+        updateRequired = await AppUpdateService.checkForUpdate()
+            .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      } catch (e) {
+        // Network error or timeout - proceed to app
+      }
+      if (updateRequired) return;
+
       loginController.proceedToMainApp();
     } catch (e) {
+      if (!mounted) return;
       Get.offAll(
-        () => const LoginScreen(),
+        () => const LandingScreen(),
         transition: Transition.fadeIn,
-        duration: const Duration(milliseconds: 1200),
+        duration: const Duration(milliseconds: 500),
       );
     }
   }

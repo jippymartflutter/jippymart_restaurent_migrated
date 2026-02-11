@@ -44,8 +44,7 @@ import 'package:jippymart_restaurant/models/rating_model.dart';
 import 'package:jippymart_restaurant/models/referral_model.dart';
 import 'package:jippymart_restaurant/models/review_attribute_model.dart';
 import 'package:jippymart_restaurant/models/story_model.dart';
-import 'package:jippymart_restaurant/models/subscription_history.dart';
-import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
+
 import 'package:jippymart_restaurant/models/user_model.dart';
 import 'package:jippymart_restaurant/models/vendor_category_model.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
@@ -500,7 +499,8 @@ class FireStoreUtils {
         // Restaurant Settings
         final restaurantSettings = documents['restaurant'] ?? {};
         Constant.autoApproveRestaurant = restaurantSettings['auto_approve_restaurant'] ?? false;
-        Constant.isSubscriptionModelApplied = restaurantSettings['subscription_model'] ?? false;
+        // App Store compliance: Subscription model disabled - app is 100% free
+        Constant.isSubscriptionModelApplied = false; // Override server: restaurantSettings['subscription_model'] ?? false;
 
         // Admin Commission
         final adminCommission = documents['AdminCommission'] ?? {};
@@ -581,7 +581,8 @@ class FireStoreUtils {
         }
 
         // Also set derived values for consistency
-        Constant.isSubscriptionModelApplied = derived['isSubscriptionModelApplied'] ?? false;
+        // App Store compliance: Subscription model disabled - app is 100% free
+        Constant.isSubscriptionModelApplied = false; // Override: derived['isSubscriptionModelApplied'] ?? false;
         Constant.autoApproveRestaurant = derived['autoApproveRestaurant'] ?? false;
         Constant.isEnableAdsFeature = derived['isEnableAdsFeature'] ?? false;
         Constant.isSelfDeliveryFeature = derived['isSelfDeliveryFeature'] ?? false;
@@ -2350,7 +2351,7 @@ class FireStoreUtils {
       'restaurantMenuPhotos': vendor.restaurantMenuPhotos ?? [],
       'subscriptionPlanId': vendor.subscriptionPlanId,
       'subscriptionExpiryDate': vendor.subscriptionExpiryDate,
-      'subscription_plan': vendor.subscriptionPlan?.toJson(),
+      // 'subscription_plan': vendor.subscriptionPlan?.toJson(),
       'subscriptionTotalOrders': vendor.subscriptionTotalOrders,
       'location': vendor.location,
       'fcmToken': vendor.fcmToken,
@@ -2911,195 +2912,7 @@ class FireStoreUtils {
         await (await uploadTask.whenComplete(() {})).ref.getDownloadURL();
     return downloadUrl.toString();
   }
-  static Future<List<SubscriptionPlanModel>> getAllSubscriptionPlans() async {
-    List<SubscriptionPlanModel> subscriptionPlanModels = [];
-    try {
-      final response = await http.get(
-        Uri.parse('${Constant.baseUrl}subscriptions/plans'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
 
-        if (responseData['success'] == true) {
-          final List<dynamic> data = responseData['data'];
-
-          if (data.isNotEmpty) {
-            for (var element in data) {
-              SubscriptionPlanModel subscriptionPlanModel =
-              SubscriptionPlanModel.fromJson(element);
-
-              if (subscriptionPlanModel.isEnable == true &&
-                  subscriptionPlanModel.id != Constant.commissionSubscriptionID) {
-                subscriptionPlanModels.add(subscriptionPlanModel);
-              }
-            }
-
-            // Sort by place ascending (to match Firebase orderBy behavior)
-            subscriptionPlanModels.sort((a, b) {
-              if (a.place == null && b.place == null) return 0;
-              if (a.place == null) return 1;
-              if (b.place == null) return -1;
-              return a.place!.compareTo(b.place!);
-            });
-          }
-        } else {
-          throw Exception('API returned success: false');
-        }
-      } else {
-        throw Exception('Failed to load subscription plans: ${response.statusCode}');
-      }
-    } catch (error) {
-      log("Error fetching subscription plans: $error");
-    }
-    return subscriptionPlanModels;
-  }
-  static Future<SubscriptionPlanModel?> getSubscriptionPlanById(
-      {required String planId}) async {
-    try {
-      if (planId.isEmpty) {
-        return null;
-      }
-
-      // Make API call
-      final response = await http.get(
-        Uri.parse('${Constant.baseUrl}subscriptions/plans/$planId'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-
-        if (responseData['success'] == true) {
-          // If API returns the plan data
-          if (responseData['data'] != null) {
-            SubscriptionPlanModel subscriptionPlanModel =
-            SubscriptionPlanModel.fromJson(responseData['data']);
-            return subscriptionPlanModel;
-          } else {
-            return null; // No plan found
-          }
-        } else {
-          throw Exception('API returned success: false');
-        }
-      } else if (response.statusCode == 404) {
-        // Plan not found
-        return null;
-      } else {
-        throw Exception('Failed to load subscription plan: ${response.statusCode}');
-      }
-    } catch (error) {
-      log("Error fetching subscription plan: $error");
-      return null;
-    }
-  }
-  static Future<SubscriptionPlanModel> setSubscriptionPlan(
-      SubscriptionPlanModel subscriptionPlanModel) async {
-    try {
-      if (subscriptionPlanModel.id?.isEmpty == true) {
-        subscriptionPlanModel.id = const Uuid().v4();
-      }
-      final response = await http.post(
-        Uri.parse('${Constant.baseUrl}subscriptions/plans'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(subscriptionPlanModel.toJson()),
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['success'] == true) {
-          if (responseData['data'] != null) {
-            return SubscriptionPlanModel.fromJson(responseData['data']);
-          } else {
-            return subscriptionPlanModel;
-          }
-        } else {
-          throw Exception('API returned success: false: ${responseData['message']}');
-        }
-      } else {
-        throw Exception('Failed to set subscription plan: ${response.statusCode}');
-      }
-    } catch (error) {
-      log("Failed to set subscription plan: $error");
-      throw error;
-    }
-  }
-
-  static Future<bool?> setSubscriptionTransaction(
-      SubscriptionHistoryModel subscriptionPlan) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${Constant.baseUrl}subscriptions/transactions'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(subscriptionPlan.toJson()),
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['success'] == true) {
-          return true; // Successfully added
-        } else {
-          log("Failed to add subscription transaction: API returned success false");
-          return false;
-        }
-      } else {
-        log("Failed to add subscription transaction: ${response.statusCode}");
-        return false;
-      }
-    } catch (error) {
-      log("Failed to add subscription transaction: $error");
-      return false;
-    }
-  }
-  static Future<List<SubscriptionHistoryModel>> getSubscriptionHistory() async {
-    List<SubscriptionHistoryModel> subscriptionHistoryList = [];
-    try {
-      // Make API call
-      final response = await http.get(
-        Uri.parse('${Constant.baseUrl}subscriptions/history?user_id=${getCurrentUid()}'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-
-        if (responseData['success'] == true) {
-          final List<dynamic> data = responseData['data'];
-
-          if (data.isNotEmpty) {
-            for (var element in data) {
-              SubscriptionHistoryModel subscriptionHistoryModel =
-              SubscriptionHistoryModel.fromJson(element);
-              subscriptionHistoryList.add(subscriptionHistoryModel);
-            }
-
-            // Sort by createdAt descending (to match Firebase orderBy behavior)
-            subscriptionHistoryList.sort((a, b) {
-              if (a.createdAt == null && b.createdAt == null) return 0;
-              if (a.createdAt == null) return 1;
-              if (b.createdAt == null) return -1;
-              return b.createdAt!.compareTo(a.createdAt!);
-            });
-          }
-        } else {
-          throw Exception('API returned success: false');
-        }
-      } else {
-        throw Exception('Failed to load subscription history: ${response.statusCode}');
-      }
-    } catch (error) {
-      log(error.toString());
-    }
-    return subscriptionHistoryList;
-  }
   static Future<AdvertisementModel> firebaseCreateAdvertisement(
       AdvertisementModel model) async {
     try {

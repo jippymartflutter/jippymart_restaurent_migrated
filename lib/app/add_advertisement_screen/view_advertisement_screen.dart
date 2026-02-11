@@ -50,7 +50,7 @@ class ViewAdvertisementScreen extends StatelessWidget {
               actions: [
                 Visibility(
                   visible:
-                      Constant.userModel?.subscriptionPlan?.features?.chat !=
+                      // Constant.userModel?.subscriptionPlan?.features?.chat !=
                           false,
                   child: InkWell(
                     splashColor: Colors.transparent,

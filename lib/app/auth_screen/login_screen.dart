@@ -39,7 +39,7 @@ class LoginScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Welcome Back! 👋".tr,
+                      "Restaurant Partner Login".tr,
                       style: TextStyle(
                           color: themeChange.getThem()
                               ? AppThemeData.grey50
@@ -48,7 +48,7 @@ class LoginScreen extends StatelessWidget {
                           fontFamily: AppThemeData.semiBold),
                     ),
                     Text(
-                      "Log in to continue managing your restaurant’s orders and reservations seamlessly."
+                      "Log in to manage your restaurant account, accept orders, and handle reservations."
                           .tr,
                       style: TextStyle(
                           color: themeChange.getThem()

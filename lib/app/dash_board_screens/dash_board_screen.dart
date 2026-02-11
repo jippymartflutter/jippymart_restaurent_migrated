@@ -126,10 +126,7 @@ class DashBoardScreen extends StatelessWidget {
                       }
                     }
                   },
-                  items: Constant.isDineInEnable &&
-                          Constant.userModel?.subscriptionPlan?.features
-                                  ?.dineIn !=
-                              false
+                  items: Constant.isDineInEnable
                       ? [
                           navigationBarItem(
                             themeChange,
@@ -149,7 +146,7 @@ class DashBoardScreen extends StatelessWidget {
                             themeChange,
                             index: 2,
                             assetIcon: ImageConst.products,
-                            label: 'Products'.tr,
+                            label: 'Manage Inventory'.tr,
                             controller: controller,
                           ),
                           navigationBarItem(
@@ -181,7 +178,7 @@ class DashBoardScreen extends StatelessWidget {
                             themeChange,
                             index: 1,
                             assetIcon:  ImageConst.products,
-                            label: 'Products'.tr,
+                            label: 'Manage Inventory'.tr,
                             controller: controller,
                           ),
                           navigationBarItem(

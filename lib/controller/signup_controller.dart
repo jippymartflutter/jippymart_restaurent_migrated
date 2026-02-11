@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/app/auth_screen/login_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/app_not_access_screen.dart';
 import 'package:jippymart_restaurant/app/dash_board_screens/dash_board_screen.dart';
-import 'package:jippymart_restaurant/app/subscription_plan_screen/subscription_plan_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/models/user_model.dart';
@@ -133,34 +132,8 @@ class SignupController extends GetxController {
 
 // Helper method for post-signup navigation
   handlePostSignupNavigation() async {
-    bool isPlanExpire = false;
-    if (userModel.value.subscriptionPlan?.id != null) {
-      if (userModel.value.subscriptionExpiryDate == null) {
-        if (userModel.value.subscriptionPlan?.expiryDay == '-1') {
-          isPlanExpire = false;
-        } else {
-          isPlanExpire = true;
-        }
-      } else {
-        DateTime expiryDate = userModel.value.subscriptionExpiryDate!.toDate();
-        isPlanExpire = expiryDate.isBefore(DateTime.now());
-      }
-    } else {
-      isPlanExpire = true;
-    }
-    if (userModel.value.subscriptionPlanId == null || isPlanExpire == true) {
-      if (Constant.adminCommission?.isEnabled == false &&
-          Constant.isSubscriptionModelApplied == false) {
-        Get.offAll(const DashBoardScreen());
-      } else {
-        Get.offAll(const LoginScreen());
-      }
-    } else if (userModel.value.subscriptionPlan?.features?.restaurantMobileApp != false ||
-        userModel.value.subscriptionPlan?.type == 'free') {
-      Get.offAll(const DashBoardScreen());
-    } else {
-      Get.offAll(const AppNotAccessScreen());
-    }
+    // App is now 100% free - no subscription checks needed
+    Get.offAll(const LoginScreen());
   }
   // signUpWithEmailAndPassword() async {
   //   signUp();

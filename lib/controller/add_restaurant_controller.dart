@@ -469,13 +469,13 @@ class AddRestaurantController extends GetxController {
       vendorModel.value.isSelfDelivery = isSelfDelivery.value;
 
       // Handle subscription safely
-      if ((Constant.adminCommission?.isEnabled == true || Constant.isSubscriptionModelApplied == true) &&
-          currentUser.subscriptionPlanId != null) {
-        vendorModel.value.subscriptionPlanId = currentUser.subscriptionPlanId;
-        vendorModel.value.subscriptionPlan = currentUser.subscriptionPlan;
-        vendorModel.value.subscriptionExpiryDate = currentUser.subscriptionExpiryDate;
-        vendorModel.value.subscriptionTotalOrders = currentUser.subscriptionPlan?.orderLimit;
-      }
+      // if ((Constant.adminCommission?.isEnabled == true || Constant.isSubscriptionModelApplied == true) &&
+      //     currentUser.subscriptionPlanId != null) {
+      //   vendorModel.value.subscriptionPlanId = currentUser.subscriptionPlanId;
+      //   vendorModel.value.subscriptionPlan = currentUser.subscriptionPlan;
+      //   vendorModel.value.subscriptionExpiryDate = currentUser.subscriptionExpiryDate;
+      //   vendorModel.value.subscriptionTotalOrders = currentUser.subscriptionPlan?.orderLimit;
+      // }
 
       print("✅ Vendor data set");
 
