@@ -30,6 +30,7 @@ class AddAdvertisementController extends GetxController {
     super.onInit();
   }
 
+
   Rx<AdvertisementModel> advertisementModel = AdvertisementModel().obs;
   RxBool isCopy = false.obs;
   getArgument() {
