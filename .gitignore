@@ -6,11 +6,45 @@
 .DS_Store
 .atom/
 .build/
+.ios/
 .buildlog/
 .history
 .svn/
 .swiftpm/
 migrate_working_dir/
+
+
+.DS_Store
+**/.DS_Store
+.AppleDouble
+.LSOverride
+
+
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+
+
+ios/Podfile.lock
+
+# Build outputs
+ios/build/
+build/ios/
+
+
+# Xcode user data
+ios/Runner.xcworkspace/
+*.xcworkspace
+*.xcuserdata
+*.xcuserstate
+DerivedData/
+
 
 # IntelliJ related
 *.iml
