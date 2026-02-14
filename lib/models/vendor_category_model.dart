@@ -16,13 +16,24 @@ class VendorCategoryModel {
     this.isActive,
   });
   VendorCategoryModel.fromJson(Map<String, dynamic> json) {
-    reviewAttributes = json['review_attributes'] is String
-        ? jsonDecode(json['review_attributes'])
-        : (json['review_attributes'] ?? []);
+    final raw = json['review_attributes'];
+    if (raw is List) {
+      reviewAttributes = raw;
+    } else if (raw is String) {
+      try {
+        reviewAttributes = jsonDecode(raw) as List<dynamic>? ?? [];
+      } catch (_) {
+        reviewAttributes = raw.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      }
+    } else {
+      reviewAttributes = [];
+    }
     photo = json['photo'] ?? "";
     description = json['description'] ?? '';
-    id = json['id']?.toString() ?? "";
-    title = json['title'] ?? "";
+    final rawId = json['id'] ?? json['category_id'];
+    id = rawId?.toString() ?? "";
+    final rawTitle = json['title'] ?? json['Title'] ?? json['name'] ?? json['category_name'] ?? json['categoryName'] ?? json['label'];
+    title = (rawTitle ?? '').toString().trim();
     isActive = json['isActive'] == 1 || json['isActive'] == true;
   }
   Map<String, dynamic> toJson() {
