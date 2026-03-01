@@ -12,6 +12,7 @@ import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
 import 'package:jippymart_restaurant/models/AttributesModel.dart';
 import 'package:jippymart_restaurant/models/product_model.dart';
 import 'package:jippymart_restaurant/models/vendor_category_model.dart';
+import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
@@ -83,14 +84,15 @@ class AddProductController extends GetxController {
 
   RxDouble regularPrice = 0.0.obs;
   RxDouble discountPrice = 0.0.obs;
+  RxDouble merchant_price = 0.0.obs;
   priceAndDiscountPriceListen() {
     regularPriceController.value.addListener(() {
       regularPrice.value = double.parse(
           regularPriceController.value.text.trim().isEmpty
               ? '0.0'
               : regularPriceController.value.text.trim());
-      if (discountPrice.value != 0.0 &&
-          regularPrice.value < discountPrice.value) {
+      if (merchant_price.value != 0.0 &&
+          merchant_price.value < merchant_price.value) {
         ShowToastDialog.showToast(
             "Enter a regular price greater than the discount price.".tr);
       }
@@ -160,7 +162,7 @@ class AddProductController extends GetxController {
       productTitleController.value.text = productModel.value.name.toString();
       productDescriptionController.value.text =
           productModel.value.description.toString();
-      regularPriceController.value.text = productModel.value.price.toString();
+      regularPriceController.value.text = productModel.value.merchant_price.toString();
       discountedPriceController.value.text =
           productModel.value.disPrice.toString();
       productQuantityController.value.text =
@@ -372,6 +374,7 @@ class AddProductController extends GetxController {
       productModel.value.photo = images.isNotEmpty ? images.first : "";
       productModel.value.photos = images;
       productModel.value.price = regularPriceController.value.text.toString();
+      productModel.value.merchant_price = regularPriceController.value.text.toString();
       productModel.value.disPrice =
           discountedPriceController.value.text.toString().isEmpty
               ? "0"
@@ -393,7 +396,6 @@ class AddProductController extends GetxController {
       productModel.value.fats = int.parse(
           fatsController.value.text.isEmpty ? "0" : fatsController.value.text);
       productModel.value.name = productTitleController.value.text;
-print("${productModel.value.name} productModelproductModel ");
       productModel.value.veg = isPureVeg.value;
       productModel.value.nonveg = isNonVeg.value;
       productModel.value.publish = isPublish.value;
@@ -414,7 +416,9 @@ print("${productModel.value.name} productModelproductModel ");
       productModel.value.createdAt = Timestamp.now();
       await FireStoreUtils.updateProduct(productModel.value);
       ShowToastDialog.closeLoader();
+      ShowToastDialog.showToast("Product saved successfully".tr);
       Get.back(result: true);
+      // Product list screen refreshes via .then((value) { if (value == true) controller.getProduct(); })
     }
   }
   final ImagePicker _imagePicker = ImagePicker();

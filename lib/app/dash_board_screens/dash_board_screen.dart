@@ -18,12 +18,12 @@ class DashBoardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
-    final dashController = Get.put(DashBoardController());
-    final productListController = Get.put(ProductListController()); // ← fix
-    return GetX(
-        init: DashBoardController(),
-        builder: (controller) {
-          return WillPopScope(
+    // IMPORTANT: create controllers only once (avoid duplicate onInit/network calls)
+    final controller = Get.put(DashBoardController());
+    final productListController = Get.put(ProductListController());
+
+    return Obx(() {
+      return WillPopScope(
             onWillPop: () async {
               if (controller.selectedIndex.value != 0) {
                 controller.selectedIndex.value = 0;
@@ -204,7 +204,7 @@ class DashBoardScreen extends StatelessWidget {
               ),
             ),
           );
-        });
+    });
   }
 
   BottomNavigationBarItem navigationBarItem(themeChange,

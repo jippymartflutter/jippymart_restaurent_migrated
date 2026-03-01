@@ -59,14 +59,13 @@ class LoginController extends GetxController {
         return;
       }
 
-      // 🔐 Navigate FIRST — never block UI with FCM
+      // Navigate first, then refresh FCM token and update profile (token can change after init)
       Get.offAll(
             () => const DashBoardScreen(),
         transition: Transition.fadeIn,
         duration: const Duration(milliseconds: 3000),
       );
 
-      // 🔔 Update FCM token safely in background
       final fcmToken = await NotificationService.getToken();
       if (fcmToken != null && fcmToken.isNotEmpty) {
         userModel.fcmToken = fcmToken;
@@ -136,9 +135,9 @@ class LoginController extends GetxController {
         if (userModel != null) {
           if (userModel.role == Constant.userRoleVendor) {
             if (userModel.active == true) {
+              // Update FCM token after every login and call profile update API
               userModel.fcmToken = await NotificationService.getToken();
               await FireStoreUtils.updateUser(userModel);
-              // App is now 100% free - no subscription checks needed
               proceedToMainApp();
             } else {
               await clearUserData();

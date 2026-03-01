@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:jippymart_restaurant/app/auth_screen/phone_number_screen.dart';
 import 'package:jippymart_restaurant/app/auth_screen/signup_screen.dart';
 import 'package:jippymart_restaurant/app/forgot_password_screen/forgot_password_screen.dart';
 import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
@@ -133,9 +132,7 @@ class LoginScreen extends StatelessWidget {
                           style: TextStyle(
                               decoration: TextDecoration.underline,
                               decorationColor: AppThemeData.secondary300,
-                              color: themeChange.getThem()
-                                  ? AppThemeData.secondary300
-                                  : AppThemeData.secondary300,
+                              color: AppThemeData.secondary300,
                               fontSize: 14,
                               fontFamily: AppThemeData.regular),
                         ),
@@ -158,49 +155,6 @@ class LoginScreen extends StatelessWidget {
                         }
                       },
                     ),
-                    // RoundedButtonFill(
-                    //   title: "Login".tr,
-                    //   color: AppThemeData.secondary300,
-                    //   textColor: AppThemeData.grey50,
-                    //   onPress: () async {
-                    //     if (controller.emailEditingController.value.text
-                    //         .trim()
-                    //         .isEmpty) {
-                    //       ShowToastDialog.showToast(
-                    //           "Please enter valid email".tr);
-                    //     } else if (controller
-                    //         .passwordEditingController.value.text
-                    //         .trim()
-                    //         .isEmpty) {
-                    //       ShowToastDialog.showToast(
-                    //           "Please enter valid password".tr);
-                    //     } else {
-                    //       controller.loginWithEmailAndPassword();
-                    //     }
-                    //   },
-                    // ),
-
-                    // Visibility(
-                    //   visible: false,
-                    //   child: RoundedButtonFill(
-                    //     title: "Continue with Mobile Number".tr,
-                    //     textColor: themeChange.getThem()
-                    //         ? AppThemeData.grey100
-                    //         : AppThemeData.grey900,
-                    //     color: themeChange.getThem()
-                    //         ? AppThemeData.grey900
-                    //         : AppThemeData.grey100,
-                    //     icon: SvgPicture.asset(
-                    //       "assets/icons/ic_phone.svg",
-                    //       colorFilter: const ColorFilter.mode(
-                    //           AppThemeData.grey900, BlendMode.srcIn),
-                    //     ),
-                    //     isRight: false,
-                    //     onPress: () async {
-                    //       Get.to(const PhoneNumberScreen());
-                    //     },
-                    //   ),
-                    // ),
                     const SizedBox(
                       height: 12,
                     ),

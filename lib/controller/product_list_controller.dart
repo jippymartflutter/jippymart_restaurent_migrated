@@ -8,10 +8,9 @@ import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 class ProductListController extends GetxController {
   @override
   void onInit() {
-    // TODO: implement onInit
-    getUserProfile();
-    getCategories();
     super.onInit();
+    // Load profile then products; categories are refreshed after productList is set (inside getProduct).
+    getUserProfile();
   }
 
   Rx<UserModel> userModel = UserModel().obs;
@@ -45,17 +44,43 @@ class ProductListController extends GetxController {
     await refreshCategoriesWithProducts();
   }
   Future<void> refreshCategoriesWithProducts() async {
+    if (productList.isEmpty) return;
+
+    final allProductCategoryIds = productList
+        .map((p) => p.categoryID?.toString())
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
+    FireStoreUtils.invalidateVendorCategoryCache();
     final categories = await FireStoreUtils.getVendorCategoryById();
-    if (categories != null) {
-      final allProductCategoryIds = productList.map((p) => p.categoryID).toSet();
-      categoryList.value = categories
-        .where((cat) => allProductCategoryIds.contains(cat.id))
-        .toList()
-        ..sort((a, b) => (a.title ?? '').toLowerCase().compareTo((b.title ?? '').toLowerCase()));
+    if (categories != null && categories.isNotEmpty) {
+      if (allProductCategoryIds.isEmpty) {
+        categoryList.value = List.from(categories)
+          ..sort((a, b) => (a.title ?? '').toLowerCase().compareTo((b.title ?? '').toLowerCase()));
+      } else {
+        final matched = categories
+            .where((cat) {
+              final catId = cat.id?.toString() ?? '';
+              return catId.isNotEmpty && allProductCategoryIds.contains(catId);
+            })
+            .toList();
+        matched.sort((a, b) => (a.title ?? '').toLowerCase().compareTo((b.title ?? '').toLowerCase()));
+        categoryList.value = matched;
+      }
+      return;
+    }
+
+    if (allProductCategoryIds.isNotEmpty) {
+      categoryList.value = allProductCategoryIds.map((id) => VendorCategoryModel(
+        id: id,
+        title: 'Category',
+        isActive: true,
+      )).toList()..sort((a, b) => (a.title ?? '').compareTo(b.title ?? ''));
     }
   }
 
-  void getCategories() async {
+  Future<void> getCategories() async {
     await refreshCategoriesWithProducts();
   }
 
@@ -90,17 +115,19 @@ class ProductListController extends GetxController {
   List<ProductModel> get filteredProductList {
     if (selectedCategory.value == null) {
       return productList;
-    } else {
-      return productList
-          .where((product) => product.categoryID == selectedCategory.value!.id)
-          .toList();
     }
+    final selectedId = selectedCategory.value!.id?.toString() ?? '';
+    if (selectedId.isEmpty) return productList;
+    return productList
+        .where((product) => (product.categoryID?.toString() ?? '') == selectedId)
+        .toList();
   }
 
 
   Future<void> toggleCategoryActive(int index) async {
     final category = categoryList[index];
     final newStatus = !(category.isActive ?? true);
+    final categoryId = category.id;
     print("toggleCategoryActive $index");
     categoryList[index] = VendorCategoryModel(
       reviewAttributes: category.reviewAttributes,
@@ -110,11 +137,19 @@ class ProductListController extends GetxController {
       title: category.title,
       isActive: newStatus,
     );
+    for (int i = 0; i < productList.length; i++) {
+      if ((productList[i].categoryID?.toString() ?? '') == (categoryId?.toString() ?? '')) {
+        productList[i].isAvailable = newStatus;
+      }
+    }
+    productList.value = List.from(productList);
     update();
     await FireStoreUtils.updateCategoryIsActive(category.id!, newStatus);
     await FireStoreUtils.setAllProductsAvailabilityForCategory(category.id!, newStatus);
+    FireStoreUtils.invalidateProductCache(Constant.userModel?.vendorID);
     await getProduct();
-       getCategories();
+    await getCategories();
+    productList.value = List.from(productList);
     update();
   }
   // Future<void> toggleCategoryActive(int index) async {

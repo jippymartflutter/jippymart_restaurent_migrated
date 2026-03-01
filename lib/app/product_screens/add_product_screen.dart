@@ -1036,7 +1036,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   children: [
                                     Expanded(
                                       child: TextFieldWidget(
-                                        title: 'Regular Price'.tr,
+                                        title: 'Your Price'.tr,
                                         controller:
                                             controller.regularPriceController.value,
                                         hintText: 'Enter Regular Price'.tr,
@@ -1066,84 +1066,84 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                     const SizedBox(
                                       width: 10,
                                     ),
-                                    Expanded(
-                                      child: TextFieldWidget(
-                                        title: 'Discounted Price'.tr,
-                                        controller: controller
-                                            .discountedPriceController.value,
-                                        hintText: 'Enter Discounted Price'.tr,
-                                        textInputAction: TextInputAction.done,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                              RegExp('[0-9]')),
-                                        ],
-                                        textInputType:
-                                            const TextInputType.numberWithOptions(
-                                                signed: true, decimal: true),
-                                        prefix: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 14),
-                                          child: Text(
-                                            "${Constant.currencyModel!.symbol}".tr,
-                                            style: TextStyle(
-                                                color: themeChange.getThem()
-                                                    ? AppThemeData.grey50
-                                                    : AppThemeData.grey900,
-                                                fontFamily: AppThemeData.semiBold,
-                                                fontSize: 18),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                    // Expanded(
+                                    //   child: TextFieldWidget(
+                                    //     title: 'Discounted Price'.tr,
+                                    //     controller: controller
+                                    //         .discountedPriceController.value,
+                                    //     hintText: 'Enter Discounted Price'.tr,
+                                    //     textInputAction: TextInputAction.done,
+                                    //     inputFormatters: [
+                                    //       FilteringTextInputFormatter.allow(
+                                    //           RegExp('[0-9]')),
+                                    //     ],
+                                    //     textInputType:
+                                    //         const TextInputType.numberWithOptions(
+                                    //             signed: true, decimal: true),
+                                    //     prefix: Padding(
+                                    //       padding: const EdgeInsets.symmetric(
+                                    //           horizontal: 16, vertical: 14),
+                                    //       child: Text(
+                                    //         "${Constant.currencyModel!.symbol}".tr,
+                                    //         style: TextStyle(
+                                    //             color: themeChange.getThem()
+                                    //                 ? AppThemeData.grey50
+                                    //                 : AppThemeData.grey900,
+                                    //             fontFamily: AppThemeData.semiBold,
+                                    //             fontSize: 18),
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    // ),
                                   ],
                                 ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Your item Price will be display like this. "
-                                          .tr,
-                                      style: TextStyle(
-                                          color: themeChange.getThem()
-                                              ? AppThemeData.grey100
-                                              : AppThemeData.grey800,
-                                          fontFamily: AppThemeData.medium,
-                                          fontSize: 12),
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          (controller.discountPrice.value == 0.0
-                                                  ? Constant.amountShow(amount: "0.0")
-                                                  : Constant.amountShow(
-                                                      amount: controller
-                                                          .discountPrice.value
-                                                          .toString()))
-                                              .tr,
-                                          style: TextStyle(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.secondary300
-                                                  : AppThemeData.secondary300,
-                                              fontFamily: AppThemeData.medium,
-                                              fontSize: 12),
-                                        ),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        Text(
-                                          Constant.amountShow(
-                                              amount: controller.regularPrice.value
-                                                  .toString()),
-                                          style: TextStyle(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.grey500
-                                                  : AppThemeData.grey400,
-                                              fontFamily: AppThemeData.medium,
-                                              decoration: TextDecoration.lineThrough),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                // Row(
+                                //   children: [
+                                //     Text(
+                                //       "Your item Price will be display like this. "
+                                //           .tr,
+                                //       style: TextStyle(
+                                //           color: themeChange.getThem()
+                                //               ? AppThemeData.grey100
+                                //               : AppThemeData.grey800,
+                                //           fontFamily: AppThemeData.medium,
+                                //           fontSize: 12),
+                                //     ),
+                                //     Row(
+                                //       children: [
+                                //         Text(
+                                //           (controller.merchant_price.value == 0.0
+                                //                   ? Constant.amountShow(amount: "0.0")
+                                //                   : Constant.amountShow(
+                                //                       amount: controller
+                                //                           .merchant_price.value
+                                //                           .toString()))
+                                //               .tr,
+                                //           style: TextStyle(
+                                //               color: themeChange.getThem()
+                                //                   ? AppThemeData.secondary300
+                                //                   : AppThemeData.secondary300,
+                                //               fontFamily: AppThemeData.medium,
+                                //               fontSize: 12),
+                                //         ),
+                                //         const SizedBox(
+                                //           width: 5,
+                                //         ),
+                                //         Text(
+                                //           Constant.amountShow(
+                                //               amount: controller.regularPrice.value
+                                //                   .toString()),
+                                //           style: TextStyle(
+                                //               color: themeChange.getThem()
+                                //                   ? AppThemeData.grey500
+                                //                   : AppThemeData.grey400,
+                                //               fontFamily: AppThemeData.medium,
+                                //               decoration: TextDecoration.lineThrough),
+                                //         ),
+                                //       ],
+                                //     ),
+                                //   ],
+                                // ),
                                 const SizedBox(
                                   height: 20,
                                 ),
@@ -1584,12 +1584,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                             child: RoundedButtonFill(
                               title: "Save Details".tr,
                               height: 5.5,
-                              color: themeChange.getThem()
-                                  ? ColorConst.orange
-                                  : ColorConst.orange,
-                              textColor: themeChange.getThem()
-                                  ? AppThemeData.grey50
-                                  : AppThemeData.grey50,
+                              color: ColorConst.orange,
+                              textColor: AppThemeData.grey50,
                               fontSizes: 16,
                               onPress: () async {
                                 // App is now 100% free - no subscription checks needed
@@ -1625,24 +1621,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                                   }
                                 }
       
-                                print(
-                                    "==> ${controller.itemAttributes.value!.toJson()}");
-                                controller.saveDetails();
-                                // if (controller.itemAttributes.value != null && controller.itemAttributes.value!.variants!.isNotEmpty) {
-                                //   for (var i = 0; i < controller.itemAttributes.value!.variants!.length; i++) {
-                                //     if (controller.itemAttributes.value!.variants![i].variantPrice.toString() != "0") {
-                                //       // ShowToastDialog.showToast("Please enter attribute amount.");
-                                //       if (i == controller.itemAttributes.value!.variants!.length - 1) {
-                                //
-                                //       }
-                                //     } else {
-                                //       ShowToastDialog.showToast("Please enter Variant amount");
-                                //       break;
-                                //     }
-                                //   }
-                                // } else {
-                                //   controller.saveDetails();
-                                // }
+                                await controller.saveDetails();
                               },
                             ),
                           ),

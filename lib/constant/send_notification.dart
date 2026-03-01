@@ -11,6 +11,8 @@ import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
 class SendNotification {
   static final _scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+  // Simple in-app debounce to avoid sending the exact same notification twice in quick succession
+  static final Map<String, DateTime> _lastSentMap = {};
   static Future getCharacters() {
     return http.get(Uri.parse(Constant.jsonNotificationFileURL.toString()));
   }
@@ -30,12 +32,32 @@ class SendNotification {
       String type, String token, Map<String, dynamic>? payload) async {
     print('[FCM DEBUG] sendFcmMessage: type=$type, token=$token, payload=$payload');
     try {
+      // Debounce key: type + token; for new_delivery_order include orderId so we send only once per order per driver
+      final String orderId = (payload != null && payload['orderId'] != null) ? payload['orderId'].toString() : '';
+      final String debounceKey = type == Constant.newDeliveryOrder && orderId.isNotEmpty
+          ? '$type|$token|$orderId'
+          : '$type|$token';
+      final Duration debounceWindow = type == Constant.newDeliveryOrder
+          ? const Duration(seconds: 30)
+          : const Duration(seconds: 2);
+      final DateTime now = DateTime.now();
+      final DateTime? lastSentAt = _lastSentMap[debounceKey];
+
+      if (lastSentAt != null && now.difference(lastSentAt) < debounceWindow) {
+        print(
+            '[FCM DEBUG] Skipping duplicate FCM send for key=$debounceKey (sent ${now.difference(lastSentAt).inMilliseconds}ms ago)');
+        return false;
+      }
+
+      _lastSentMap[debounceKey] = now;
+
       final String accessToken = await getAccessToken();
       debugPrint("accessToken=======>");
       debugPrint(accessToken);
       NotificationModel? notificationModel =
           await FireStoreUtils.getNotificationContent(type);
       print('[FCM DEBUG] NotificationModel: ${notificationModel?.toJson()}');
+
       final response = await http.post(
         Uri.parse(
             'https://fcm.googleapis.com/v1/projects/${Constant.senderId}/messages:send'),
@@ -48,8 +70,8 @@ class SendNotification {
             'message': {
               'token': token,
               'notification': {
-                'body': notificationModel!.message ?? '',
-                'title': notificationModel.subject ?? '',
+                'body': notificationModel?.message ?? '',
+                'title': notificationModel?.subject ?? '',
               },
               'android': {
                 'notification': {
@@ -66,7 +88,11 @@ class SendNotification {
       debugPrint("Notification=======>");
       debugPrint(response.statusCode.toString());
       debugPrint(response.body);
-      return true;
+      final bool success = response.statusCode >= 200 && response.statusCode < 300;
+      if (!success) {
+        print('[FCM DEBUG] Send failed (e.g. UNREGISTERED token): status=${response.statusCode}');
+      }
+      return success;
     } catch (e) {
       print('[FCM DEBUG] Error sending notification: $e');
       debugPrint(e.toString());

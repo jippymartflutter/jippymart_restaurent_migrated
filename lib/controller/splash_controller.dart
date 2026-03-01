@@ -79,7 +79,8 @@ class SplashController extends GetxController {
         return;
       }
       String userId = await FireStoreUtils.getCurrentUid();
-      final userProfile = await FireStoreUtils.getUserProfile(userId);
+      // Use cached profile when valid (same userId, not expired) to avoid refetch on post-login redirect
+      final userProfile = await FireStoreUtils.getUserProfile(userId, forceRefresh: false);
       if (userProfile == null) {
         loginController.clearUserData();
         Get.offAll(() => const LandingScreen());
@@ -98,16 +99,14 @@ class SplashController extends GetxController {
         Get.offAll(() => const LandingScreen());
         return;
       }
-      // Update FCM token
+      // On startup (after login): get FCM token and call profile update API with fcmToken
       try {
         Constant.userModel?.fcmToken = await NotificationService.getToken();
         await FireStoreUtils.updateUser(Constant.userModel!);
       } catch (e) {
         print('Error updating FCM token: $e');
-        // Continue even if FCM token update fails
       }
 
-      // App is now 100% free - no subscription checks needed
       Get.offAll(() => const DashBoardScreen());
     } catch (e) {
       print('Error in redirectScreen: $e');

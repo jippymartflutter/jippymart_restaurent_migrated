@@ -11,6 +11,7 @@ class OrderModel {
   String? vendorID;
   String? driverID;
   num? discount;
+  num? merchant_price;
   String? authorID;
   String? estimatedTimeToPrepare;
   Timestamp? createdAt;
@@ -40,6 +41,7 @@ class OrderModel {
     this.vendorID,
     this.driverID,
     this.discount,
+    this.merchant_price,
     this.authorID,
     this.estimatedTimeToPrepare,
     this.createdAt,
@@ -72,6 +74,7 @@ class OrderModel {
         vendorID: json['vendorID']?.toString(),
         driverID: json['driverID']?.toString(),
         discount: _parseNumber(json['discount']),
+        merchant_price: _parseNumber(json['merchant_price']),
         authorID: json['authorID']?.toString(),
         estimatedTimeToPrepare: json['estimatedTimeToPrepare']?.toString(),
         createdAt: _parseTimestamp(json['createdAt']),
@@ -333,7 +336,26 @@ class OrderModel {
     }
   }
 
+  /// Recomputes order-level merchant_price from products subtotal when missing or zero.
+  void ensureMerchantPriceFromProducts() {
+    if (products == null || products!.isEmpty) return;
+    final current = merchant_price == null
+        ? 0.0
+        : (merchant_price is num ? (merchant_price as num).toDouble() : 0.0);
+    if (current > 0) return;
+    double subtotal = 0.0;
+    for (var p in products!) {
+      final qty = p.quantity ?? 1;
+      final mp = (p.merchant_price != null ? double.tryParse(p.merchant_price!) : null) ?? 0.0;
+      final ext = (p.extrasPrice != null ? double.tryParse(p.extrasPrice!) : null) ?? 0.0;
+      subtotal += mp * qty + ext * qty;
+    }
+    merchant_price = subtotal;
+  }
+
   Map<String, dynamic> toJson() {
+    ensureMerchantPriceFromProducts();
+    print("Before update merchant_price: $merchant_price");
     final Map<String, dynamic> data = <String, dynamic>{};
     if (address != null) {
       data['address'] = address!.toJson();
@@ -343,6 +365,7 @@ class OrderModel {
     data['vendorID'] = vendorID;
     data['driverID'] = driverID;
     data['discount'] = discount;
+    data['merchant_price'] = merchant_price;
     data['authorID'] = authorID;
     data['estimatedTimeToPrepare'] = estimatedTimeToPrepare;
 

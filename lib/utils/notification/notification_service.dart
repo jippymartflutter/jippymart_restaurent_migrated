@@ -17,16 +17,17 @@ Future<void> firebaseMessageBackgroundHandle(RemoteMessage message) async {
   log("BackGround Message :: ${message.messageId}");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Preferences.initPref();
-      // Always check actual order state before playing sound (most reliable method)
-      bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
-      await AudioPlayerService.initAudio();
-        if (hasNewOrders) {
-          await AudioPlayerService.playSound(true);
-        } else {
-          await AudioPlayerService.playSound(false);
-        }
+  // Play sound based on order state
+  bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
+  await AudioPlayerService.initAudio();
+  if (hasNewOrders) {
+    await AudioPlayerService.playSound(true);
+  } else {
+    await AudioPlayerService.playSound(false);
+  }
+  // Show local notification when in background so user always sees it (FCM may not show if data-only)
   final notificationService = NotificationService();
-  await notificationService.initInfo();
+  await notificationService.showBackgroundNotification(message);
 }
 class NotificationService {
   NotificationHandler notificationHandler = NotificationHandler();
@@ -70,22 +71,58 @@ class NotificationService {
           await AudioPlayerService.playSound(false);
         },
       );
+      // Create order_channel at startup so FCM background/terminated notifications use it
+      await _ensureOrderChannelCreated();
       // ✅ Initialize and schedule daily 8 AM notification
       await notificationHandler.initializeNotification();
       setupInteractedMessage();
     }
   }
 
-  // In NotificationService, update the _initializeDailyNotification method:
+  /// Called from background handler. Ensures plugin is inited and shows the notification.
+  Future<void> showBackgroundNotification(RemoteMessage message) async {
+    try {
+      final title = message.notification?.title ?? message.data['title'] ?? 'New order';
+      final body = message.notification?.body ?? message.data['body'] ?? 'You have a new order';
+      const AndroidInitializationSettings androidSettings =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: DarwinInitializationSettings(),
+      );
+      await flutterLocalNotificationsPlugin.initialize(initSettings);
+      await _ensureOrderChannelCreated();
+      AndroidNotificationDetails androidDetails =
+          const AndroidNotificationDetails(
+        'order_channel',
+        'Order Notifications',
+        channelDescription: 'Channel for order notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('order_ringtone'),
+      );
+      final details = NotificationDetails(
+        android: androidDetails,
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+      await flutterLocalNotificationsPlugin.show(
+        message.hashCode & 0x7FFFFFFF,
+        title,
+        body,
+        details,
+        payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
+      );
+    } catch (e) {
+      log('showBackgroundNotification: $e');
+    }
+  }
 
   Future<void> setupInteractedMessage() async {
-    RemoteMessage? initialMessage = await FirebaseMessaging.instance
-        .getInitialMessage();
-    if (initialMessage != null) {
-      FirebaseMessaging.onBackgroundMessage(
-        (message) => firebaseMessageBackgroundHandle(message),
-      );
-    }
+    // onBackgroundMessage is already registered in main() — do not re-register here
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       log("::::::::::::onMessage:::::::::::::::::");
@@ -200,52 +237,56 @@ class NotificationService {
   }
 
 
-  void display(RemoteMessage message) async {
-    log('Got a message whilst in the foreground!');
-    log('Message data:  [32m${message.notification!.body.toString()} [0m');
+  /// Ensures order_channel exists so FCM and local notifications can use it.
+  Future<void> _ensureOrderChannelCreated() async {
     try {
-      AndroidNotificationChannel channel = const AndroidNotificationChannel(
-        'order_channel', // <-- new channel ID
-        'Order Notifications', // <-- new channel name
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'order_channel',
+        'Order Notifications',
         description: 'Channel for order notifications',
         importance: Importance.max,
-        sound: RawResourceAndroidNotificationSound(
-          'order_ringtone',
-        ), // <-- custom sound
+        sound: RawResourceAndroidNotificationSound('order_ringtone'),
       );
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.createNotificationChannel(channel);
+    } catch (e) {
+      log('_ensureOrderChannelCreated: $e');
+    }
+  }
+
+  void display(RemoteMessage message) async {
+    log('Got a message whilst in the foreground!');
+    log('Message data:  [32m${message.notification!.body.toString()} [0m');
+    try {
+      await _ensureOrderChannelCreated();
       AndroidNotificationDetails notificationDetails =
-          AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            channelDescription: channel.description,
-            importance: Importance.high,
-            priority: Priority.high,
-            ticker: 'ticker',
-            sound: RawResourceAndroidNotificationSound('order_ringtone'),
-            // icon: '@mipmap/ic_launcher',
-            // largeIcon: const DrawableResourceAndroidBitmap(
-            //   'ic_launcher',
-            // ), // Optional: for large
-          );
+          const AndroidNotificationDetails(
+        'order_channel',
+        'Order Notifications',
+        channelDescription: 'Channel for order notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+        ticker: 'ticker',
+        sound: RawResourceAndroidNotificationSound('order_ringtone'),
+      );
       const DarwinNotificationDetails darwinNotificationDetails =
           DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true,
           );
-      NotificationDetails notificationDetailsBoth = NotificationDetails(
+      final NotificationDetails notificationDetailsBoth = NotificationDetails(
         android: notificationDetails,
         iOS: darwinNotificationDetails,
       );
-      await FlutterLocalNotificationsPlugin().show(
+      // Use the initialized plugin instance so the notification actually shows
+      await flutterLocalNotificationsPlugin.show(
         0,
-        message.notification!.title,
-        message.notification!.body,
+        message.notification!.title ?? 'New order',
+        message.notification!.body ?? '',
         notificationDetailsBoth,
         payload: jsonEncode(message.data),
       );

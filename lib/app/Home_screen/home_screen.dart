@@ -619,15 +619,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double specialDiscount = 0.0;
     double adminCommission = 0.0;
     for (var element in orderModel.products!) {
-      if (double.parse(element.discountPrice.toString()) <= 0) {
+      if (double.parse(element.merchant_price.toString()) <= 0) {
         subTotal = subTotal +
-            double.parse(element.price.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
       } else {
         subTotal = subTotal +
-            double.parse(element.discountPrice.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
@@ -774,17 +774,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  double.parse(product.discountPrice ?? "0.0") <= 0
+                                  double.parse(product.merchant_price ?? "0.0") <= 0
                                       ? Constant.amountShow(
                                           amount:
-                                              (double.parse(product.price.toString()) *
+                                              (double.parse(product.merchant_price.toString()) *
                                                       double.parse(product
                                                           .quantity
                                                           .toString()))
                                                   .toString())
                                       : Constant.amountShow(
                                               amount: (double.parse(product
-                                                          .discountPrice
+                                                          .merchant_price
                                                           .toString()) *
                                                       double.parse(product
                                                           .quantity
@@ -1224,6 +1224,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   color: AppThemeData.success400,
                                   textColor: AppThemeData.grey50,
                                   onPress: () async {
+                                    // Stop ringtone when restaurant takes action on the order.
+                                    await AudioPlayerService.playSound(false);
                                     // ✅ REMOVED: Subscription check - App is now 100% free
                                     // All restaurants can accept orders without subscription limits
 
@@ -1297,15 +1299,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     double specialDiscount = 0.0;
     double adminCommission = 0.0;
     for (var element in orderModel.products!) {
-      if (double.parse(element.discountPrice.toString()) <= 0) {
+      if (double.parse(element.merchant_price.toString()) <= 0) {
         subTotal = subTotal +
-            double.parse(element.price.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
       } else {
         subTotal = subTotal +
-            double.parse(element.discountPrice.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
@@ -1451,16 +1453,16 @@ print("acceptedWidget ${orderModel.vendorID}");
                               ),
                             ),
                             Text(
-                              double.parse(product.discountPrice ?? "0.0") <= 0
+                              double.parse(product.merchant_price ?? "0.0") <= 0
                                   ? Constant.amountShow(
                                       amount: (double.parse(
-                                                  product.price.toString()) *
+                                                  product.merchant_price.toString()) *
                                               double.parse(
                                                   product.quantity.toString()))
                                           .toString())
                                   : Constant.amountShow(
                                           amount: (double.parse(product
-                                                      .discountPrice
+                                                      .merchant_price
                                                       .toString()) *
                                                   double.parse(product.quantity
                                                       .toString()))
@@ -1790,7 +1792,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   await FireStoreUtils.getUserById(
                                       orderModel.driverID ?? '');
                               if(driverModel!=null){
-                                driverModel.orderRequestData
+                                  driverModel.orderRequestData
                                     ?.remove(orderModel.id);
                                 driverModel.inProgressOrderID
                                     ?.remove(orderModel.id);
@@ -2035,15 +2037,15 @@ print("acceptedWidget ${orderModel.vendorID}");
     double adminCommission = 0.0;
 
     for (var element in orderModel.products!) {
-      if (double.parse(element.discountPrice.toString()) <= 0) {
+      if (double.parse(element.merchant_price.toString()) <= 0) {
         subTotal = subTotal +
-            double.parse(element.price.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
       } else {
         subTotal = subTotal +
-            double.parse(element.discountPrice.toString()) *
+            double.parse(element.merchant_price.toString()) *
                 double.parse(element.quantity.toString()) +
             (double.parse(element.extrasPrice.toString()) *
                 double.parse(element.quantity.toString()));
@@ -2189,16 +2191,16 @@ print("acceptedWidget ${orderModel.vendorID}");
                               ),
                             ),
                             Text(
-                              double.parse(product.discountPrice ?? "0.0") <= 0
+                              double.parse(product.merchant_price ?? "0.0") <= 0
                                   ? Constant.amountShow(
                                       amount: (double.parse(
-                                                  product.price.toString()) *
+                                                  product.merchant_price.toString()) *
                                               double.parse(
                                                   product.quantity.toString()))
                                           .toString())
                                   : Constant.amountShow(
                                           amount: (double.parse(product
-                                                      .discountPrice
+                                                      .merchant_price
                                                       .toString()) *
                                                   double.parse(product.quantity
                                                       .toString()))
@@ -2742,17 +2744,12 @@ print("acceptedWidget ${orderModel.vendorID}");
                                 FireStoreUtils.updateDriverUser(controller.selectDriverUser.value),
                                 FireStoreUtils.restaurantVendorWalletSet(orderModel),
                               ]);
-                              if (orderModel.author?.fcmToken != null &&
-                                  orderModel.author!.fcmToken!.isNotEmpty) {
-                                SendNotification.sendFcmMessage(
-                                    Constant.restaurantAccepted,
-                                    orderModel.author!.fcmToken.toString(), {});
-                              }
                               if (orderModel.driver?.fcmToken != null &&
                                   orderModel.driver!.fcmToken!.isNotEmpty) {
                                 SendNotification.sendFcmMessage(
                                     Constant.newDeliveryOrder,
-                                    orderModel.driver?.fcmToken.toString() ??'', {});
+                                    orderModel.driver?.fcmToken.toString() ?? '',
+                                    {'orderId': orderModel.id});
                               }
                               ShowToastDialog.closeLoader();
                             } else {
@@ -3017,7 +3014,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   await AudioPlayerService.playSound(false);
                                   
                                   // Get driver radius (fetch if not cached)
-                                  double radius = Constant.driverSearchRadius ?? 5.0;
+                                  double radius = Constant.driverSearchRadius ?? 10.0;
                                   Future<void> radiusFuture = Future.value();
                                   if (Constant.driverSearchRadius == null) {
                                     String getUrl = '${Constant.baseUrl}restaurant/GetDriverNearBy';
@@ -3031,22 +3028,24 @@ print("acceptedWidget ${orderModel.vendorID}");
                                       if (response.statusCode == 200) {
                                         final data = json.decode(response.body);
                                         if (data['success'] == true) {
-                                          radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 5.0;
+                                          radius = double.tryParse(data['data']['driverRadios'].toString()) ?? 10.0;
                                           print("GetDriverNearBy radius: ${radius}km");
                                           Constant.driverSearchRadius = radius;
                                         }
                                       } else {
-                                        radius = 5.0;
+                                        radius = 10.0;
                                         Constant.driverSearchRadius = radius;
                                       }
                                     }).catchError((e) {
                                       print('Error fetching driver radius: $e');
-                                      radius = 5.0;
+                                      radius = 10.0;
                                       Constant.driverSearchRadius = radius;
                                     });
                                   }
                                   
                                   // Update order and wallet in parallel with radius fetch
+                                  orderModel.ensureMerchantPriceFromProducts();
+                                  print("Before update merchant_price: ${orderModel.merchant_price}");
                                   final orderUpdateFuture = FireStoreUtils.updateOrder(orderModel);
                                   final walletUpdateFuture = FireStoreUtils.restaurantVendorWalletSet(orderModel);
                                   await Future.wait([radiusFuture, orderUpdateFuture, walletUpdateFuture]);
@@ -3119,6 +3118,19 @@ print("acceptedWidget ${orderModel.vendorID}");
                                   
                                   print("Driver filtering summary: Total=${allDrivers.length}, Eligible=${eligibleDrivers.length}, NoLocation=$driversWithoutLocation, OutOfRange=$driversOutOfRange, Radius=${radius}km");
                                   
+                                  // Sort by distance (closest first) so the nearest driver gets the single notification
+                                  eligibleDrivers.sort((a, b) {
+                                    try {
+                                      final aLat = a.location?.latitude ?? 0.0;
+                                      final aLng = a.location?.longitude ?? 0.0;
+                                      final bLat = b.location?.latitude ?? 0.0;
+                                      final bLng = b.location?.longitude ?? 0.0;
+                                      final distA = Geolocator.distanceBetween(restaurantLat, restaurantLng, aLat, aLng) / 1000;
+                                      final distB = Geolocator.distanceBetween(restaurantLat, restaurantLng, bLat, bLng) / 1000;
+                                      return distA.compareTo(distB);
+                                    } catch (_) { return 0; }
+                                  });
+                                  
                                   // Update eligible drivers and send notifications in parallel (batched)
                                   if (eligibleDrivers.isNotEmpty) {
                                     // Prepare drivers that need to be updated (those who don't already have this order)
@@ -3137,7 +3149,7 @@ print("acceptedWidget ${orderModel.vendorID}");
                                     
                                     print("Drivers to update: ${driversToUpdate.length}, Already have order: $driversAlreadyHaveOrder");
                                     
-                                    // Update drivers in parallel batches (5 at a time to avoid overwhelming the API)
+                                    // Update drivers (add orderRequestData) and send notification to each eligible driver (one per driver)
                                     const int batchSize = 5;
                                     for (int i = 0; i < driversToUpdate.length; i += batchSize) {
                                       final batch = driversToUpdate.skip(i).take(batchSize).toList();
@@ -3146,14 +3158,14 @@ print("acceptedWidget ${orderModel.vendorID}");
                                           try {
                                             driver.orderRequestData!.add(orderModel.id);
                                             await FireStoreUtils.updateDriverUser(driver);
-                                            // Send notification (non-blocking, fire and forget)
+                                            // Send notification (non-blocking, fire and forget) to this driver
                                             if (driver.fcmToken != null && driver.fcmToken!.isNotEmpty) {
                                               SendNotification.sendFcmMessage(
-                                                "New Order",
+                                                Constant.newDeliveryOrder,
                                                 driver.fcmToken!,
-                                                {},
+                                                {'orderId': orderModel.id},
                                               ).catchError((e) {
-                                                print("Error sending FCM to driver ${driver.firebaseId}: $e");
+                                                print("[DRIVER FCM] Error sending FCM to driver ${driver.firebaseId}: $e");
                                                 return false;
                                               });
                                             }

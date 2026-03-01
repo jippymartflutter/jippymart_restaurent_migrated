@@ -133,7 +133,8 @@ class SignupScreen extends StatelessWidget {
                       textInputAction: TextInputAction.done,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp('[0-9]')),
-                      ],  prefix: Container(
+                      ],
+                      prefix: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -305,114 +306,9 @@ class SignupScreen extends StatelessWidget {
                           } else {
                             controller.signUpWithEmailAndPassword();
                           }
-                          // if (controller.firstNameEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter first name".tr);
-                          // } else if (controller.lastNameEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter last name".tr);
-                          // } else if (controller.emailEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter valid email".tr);
-                          // } else if (controller.phoneNUmberEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter Phone number".tr);
-                          // } else if (controller.passwordEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter password".tr);
-                          // } else if (controller.conformPasswordEditingController.value.text.trim().isEmpty) {
-                          //   ShowToastDialog.showToast("Please enter conform password".tr);
-                          // } else if (controller.passwordEditingController.value.text.trim() !=
-                          //     controller.conformPasswordEditingController.value.text.trim()) {
-                          //   ShowToastDialog.showToast("Password and confirm password doesn't match".tr);
-                          // }else if (controller.phoneNUmberEditingController.value.text.length !=10) {
-                          //   ShowToastDialog.showToast("Number Must Be 10".tr);
-                          // } else {
-                          //   controller.signUpWithEmailAndPassword();
-                          // }
                         }
                       },
                     ),
-                    // RoundedButtonFill(
-                    //   title: "Signup".tr,
-                    //   color: AppThemeData.secondary300,
-                    //   textColor: AppThemeData.grey50,
-                    //   onPress: () async {
-                    //     if (controller.type.value == "google" ||
-                    //         controller.type.value == "apple" ||
-                    //         controller.type.value == "mobileNumber") {
-                    //       if (controller.firstNameEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter first name".tr);
-                    //       } else if (controller
-                    //           .lastNameEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter last name".tr);
-                    //       } else if (controller
-                    //           .emailEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter valid email".tr);
-                    //       } else if (controller
-                    //           .phoneNUmberEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter phone number".tr);
-                    //       } else {
-                    //         controller.signUpWithEmailAndPassword();
-                    //       }
-                    //     } else {
-                    //       if (controller.firstNameEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter first name".tr);
-                    //       } else if (controller
-                    //           .lastNameEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter last name".tr);
-                    //       } else if (controller
-                    //           .emailEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter valid email".tr);
-                    //       } else if (controller
-                    //           .phoneNUmberEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter Phone number".tr);
-                    //       } else if (controller
-                    //           .passwordEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter password".tr);
-                    //       } else if (controller
-                    //           .conformPasswordEditingController.value.text
-                    //           .trim()
-                    //           .isEmpty) {
-                    //         ShowToastDialog.showToast(
-                    //             "Please enter conform password".tr);
-                    //       } else if (controller
-                    //               .passwordEditingController.value.text
-                    //               .trim() !=
-                    //           controller
-                    //               .conformPasswordEditingController.value.text
-                    //               .trim()) {
-                    //         ShowToastDialog.showToast(
-                    //             "Password and conform password doesn't match"
-                    //                 .tr);
-                    //       } else {
-                    //         controller.signUpWithEmailAndPassword();
-                    //       }
-                    //     }
-                    //   },
-                    // ),
                   ],
                 ),
               ),

@@ -46,6 +46,8 @@ class HomeController extends GetxController {
     _orderPollingTimer?.cancel();
     _orderPollingTimer = null;
     _isPollingActive = false;
+    // Ensure any ringing sound is stopped when leaving the screen/app.
+    AudioPlayerService.playSound(false);
     estimatedTimeController.value.dispose();
     super.onClose();
   }
@@ -60,7 +62,7 @@ class HomeController extends GetxController {
   Rx<UserModel> userModel = UserModel().obs;
   Rx<VendorModel> vendermodel = VendorModel().obs;
 
-  getUserProfile() async {
+  Future<void> getUserProfile({bool withOrders = true}) async {
     try {
       String userId = await FireStoreUtils.getCurrentUid();
       if (userId.isEmpty) {
@@ -84,11 +86,14 @@ class HomeController extends GetxController {
               ).catchError((error) {
                 print("⚠️ Error fetching vendor: $error");
               });
-              // Start fetching orders and polling once vendor ID is available
-              getOrder().catchError((error) {
-                print("⚠️ Error fetching orders: $error");
-              });
-              _startOrderPolling();
+              // Start fetching orders and polling once vendor ID is available,
+              // but allow callers to skip this when they only need fresh profile data
+              if (withOrders) {
+                getOrder().catchError((error) {
+                  print("⚠️ Error fetching orders: $error");
+                });
+                _startOrderPolling();
+              }
             }
           } else {
             print("⚠️ getUserProfile: User profile not found (404 or null response)");
@@ -127,6 +132,8 @@ class HomeController extends GetxController {
     _isPollingActive = false;
     _orderPollingTimer?.cancel();
     _orderPollingTimer = null;
+    // If app goes background, ensure ringtone doesn't keep playing.
+    AudioPlayerService.playSound(false);
     print('⏹️ Stopped order polling');
   }
 
@@ -364,7 +371,7 @@ class HomeController extends GetxController {
       await getOrder(silent: false);
     }
     
-    await getUserProfile();
+    await getUserProfile(withOrders: false);
 
     // Also refresh the dashboard controller's vendor data to update restaurant status
     try {

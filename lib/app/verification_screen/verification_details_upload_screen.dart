@@ -87,9 +87,7 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
                           ),
                           Visibility(
                             visible:
-                                controller.documentModel.value.frontSide == true
-                                    ? true
-                                    : false,
+                                controller.documentModel.value.frontSide == true,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Column(
@@ -253,9 +251,7 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
                           ),
                           Visibility(
                             visible:
-                                controller.documentModel.value.backSide == true
-                                    ? true
-                                    : false,
+                                controller.documentModel.value.backSide == true,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Column(
@@ -421,12 +417,10 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
                             height: 30,
                           ),
                           Visibility(
-                            visible: controller.documents.value.status ==
-                                        "approved" ||
-                                    controller.documents.value.status ==
-                                        "uploaded"
-                                ? false
-                                : true,
+                            visible: controller.documents.value.status !=
+                                        "approved" &&
+                                    controller.documents.value.status !=
+                                        "uploaded",
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16),
@@ -467,7 +461,7 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
     );
   }
 
-  buildBottomSheet(
+  Future<void> buildBottomSheet(
       BuildContext context, DetailsUploadController controller, String type) {
     return showModalBottomSheet(
         context: context,
@@ -495,25 +489,6 @@ class VerificationDetailsUploadScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Padding(
-                      //   padding: const EdgeInsets.all(18.0),
-                      //   child: Column(
-                      //     crossAxisAlignment: CrossAxisAlignment.center,
-                      //     children: [
-                      //       IconButton(
-                      //           onPressed: () => controller.pickFile(
-                      //               source: ImageSource.camera, type: type),
-                      //           icon: const Icon(
-                      //             Icons.camera_alt,
-                      //             size: 32,
-                      //           )),
-                      //       Padding(
-                      //         padding: const EdgeInsets.only(top: 3),
-                      //         child: Text("Camera".tr),
-                      //       ),
-                      //     ],
-                      //   ),
-                      // ),
                       Padding(
                         padding: const EdgeInsets.all(18.0),
                         child: Column(

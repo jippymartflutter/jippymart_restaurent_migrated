@@ -416,11 +416,13 @@ class ProductListScreen extends StatelessWidget {
               ),
             )
                 : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: 48,
+                  height: 56,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     itemCount: controller.categoryList.length + 1,
                     itemBuilder: (context, index) {
                       final isAll = index == 0;
@@ -429,7 +431,7 @@ class ProductListScreen extends StatelessWidget {
                           : controller.selectedCategory.value?.id == controller.categoryList[index - 1].id;
                       if (isAll) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: ChoiceChip(
                             label: Text('All'),
                             selected: isSelected,
@@ -448,14 +450,14 @@ class ProductListScreen extends StatelessWidget {
                       final category = controller.categoryList[index - 1];
                       final isActive = category.isActive ?? true;
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Opacity(
                           opacity: isActive ? 1.0 : 0.4,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ChoiceChip(
-                                label: Text(category.title ?? ''),
+                                label: Text((category.title ?? '').trim().isEmpty ? 'Category' : (category.title ?? '').trim()),
                                 selected: isSelected,
                                 onSelected: isActive
                                     ? (_) {
@@ -471,7 +473,7 @@ class ProductListScreen extends StatelessWidget {
                               ),
                               Switch(
                                 value: isActive,
-                                onChanged: (_) => controller.toggleCategoryActive(index -1,),
+                                onChanged: (_) => controller.toggleCategoryActive(index - 1),
                                 activeColor: AppThemeData.secondary300,
                                 thumbColor: MaterialStatePropertyAll(Colors.white),
                                 trackColor: MaterialStatePropertyAll(Color(0xFFE74C3C)),
@@ -527,8 +529,8 @@ class ProductListScreen extends StatelessWidget {
                         }
                       } else {
                         // Use direct product prices - FIXED: Ensure we use actual product prices
-                        price = product.price?.toString() ?? "0.0";
-                        disPrice = product.disPrice?.toString() ?? "0.0";
+                        price = product.merchant_price?.toString() ?? "0.0";
+                        disPrice = product.merchant_price?.toString() ?? "0.0";
 
                         // Debug: Check if we're getting the right prices
                         print("💰 Direct prices - Price: $price, DisPrice: $disPrice");
@@ -537,8 +539,8 @@ class ProductListScreen extends StatelessWidget {
 
                       // If price is still 0.0, try to get from product directly as fallback
                       if (price == "0.0" || price.isEmpty) {
-                        price = product.price?.toString() ?? "0.0";
-                        disPrice = product.disPrice?.toString() ?? "0.0";
+                        price = product.merchant_price?.toString() ?? "0.0";
+                        disPrice = product.merchant_price?.toString() ?? "0.0";
                         print("🔄 Fallback to direct prices - Price: $price, DisPrice: $disPrice");
                       }
 
@@ -576,6 +578,8 @@ class ProductListScreen extends StatelessWidget {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     Row(
                                       children: [

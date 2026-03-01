@@ -30,19 +30,20 @@ class NotificationHandler {
 
   Future<void> initializeNotification() async {
     try {
-      // ✅ Check if already initialized to prevent duplicate initialization
-      final bool alreadyInitialized = Preferences.getBoolean(notificationInitializedKey);
-      if (alreadyInitialized) {
-        print("✅ Notifications already initialized, skipping...");
-        return;
-      }
-
       print("🔄 Starting notification initialization...");
 
-      // ✅ Initialize timezone
+      // ✅ Initialize timezone data and FORCE India time (IST).
+      // Fixes the common bug where tz.local defaults to UTC, making 8:00 AM appear as 1:30 PM in India.
       tz.initializeTimeZones();
+      try {
+        tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+      } catch (e) {
+        // Fallback: if timezone database doesn't contain the location for some reason,
+        // keep tz.local as-is (better than crashing).
+        print("⚠️ Could not set Asia/Kolkata timezone: $e");
+      }
       final String currentTimeZone = tz.local.name;
-      print("🕒 Timezone initialized: $currentTimeZone");
+      print("🕒 Timezone set to: $currentTimeZone");
 
       // Android initialization
       const AndroidInitializationSettings initializationSettingsAndroid =
@@ -72,6 +73,24 @@ class NotificationHandler {
           _onNotificationTap(response);
         },
       );
+
+      // ✅ Android 13+ requires runtime notification permission.
+      // (Manifest already includes POST_NOTIFICATIONS, but user still must grant it.)
+      final androidPlugin = flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlugin != null) {
+        try {
+          final bool? granted =
+              await androidPlugin.requestNotificationsPermission();
+          print("🔐 Android notifications permission granted: $granted");
+        } catch (e) {
+          print("⚠️ Error requesting Android notification permission: $e");
+        }
+        // Not requesting exact alarm permission - daily 8 AM uses inexact scheduling
+        // (AndroidScheduleMode.inexactAllowWhileIdle), so no alarm permission needed.
+      }
 
       print("✅ Notification Initialized Successfully!");
 

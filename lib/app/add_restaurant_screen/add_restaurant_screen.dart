@@ -283,53 +283,8 @@ class AddRestaurantScreen extends StatelessWidget {
                                     RegExp('[0-9]')),
                               ],
                             ),
-// Use this alternative in your onTap
                             InkWell(
-                              onTap: () async {
-                                Constant.checkPermission(
-                                  onTap: () async {
-                                    ShowToastDialog.showLoader("Getting location...".tr);
-                                    try {
-                                      await Geolocator.requestPermission();
-                                      Position position = await Geolocator.getCurrentPosition();
-                                      ShowToastDialog.closeLoader();
-
-                                      if (Constant.selectedMapType == 'osm') {
-                                        final result = await Get.to(() => MapPickerPage(initialPosition: LatLng(20.5937, 78.9629),));
-                                        if (result != null) {
-                                          final firstPlace = result;
-                                          final lat = firstPlace.coordinates.latitude;
-                                          final lng = firstPlace.coordinates.longitude;
-                                          final address = firstPlace.address;
-
-                                          controller.selectedLocation = LatLng(lat, lng);
-                                          controller.addressController.value.text = address.toString();
-                                          controller.isAddressEnable.value = true;
-                                        }
-                                      } else {
-                                        // Use the improved MapSelectionScreen
-                                        final result = await Get.to(
-                                              () => MapPickerPage(
-                                            initialPosition: LatLng(position.latitude, position.longitude),
-                                          ),
-                                          fullscreenDialog: true,
-                                        );
-
-                                        if (result != null) {
-                                          final Map<String, dynamic> data = result;
-                                          controller.selectedLocation = data['location'] as LatLng;
-                                          controller.addressController.value.text = data['address'] as String;
-                                          controller.isAddressEnable.value = true;
-                                        }
-                                      }
-                                    } catch (e) {
-                                      ShowToastDialog.closeLoader();
-                                      ShowToastDialog.showToast("Failed to get location: ${e.toString()}".tr);
-                                    }
-                                  },
-                                  context: context,
-                                );
-                              },
+                              onTap: () => _openLocationPicker(context, controller),
                               child: TextFieldWidget(
                                 title: 'Address'.tr,
                                 controller: controller.addressController.value,
@@ -338,68 +293,25 @@ class AddRestaurantScreen extends StatelessWidget {
                                 suffix: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                                   child: InkWell(
-                                    onTap: () async {
-                                      Constant.checkPermission(
-                                        context: context,
-                                        onTap: () async {
-                                          ShowToastDialog.showLoader("Getting location...".tr);
-                                          try {
-                                            await Geolocator.requestPermission();
-                                            Position position = await Geolocator.getCurrentPosition();
-                                            ShowToastDialog.closeLoader();
-
-                                            if (Constant.selectedMapType == 'osm') {
-                                              final result = await Get.to(() => MapPickerPage(initialPosition: LatLng(20.5937, 78.9629),));
-                                              if (result != null) {
-                                                final firstPlace = result;
-                                                final lat = firstPlace.coordinates.latitude;
-                                                final lng = firstPlace.coordinates.longitude;
-                                                final address = firstPlace.address;
-
-                                                controller.selectedLocation = LatLng(lat, lng);
-                                                controller.addressController.value.text = address.toString();
-                                                controller.isAddressEnable.value = true;
-                                              }
-                                            } else {
-                                              // Use the improved MapSelectionScreen
-                                              final result = await Get.to(
-                                                    () => MapPickerPage(
-                                                  initialPosition: LatLng(position.latitude, position.longitude),
-                                                ),
-                                                fullscreenDialog: true,
-                                              );
-
-                                              if (result != null) {
-                                                final Map<String, dynamic> data = result;
-                                                controller.selectedLocation = data['location'] as LatLng;
-                                                controller.addressController.value.text = data['address'] as String;
-                                                controller.isAddressEnable.value = true;
-                                              }
-                                            }
-                                          } catch (e) {
-                                            ShowToastDialog.closeLoader();
-                                            ShowToastDialog.showToast("Failed to get location: ${e.toString()}".tr);
-                                          }
-                                        },
-                                      );
-                                    },
-                                    child: Text("change".tr,
+                                    onTap: () => _openLocationPicker(context, controller),
+                                    child: Text(
+                                      "change".tr,
                                       style: TextStyle(
                                         fontFamily: AppThemeData.semiBold,
                                         fontSize: 14,
-                                        color: themeChange.getThem()
-                                            ? AppThemeData.primary300
-                                            : AppThemeData.primary300,
+                                        color: AppThemeData.primary300,
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),                            Column(
+                            ),
+                            Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Zone".tr,
+                                Text(
+                                    "Zone".tr,
                                     style: TextStyle(
                                         fontFamily: AppThemeData.semiBold,
                                         fontSize: 14,
@@ -414,9 +326,7 @@ class AddRestaurantScreen extends StatelessWidget {
                                       'Select zone'.tr,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: themeChange.getThem()
-                                            ? AppThemeData.grey700
-                                            : AppThemeData.grey700,
+                                        color: AppThemeData.grey700,
                                         fontFamily: AppThemeData.regular,
                                       ),
                                     ),
@@ -442,9 +352,7 @@ class AddRestaurantScreen extends StatelessWidget {
                                         borderRadius: const BorderRadius.all(
                                             Radius.circular(10)),
                                         borderSide: BorderSide(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.secondary300
-                                                : AppThemeData.secondary300,
+                                            color: AppThemeData.secondary300,
                                             width: 1),
                                       ),
                                       enabledBorder: OutlineInputBorder(
@@ -526,119 +434,6 @@ class AddRestaurantScreen extends StatelessWidget {
                                 const SizedBox(
                                   height: 5,
                                 ),
-                                // Padding(
-                                //   padding: const EdgeInsets.only(bottom: 16),
-                                //   child: DropdownSearch<
-                                //       VendorCategoryModel>.multiSelection(
-                                //     items: controller.vendorCategoryList,
-                                //     key: controller.myKey1,
-                                //     dropdownButtonProps: DropdownButtonProps(
-                                //       focusColor: AppThemeData.secondary300,
-                                //       color: AppThemeData.secondary300,
-                                //       icon: const Icon(
-                                //         Icons.keyboard_arrow_down,
-                                //         color: AppThemeData.grey800,
-                                //       ),
-                                //     ),
-                                //     dropdownDecoratorProps: DropDownDecoratorProps(
-                                //       dropdownSearchDecoration: InputDecoration(
-                                //           contentPadding: const EdgeInsets.only(
-                                //               left: 8, right: 8),
-                                //           disabledBorder: UnderlineInputBorder(
-                                //             borderRadius: const BorderRadius.all(
-                                //                 Radius.circular(10)),
-                                //             borderSide: BorderSide(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.grey900
-                                //                     : AppThemeData.grey50,
-                                //                 width: 1),
-                                //           ),
-                                //           focusedBorder: OutlineInputBorder(
-                                //             borderRadius: const BorderRadius.all(
-                                //                 Radius.circular(10)),
-                                //             borderSide: BorderSide(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.secondary300
-                                //                     : AppThemeData.secondary300,
-                                //                 width: 1),
-                                //           ),
-                                //           enabledBorder: OutlineInputBorder(
-                                //             borderRadius: const BorderRadius.all(
-                                //                 Radius.circular(10)),
-                                //             borderSide: BorderSide(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.grey900
-                                //                     : AppThemeData.grey50,
-                                //                 width: 1),
-                                //           ),
-                                //           errorBorder: OutlineInputBorder(
-                                //             borderRadius: const BorderRadius.all(
-                                //                 Radius.circular(10)),
-                                //             borderSide: BorderSide(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.grey900
-                                //                     : AppThemeData.grey50,
-                                //                 width: 1),
-                                //           ),
-                                //           border: OutlineInputBorder(
-                                //             borderRadius: const BorderRadius.all(
-                                //                 Radius.circular(10)),
-                                //             borderSide: BorderSide(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.grey900
-                                //                     : AppThemeData.grey50,
-                                //                 width: 1),
-                                //           ),
-                                //           filled: true,
-                                //           hintStyle: TextStyle(
-                                //             fontSize: 14,
-                                //             color: themeChange.getThem()
-                                //                 ? AppThemeData.grey50
-                                //                 : AppThemeData.grey900,
-                                //             fontFamily: AppThemeData.medium,
-                                //           ),
-                                //           fillColor: themeChange.getThem()
-                                //               ? AppThemeData.grey900
-                                //               : AppThemeData.grey50,
-                                //           hintText: 'Select Categories'.tr),
-                                //     ),
-                                //     compareFn: (i1, i2) => i1.title == i2.title,
-                                //     popupProps: PopupPropsMultiSelection.menu(
-                                //       fit: FlexFit.tight,
-                                //       showSelectedItems: true,
-                                //       listViewProps: const ListViewProps(
-                                //           physics: BouncingScrollPhysics(),
-                                //           padding: EdgeInsets.only(left: 20)),
-                                //       itemBuilder: (context, item, isSelected) {
-                                //         return ListTile(
-                                //           selectedColor: AppThemeData.secondary300,
-                                //           selected: isSelected,
-                                //           title: Text(
-                                //             item.title.toString(),
-                                //             style: TextStyle(
-                                //                 color: themeChange.getThem()
-                                //                     ? AppThemeData.grey50
-                                //                     : AppThemeData.grey900,
-                                //                 fontFamily: AppThemeData.medium,
-                                //                 fontSize: 18),
-                                //           ),
-                                //           onTap: () {
-                                //             controller.myKey1.currentState
-                                //                 ?.popupValidate([item]);
-                                //           },
-                                //         );
-                                //       },
-                                //     ),
-                                //     itemAsString: (VendorCategoryModel u) =>
-                                //         u.title.toString(),
-                                //     selectedItems: controller.selectedCategories,
-                                //     onSaved: (data) {},
-                                //     onChanged: (data) {
-                                //       controller.selectedCategories.clear();
-                                //       controller.selectedCategories.addAll(data);
-                                //     },
-                                //   ),
-                                // ),
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 16),
                                   child: DropdownSearch<VendorCategoryModel>.multiSelection(
@@ -993,30 +788,22 @@ class AddRestaurantScreen extends StatelessWidget {
                 color: themeChange.getThem()
                     ? AppThemeData.grey900
                     : AppThemeData.grey50,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: RoundedButtonFill(
-                    title: "Save Details".tr,
-                    height: 5.5,
-                    color: themeChange.getThem()
-                        ? AppThemeData.secondary300
-                        : AppThemeData.secondary300,
-                    textColor: themeChange.getThem()
-                        ? AppThemeData.grey900
-                        : AppThemeData.grey50,
-                    fontSizes: 16,
-                    onPress: () async {
-                      print("🟢 Save Details button pressed!");
-                      try {
-                        await controller.saveDetails();
-                        print("🟢 saveDetails() completed");
-                      } catch (e) {
-                        print("❌ Error in button onPress: $e");
-                        ShowToastDialog.showToast("Error: ${e.toString()}".tr);
-                      }
-                    },
-                  ),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                child: RoundedButtonFill(
+                  title: "Save Details".tr,
+                  height: 5.5,
+                  color: AppThemeData.secondary300,
+                  textColor: themeChange.getThem()
+                      ? AppThemeData.grey900
+                      : AppThemeData.grey50,
+                  fontSizes: 16,
+                  onPress: () async {
+                    try {
+                      await controller.saveDetails();
+                    } catch (e) {
+                      ShowToastDialog.showToast("Error: ${e.toString()}".tr);
+                    }
+                  },
                 ),
               ),
             );
@@ -1024,7 +811,40 @@ class AddRestaurantScreen extends StatelessWidget {
     );
   }
 
-  buildBottomSheet(BuildContext context, AddRestaurantController controller) {
+  void _openLocationPicker(
+      BuildContext context, AddRestaurantController controller) {
+    Constant.checkPermission(
+      context: context,
+      onTap: () async {
+        ShowToastDialog.showLoader("Getting location...".tr);
+        try {
+          await Geolocator.requestPermission();
+          final position = await Geolocator.getCurrentPosition();
+          ShowToastDialog.closeLoader();
+
+          final initialPos = Constant.selectedMapType == 'osm'
+              ? LatLng(20.5937, 78.9629)
+              : LatLng(position.latitude, position.longitude);
+          final result = await Get.to(
+            () => MapPickerPage(initialPosition: initialPos),
+            fullscreenDialog: Constant.selectedMapType != 'osm',
+          );
+          if (result != null) {
+            final data = result as Map<String, dynamic>;
+            controller.selectedLocation = data['location'] as LatLng;
+            controller.addressController.value.text = data['address'] as String;
+            controller.isAddressEnable.value = true;
+          }
+        } catch (e) {
+          ShowToastDialog.closeLoader();
+          ShowToastDialog.showToast("Failed to get location: ${e.toString()}".tr);
+        }
+      },
+    );
+  }
+
+  dynamic buildBottomSheet(
+      BuildContext context, AddRestaurantController controller) {
     return showModalBottomSheet(
         context: context,
         builder: (context) {

@@ -30,7 +30,7 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 class Constant {
-  static String baseUrl  = "http://192.168.0.23:8000/api/";
+  static String baseUrl  = "http://192.168.88.8:8000/api/";
   // static String baseUrl = "https://web.jippymart.in/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
@@ -123,6 +123,8 @@ class Constant {
   static const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.jippymart.restaurant';
   static const String packageName = 'com.jippymart.restaurant';
   static const String appStoreId = '1234567890'; // Replace with your actual App Store ID
+  /// When false, no update check runs and no update screen is shown. Parsed from API (show_update).
+  static bool showUpdate = false;
 
   static double? driverSearchRadius;
 
@@ -155,10 +157,22 @@ class Constant {
   }
 
   static String amountShow({required String? amount}) {
-    if (currencyModel?.symbolAtRight == true) {
-      return "${double.parse(amount == null ? '0.0' : amount.toString()).toStringAsFixed(currencyModel!.decimalDigits ?? 0)} ${currencyModel!.symbol.toString()}";
+    // 🔥 FIX: Check if currencyModel is null before using it
+    if (currencyModel == null) {
+      // If currencyModel is null, return formatted amount without currency
+      final amountValue = double.tryParse(amount ?? '0.0') ?? 0.0;
+      return amountValue.toStringAsFixed(2);
+    }
+
+    // Now we know currencyModel is not null, so we can safely use it
+    final amountValue = double.tryParse(amount ?? '0.0') ?? 0.0;
+    final decimalDigits = currencyModel!.decimalDigits ?? 2;
+    final symbol = currencyModel!.symbol?.toString() ?? '';
+
+    if (currencyModel!.symbolAtRight == true) {
+      return "${amountValue.toStringAsFixed(decimalDigits)} $symbol".trim();
     } else {
-      return "${currencyModel!.symbol.toString()} ${double.parse(amount == null ? '0.0' : amount.toString()).toStringAsFixed(currencyModel!.decimalDigits ?? 0)}";
+      return "$symbol ${amountValue.toStringAsFixed(decimalDigits)}".trim();
     }
   }
 

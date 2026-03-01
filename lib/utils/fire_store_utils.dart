@@ -64,6 +64,13 @@ final headers = {
   "Content-Type": "application/json",
   "User-Agent": "Flutter-App",
 };
+
+class _ProductCacheEntry {
+  final List<ProductModel> list;
+  final DateTime cachedAt;
+  _ProductCacheEntry(this.list, this.cachedAt);
+}
+
 class FireStoreUtils {
   static FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
@@ -78,6 +85,15 @@ class FireStoreUtils {
   static String? _cachedVendorId;
   static DateTime? _vendorCacheTime;
   static const Duration _vendorCacheTTL = Duration(minutes: 5);
+
+  // Product list cache: keyed by vendorID, TTL 3 minutes
+  static final Map<String, _ProductCacheEntry> _productCache = {};
+  static const Duration _productCacheTTL = Duration(minutes: 3);
+
+  // Vendor categories cache: one global list per app session, TTL 3 minutes
+  static List<VendorCategoryModel>? _cachedVendorCategories;
+  static DateTime? _vendorCategoriesCacheTime;
+  static const Duration _vendorCategoriesCacheTTL = Duration(minutes: 3);
 
   static DateTime? _settingsCacheTime;
   static const Duration _settingsCacheTTL = Duration(minutes: 30);
@@ -97,6 +113,11 @@ class FireStoreUtils {
     _cachedVendor = null;
     _cachedVendorId = null;
     _vendorCacheTime = null;
+  }
+
+  /// Call after create/update vendor so next getVendorById() fetches fresh data from server.
+  static void invalidateVendorCache() {
+    _invalidateVendorCache();
   }
 
   static void _invalidateSettingsCache() {
@@ -452,7 +473,7 @@ class FireStoreUtils {
     }
   }
 
-  getSettings({bool forceRefresh = false}) async {
+  static Future<void> getSettings({bool forceRefresh = false}) async {
     try {
       // Performance Optimization: Check cache first (transparent to caller)
       if (!forceRefresh && _settingsCacheTime != null) {
@@ -1044,6 +1065,15 @@ class FireStoreUtils {
     return ratingModel;
   }
   static Future<List<ProductModel>?> getProduct() async {
+    final String? vendorID = Constant.userModel?.vendorID;
+    if (vendorID != null) {
+      final entry = _productCache[vendorID];
+      if (entry != null &&
+          DateTime.now().difference(entry.cachedAt) < _productCacheTTL) {
+        return entry.list;
+      }
+    }
+
     List<ProductModel> productList = [];
     try {
       String url = '${Constant.baseUrl}restaurant/products?vendorID=${Constant.userModel!.vendorID}';
@@ -1075,6 +1105,9 @@ class FireStoreUtils {
               continue;
             }
           }
+          if (vendorID != null) {
+            _productCache[vendorID] = _ProductCacheEntry(productList, DateTime.now());
+          }
         } else {
           print("No products found or API returned error");
         }
@@ -1087,6 +1120,21 @@ class FireStoreUtils {
       return null;
     }
     return productList;
+  }
+
+  /// Call after any product write (set/update/delete) to force next getProduct() to hit the API.
+  static void invalidateProductCache([String? vendorID]) {
+    if (vendorID != null) {
+      _productCache.remove(vendorID);
+    } else {
+      _productCache.clear();
+    }
+  }
+
+  /// Call after category or product bulk updates so next getVendorCategoryById() hits the API.
+  static void invalidateVendorCategoryCache() {
+    _cachedVendorCategories = null;
+    _vendorCategoriesCacheTime = null;
   }
 
   static Future<List<AdvertisementModel>?> getAdvertisement() async {
@@ -1175,6 +1223,7 @@ class FireStoreUtils {
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
         isUpdate = true;
+        invalidateProductCache(Constant.userModel?.vendorID);
       } else {
         print("Failed to update product: ${response.statusCode} - ${response.body}");
         isUpdate = false;
@@ -1199,6 +1248,8 @@ class FireStoreUtils {
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        invalidateProductCache(Constant.userModel?.vendorID);
+        invalidateVendorCategoryCache();
         isDeleted = true;
       } else {
         print("Failed to delete product: ${response.statusCode} - ${response.body}");
@@ -1258,7 +1309,7 @@ class FireStoreUtils {
       }
     } catch (error) {
       log('getWalletTransaction error: $error');
-      return null;
+        return null;
     }
 
     return walletTransactionList;
@@ -1554,40 +1605,100 @@ class FireStoreUtils {
   }
 
   static Future<List<VendorCategoryModel>?> getVendorCategoryById() async {
+    if (_cachedVendorCategories != null &&
+        _vendorCategoriesCacheTime != null &&
+        DateTime.now().difference(_vendorCategoriesCacheTime!) < _vendorCategoriesCacheTTL) {
+      return _cachedVendorCategories!;
+    }
+
     try {
-      print("getVendorCategoryById ");
+      final vendorID = Constant.userModel?.vendorID;
+      final query = vendorID != null && vendorID.isNotEmpty ? '?vendorID=$vendorID' : '';
+      final url = '${Constant.baseUrl}restaurant/vendor-categories$query';
+      print("getVendorCategoryById $url");
       final response = await http.get(
-        Uri.parse('${Constant.baseUrl}restaurant/vendor-categories'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
         },
       );
 
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
+        final body = response.body.replaceFirst(RegExp(r'^\uFEFF'), '').trim();
+        if (body.isEmpty) return null;
+        if (!body.startsWith('[') && !body.startsWith('{')) {
+          log('getVendorCategoryById: response is not JSON (got text). Use vendor categories endpoint that returns JSON.');
+          return null;
+        }
 
-        if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
-          // Handle the case where data is a List
-          if (jsonResponse['data'] is List) {
-            List<VendorCategoryModel> categories = (jsonResponse['data'] as List)
-                .map((categoryJson) => VendorCategoryModel.fromJson(categoryJson))
-                .toList();
+        dynamic decoded;
+        try {
+          decoded = json.decode(body);
+        } catch (_) {
+          log('getVendorCategoryById: response is not valid JSON (e.g. server returned CSV/text).');
+          return null;
+        }
+        List<dynamic>? rawList;
+
+        if (decoded is List) {
+          rawList = decoded;
+        } else if (decoded is Map) {
+          final jsonResponse = Map<String, dynamic>.from(decoded as Map);
+          final success = jsonResponse['success'];
+          final isSuccess = success == true || success == 1 || success == 'true';
+          final data = jsonResponse['data'] ?? jsonResponse['categories'] ?? jsonResponse['vendor_categories'] ?? jsonResponse['result'];
+
+          if (!isSuccess && data == null) {
+            throw Exception('API returned unsuccessful response: ${jsonResponse['message']}');
+          }
+          if (data is List) {
+            rawList = data;
+          } else if (data is Map) {
+            final map = Map<String, dynamic>.from(data as Map);
+            final list = map['categories'] ?? map['vendor_categories'] ?? map['data'] ?? map['list'];
+            if (list is List) {
+              rawList = list;
+            } else if (map.containsKey('id') || map.containsKey('title') || map.containsKey('name')) {
+              final categories = [VendorCategoryModel.fromJson(map)];
+              _cachedVendorCategories = categories;
+              _vendorCategoriesCacheTime = DateTime.now();
+              return categories;
+            } else {
+              rawList = map.values.where((e) => e is Map).toList();
+            }
+          } else if (data != null) {
+            rawList = null;
+          }
+        }
+
+        if (rawList != null && rawList.isNotEmpty) {
+          final categories = <VendorCategoryModel>[];
+          for (final e in rawList) {
+            if (e is! Map) continue;
+            try {
+              categories.add(VendorCategoryModel.fromJson(Map<String, dynamic>.from(e)));
+            } catch (_) {
+              continue;
+            }
+          }
+          if (categories.isNotEmpty) {
+            _cachedVendorCategories = categories;
+            _vendorCategoriesCacheTime = DateTime.now();
+            log('getVendorCategoryById: loaded ${categories.length} categories, first title: "${categories.first.title}"');
             return categories;
           }
-          else if (jsonResponse['data'] is Map) {
-            VendorCategoryModel categoryModel = VendorCategoryModel.fromJson(jsonResponse['data']);
-            return [categoryModel];
-          } else {
-            throw Exception('Invalid data format in API response');
-          }
-        } else {
-          throw Exception('API returned unsuccessful response: ${jsonResponse['message']}');
         }
+        log('getVendorCategoryById: no categories parsed. decoded type: ${decoded.runtimeType}');
+        return null;
       } else {
         throw Exception('Failed to load categories: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Error fetching vendor categories getVendorCategoryById: $e');
+    } catch (e, _) {
+      if (e is FormatException) {
+        log('getVendorCategoryById: response not valid JSON or category field invalid (e.g. review_attributes CSV).');
+      } else {
+        print('Error fetching vendor categories getVendorCategoryById: $e');
+      }
       return null;
     }
   }
@@ -2888,6 +2999,8 @@ class FireStoreUtils {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
+          invalidateProductCache(Constant.userModel?.vendorID);
+          invalidateVendorCategoryCache();
           return true;
         } else {
           log("Failed to add product: API returned success false - ${responseData['message']}");
@@ -3138,6 +3251,7 @@ class FireStoreUtils {
         }),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        invalidateProductCache(Constant.userModel?.vendorID);
         print('Product availability updated successfully');
       } else {
         print("Failed to update product availability: ${response.statusCode} - ${response.body}");
@@ -3168,6 +3282,8 @@ class FireStoreUtils {
         }),
       );
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        invalidateProductCache(Constant.userModel?.vendorID);
+        invalidateVendorCategoryCache();
         print('Category availability updated successfully');
       } else {
         print("Failed to update category availability: ${response.statusCode} - ${response.body}");
@@ -3198,6 +3314,7 @@ class FireStoreUtils {
       );
 
       if (response.statusCode == 200) {
+        invalidateProductCache(Constant.userModel?.vendorID);
         print('Products availability updated successfully');
       } else {
         print('Failed to update products availability: ${response.statusCode}');

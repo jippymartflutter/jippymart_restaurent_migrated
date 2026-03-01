@@ -77,10 +77,8 @@ class BankDetailsScreen extends StatelessWidget {
                 color: themeChange.getThem()
                     ? AppThemeData.grey900
                     : AppThemeData.grey50,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: RoundedButtonFill(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+                child: RoundedButtonFill(
                       title: "Add Bank".tr,
                       height: 5.5,
                       color: AppThemeData.secondary300,
@@ -89,7 +87,7 @@ class BankDetailsScreen extends StatelessWidget {
                       onPress: () async {
                         controller.saveBank();
                       },
-                    )),
+                    ),
               ),
             );
           }),

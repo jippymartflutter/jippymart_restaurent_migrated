@@ -10,6 +10,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter/painting.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/app/splash_screen.dart';
 import 'package:jippymart_restaurant/firebase_options.dart';
@@ -77,6 +78,11 @@ Future<void> initializeFirebase() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global in-memory image cache limits (smooth scrolling + less jank).
+  // 80 MB memory budget, keep up to 200 decoded images.
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 1024 * 1024 * 80;
+  PaintingBinding.instance.imageCache.maximumSize = 200;
 
   // 🔥 Firebase MUST initialize or app should NOT continue
   await Firebase.initializeApp(
@@ -210,18 +216,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             title: 'Jippymart Restaurant'.tr,
             debugShowCheckedModeBanner: false,
             theme: Styles.themeData(
-              themeChangeProvider.darkTheme == 0
-                  ? true
-                  : themeChangeProvider.darkTheme == 1
-                  ? false
-                  : false,
+              themeChangeProvider.darkTheme == 0,
               context,
             ),
             localizationsDelegates: const [CountryLocalizations.delegate],
             locale: LocalizationService.locale,
             fallbackLocale: LocalizationService.locale,
             translations: LocalizationService(),
-            builder: EasyLoading.init(),
+            builder: (context, child) {
+              final appChild = child != null ? SafeArea(child: child) : child;
+              return EasyLoading.init()(context, appChild);
+            },
             home: GetBuilder<GlobalSettingController>(
               init: GlobalSettingController(),
               builder: (context) {

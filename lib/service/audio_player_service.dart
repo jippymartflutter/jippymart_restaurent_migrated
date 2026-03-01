@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
@@ -7,12 +9,14 @@ class AudioPlayerService {
   static bool _isPlaying = false;
   static bool _isInitialized = false;
   static bool _isStopping = false; // Add flag to prevent race conditions
+  static Timer? _autoStopTimer;
 
   static Future<void> initAudio() async {
     if (!_isInitialized) {
       _audioPlayer = AudioPlayer()
         ..setVolume(1.0)
-        ..setReleaseMode(ReleaseMode.loop);
+        // IMPORTANT: do not loop. Play only once (one "ring").
+        ..setReleaseMode(ReleaseMode.stop);
 
       _isInitialized = true;
 
@@ -54,6 +58,7 @@ class AudioPlayerService {
 
           // Stop any current playback first (with retry logic for iOS)
           await _stopAudioWithRetry();
+          _autoStopTimer?.cancel();
 
           if (soundUrl.isEmpty || !soundUrl.startsWith('http')) {
             print('Invalid sound URL, using default');
@@ -74,8 +79,9 @@ class AudioPlayerService {
 
           _isPlaying = true;
 
-          // Auto-stop after 10 seconds (safety measure)
-          Future.delayed(Duration(seconds: 10), () async {
+          // Safety measure: in case platform doesn't report completion reliably.
+          // With ReleaseMode.stop, the sound should end naturally after one play.
+          _autoStopTimer = Timer(const Duration(seconds: 10), () async {
             if (_isPlaying) {
               print('Auto-stopping audio after 10 seconds');
               await stopSound();
@@ -98,6 +104,7 @@ class AudioPlayerService {
       // Reset state on error
       _isPlaying = false;
       _isStopping = false;
+      _autoStopTimer?.cancel();
     }
   }
 
@@ -145,6 +152,7 @@ class AudioPlayerService {
   static Future<void> stopSound() async {
     if (_audioPlayer == null) return;
 
+    _autoStopTimer?.cancel();
     await _stopAudioWithRetry();
 
     // Additional iOS-specific: Release resources
@@ -169,6 +177,8 @@ class AudioPlayerService {
       _isPlaying = false;
       _isInitialized = false;
       _isStopping = false;
+      _autoStopTimer?.cancel();
+      _autoStopTimer = null;
     } catch (e) {
       print('Error in disposePlayer: $e');
     }

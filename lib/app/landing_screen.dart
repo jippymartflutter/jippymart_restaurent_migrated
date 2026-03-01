@@ -40,69 +40,68 @@ class LandingScreen extends StatelessWidget {
                     width: 100,
                     height: 100,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 5),
 
                   // App Title
                   Text(
                     "Jippymart Restaurant",
                     style: TextStyle(
                       color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey50,
-                      fontSize: 32,
+                      fontSize: 25,
                       fontFamily: AppThemeData.bold,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 0),
 
                   // Tagline
-                  Text(
-                    "Manage Your Restaurant Effortlessly",
-                    style: TextStyle(
-                      color: themeChange.getThem() ? AppThemeData.grey300 : AppThemeData.grey200,
-                      fontSize: 18,
-                      fontFamily: AppThemeData.regular,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
-
-                  // App Explanation
-                  Text(
-                    "Welcome to Jippymart Restaurant - Your Complete Restaurant Management Solution",
-                    style: TextStyle(
-                      color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey50,
-                      fontSize: 20,
-                      fontFamily: AppThemeData.semiBold,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-
-                  Text(
-                    "Take control of your restaurant operations with our powerful app. Manage orders, track deliveries, handle payments, and grow your business all from your mobile device.",
-                    style: TextStyle(
-                      color: themeChange.getThem() ? AppThemeData.grey300 : AppThemeData.grey200,
-                      fontSize: 16,
-                      fontFamily: AppThemeData.regular,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 40),
+                  // Text(
+                  //   "Manage Your Restaurant Effortlessly",
+                  //   style: TextStyle(
+                  //     color: themeChange.getThem() ? AppThemeData.grey300 : AppThemeData.grey200,
+                  //     fontSize: 18,
+                  //     fontFamily: AppThemeData.regular,
+                  //   ),
+                  //   textAlign: TextAlign.center,
+                  // ),
+                  // const SizedBox(height: 40),
+                  //
+                  // // App Explanation
+                  // Text(
+                  //   "Welcome to Jippymart Restaurant - Your Complete Restaurant Management Solution",
+                  //   style: TextStyle(
+                  //     color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey50,
+                  //     fontSize: 20,
+                  //     fontFamily: AppThemeData.semiBold,
+                  //     fontWeight: FontWeight.w600,
+                  //   ),
+                  //   textAlign: TextAlign.center,
+                  // ),
+                  // const SizedBox(height: 20),
+                  //
+                  // Text(
+                  //   "Take control of your restaurant operations with our powerful app. Manage orders, track deliveries, handle payments, and grow your business all from your mobile device.",
+                  //   style: TextStyle(
+                  //     color: themeChange.getThem() ? AppThemeData.grey300 : AppThemeData.grey200,
+                  //     fontSize: 16,
+                  //     fontFamily: AppThemeData.regular,
+                  //     height: 1.5,
+                  //   ),
+                  //   textAlign: TextAlign.center,
+                  // ),
 
                   // Screenshots/Demo Images
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildDemoImage("assets/images/image_1.png"),
-                      const SizedBox(width: 10),
-                      _buildDemoImage("assets/images/image_2.png"),
-                      const SizedBox(width: 10),
-                      _buildDemoImage("assets/images/image_3.png"),
-                    ],
-                  ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.center,
+                  //   children: [
+                  //     _buildDemoImage("assets/images/image_1.png"),
+                  //     const SizedBox(width: 10),
+                  //     _buildDemoImage("assets/images/image_2.png"),
+                  //     const SizedBox(width: 10),
+                  //     _buildDemoImage("assets/images/image_3.png"),
+                  //   ],
+                  // ),
                   const SizedBox(height: 40),
 
                   // How It Works

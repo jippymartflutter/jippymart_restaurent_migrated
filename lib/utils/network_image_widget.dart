@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/themes/responsive.dart';
 import 'package:flutter/material.dart';
+import 'package:jippymart_restaurant/utils/app_image_cache_manager.dart';
 
 class NetworkImageWidget extends StatelessWidget {
   final String imageUrl;
@@ -38,6 +39,7 @@ class NetworkImageWidget extends StatelessWidget {
 
     return CachedNetworkImage(
       imageUrl: imageUrl,
+      cacheManager: AppImageCacheManager.instance,
       fit: fit ?? BoxFit.fitWidth,
       height: height ?? Responsive.height(8, context),
       width: width ?? Responsive.width(15, context),

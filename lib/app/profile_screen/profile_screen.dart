@@ -77,14 +77,27 @@ class ProfileScreen extends StatelessWidget {
                             child: Row(
                               children: [
                                 ClipOval(
-                                  child: NetworkImageWidget(
-                                    imageUrl: controller
-                                        .userModel.value.profilePictureURL
-                                        .toString(),
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
+                                  child: controller.userModel.value.profilePictureURL != null &&
+                                      controller.userModel.value.profilePictureURL.toString().isNotEmpty
+                                      ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(60),
+                                    child: NetworkImageWidget(
+                                      imageUrl: controller.userModel.value.profilePictureURL.toString(),
+                                      width: 80,
+                                      height: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                      : ClipRRect(
+                                    borderRadius: BorderRadius.circular(60),
+                                    child: Image.asset(
+                                      Constant.userPlaceHolder,
+                                      height: 80,
+                                      width: 80,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
+
                                 ),
                                 const SizedBox(
                                   width: 20,

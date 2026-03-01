@@ -26,6 +26,7 @@ class ProductModel {
   bool? nonveg;
   String? photo;
   String? price;
+  String? merchant_price;
   String? categoryID;
   String? description;
   Timestamp? createdAt;
@@ -55,6 +56,7 @@ class ProductModel {
     this.nonveg,
     this.photo,
     this.price,
+    this.merchant_price,
     this.categoryID,
     this.description,
     this.createdAt,
@@ -109,7 +111,10 @@ class ProductModel {
     // Fix: Convert price to string
     price = _convertToString(json['price']);
 
-    categoryID = json['categoryID'];
+    merchant_price = _convertToString(json['merchant_price']);
+
+    final rawCategoryId = json['categoryID'] ?? json['category_id'];
+    categoryID = rawCategoryId?.toString();
     description = json['description'];
 
     // Handle createdAt field - support multiple formats
@@ -340,6 +345,7 @@ class ProductModel {
     data['nonveg'] = nonveg;
     data['photo'] = photo;
     data['price'] = price;
+    data['merchant_price'] = merchant_price;
     data['categoryID'] = categoryID;
     data['description'] = description;
 
@@ -378,6 +384,7 @@ class ProductModel {
     data['nonveg'] = nonveg;
     data['photo'] = photo;
     data['price'] = price;
+    data['merchant_price'] = merchant_price;
     data['categoryID'] = categoryID;
     data['description'] = description;
     data['createdAt'] = createdAt; // Keep as Timestamp for Firestore

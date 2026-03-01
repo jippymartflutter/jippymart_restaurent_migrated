@@ -89,7 +89,9 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
     return Scaffold(
-      backgroundColor: AppThemeData.grey50,
+      backgroundColor: themeChange.getThem()
+          ? AppThemeData.surfaceDark
+          : AppThemeData.surface,
       appBar: AppBar(
         backgroundColor:
             themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
@@ -135,7 +137,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
           vertical: 10,
         ),
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: Constant.loader())
             : _htmlData.isEmpty
                 ? Center(
                     child: Text(

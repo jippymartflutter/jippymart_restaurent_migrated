@@ -220,18 +220,18 @@ class OrderDetailsScreen extends StatelessWidget {
                                                     CrossAxisAlignment.end,
                                                 children: [
                                                   Text(
-                                                    double.parse(product.discountPrice ?? "0.0") <= 0
+                                                    double.parse(product.merchant_price ?? "0.0") <= 0
                                                         ? Constant.amountShow(
                                                             amount: (double.parse(
                                                                         product
-                                                                            .price
+                                                                            .merchant_price
                                                                             .toString()) *
                                                                     double.parse(product
                                                                         .quantity
                                                                         .toString()))
                                                                 .toString())
                                                         : Constant.amountShow(
-                                                                amount: (double.parse(product.discountPrice.toString()) *
+                                                                amount: (double.parse(product.merchant_price.toString()) *
                                                                         double.parse(
                                                                             product.quantity.toString()))
                                                                     .toString())
@@ -288,7 +288,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                           product.variantInfo == null ||
                                                   product.variantInfo!
                                                       .variantOptions!.isEmpty
-                                              ? Container()
+                                              ? const SizedBox.shrink()
                                               : Padding(
                                                   padding: const EdgeInsets
                                                       .symmetric(

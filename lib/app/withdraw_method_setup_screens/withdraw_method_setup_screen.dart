@@ -160,11 +160,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                                       TextDecoration.underline,
                                                   decorationColor:
                                                       AppThemeData.secondary300,
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData
-                                                          .secondary300
-                                                      : AppThemeData
-                                                          .secondary300,
+                                                  color: AppThemeData.secondary300,
                                                   fontSize: 16,
                                                   fontFamily:
                                                       AppThemeData.medium),
@@ -390,11 +386,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                                         TextDecoration.underline,
                                                     decorationColor:
                                                         AppThemeData.secondary300,
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
-                                                            .secondary300
-                                                        : AppThemeData
-                                                            .secondary300,
+                                                    color: AppThemeData.secondary300,
                                                     fontSize: 16,
                                                     fontFamily:
                                                         AppThemeData.medium),
@@ -407,9 +399,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                             Text(
                                               "Setup was done.".tr,
                                               style: TextStyle(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.success400
-                                                      : AppThemeData.success400,
+                                                  color: AppThemeData.success400,
                                                   fontSize: 16,
                                                   fontFamily:
                                                       AppThemeData.medium),
@@ -620,11 +610,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                                         TextDecoration.underline,
                                                     decorationColor:
                                                         AppThemeData.secondary300,
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
-                                                            .secondary300
-                                                        : AppThemeData
-                                                            .secondary300,
+                                                    color: AppThemeData.secondary300,
                                                     fontSize: 16,
                                                     fontFamily:
                                                         AppThemeData.medium),
@@ -637,9 +623,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                             Text(
                                               "Setup was done.".tr,
                                               style: TextStyle(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.success400
-                                                      : AppThemeData.success400,
+                                                  color: AppThemeData.success400,
                                                   fontSize: 16,
                                                   fontFamily:
                                                       AppThemeData.medium),
@@ -850,11 +834,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                                         TextDecoration.underline,
                                                     decorationColor:
                                                         AppThemeData.secondary300,
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
-                                                            .secondary300
-                                                        : AppThemeData
-                                                            .secondary300,
+                                                    color: AppThemeData.secondary300,
                                                     fontSize: 16,
                                                     fontFamily:
                                                         AppThemeData.medium),
@@ -867,9 +847,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                             Text(
                                               "Setup was done.".tr,
                                               style: TextStyle(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.success400
-                                                      : AppThemeData.success400,
+                                                  color: AppThemeData.success400,
                                                   fontSize: 16,
                                                   fontFamily:
                                                       AppThemeData.medium),
@@ -1080,11 +1058,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                                         TextDecoration.underline,
                                                     decorationColor:
                                                         AppThemeData.secondary300,
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData
-                                                            .secondary300
-                                                        : AppThemeData
-                                                            .secondary300,
+                                                    color: AppThemeData.secondary300,
                                                     fontSize: 16,
                                                     fontFamily:
                                                         AppThemeData.medium),
@@ -1097,9 +1071,7 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
                                             Text(
                                               "Setup was done.".tr,
                                               style: TextStyle(
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.success400
-                                                      : AppThemeData.success400,
+                                                  color: AppThemeData.success400,
                                                   fontSize: 16,
                                                   fontFamily:
                                                       AppThemeData.medium),
@@ -1118,7 +1090,8 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
         });
   }
 
-  flutterWaveDialog(WithdrawMethodSetupController controller, themeChange) {
+  Widget flutterWaveDialog(
+      WithdrawMethodSetupController controller, DarkThemeProvider themeChange) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.all(10),
@@ -1194,7 +1167,8 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
     );
   }
 
-  payPalDialog(WithdrawMethodSetupController controller, themeChange) {
+  Widget payPalDialog(
+      WithdrawMethodSetupController controller, DarkThemeProvider themeChange) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.all(10),
@@ -1256,7 +1230,8 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
     );
   }
 
-  razorPayDialog(WithdrawMethodSetupController controller, themeChange) {
+  Widget razorPayDialog(
+      WithdrawMethodSetupController controller, DarkThemeProvider themeChange) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.all(10),
@@ -1334,7 +1309,8 @@ class WithdrawMethodSetupScreen extends StatelessWidget {
     );
   }
 
-  stripeDialog(WithdrawMethodSetupController controller, themeChange) {
+  Widget stripeDialog(
+      WithdrawMethodSetupController controller, DarkThemeProvider themeChange) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.all(10),

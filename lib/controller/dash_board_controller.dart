@@ -6,20 +6,40 @@ import 'package:jippymart_restaurant/app/product_screens/product_list_screen.dar
 import 'package:jippymart_restaurant/app/profile_screen/profile_screen.dart';
 import 'package:jippymart_restaurant/app/wallet_screen/wallet_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
+import 'package:jippymart_restaurant/controller/app_update_controller.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
 
-class DashBoardController extends GetxController {
+class DashBoardController extends GetxController with WidgetsBindingObserver {
   RxInt selectedIndex = 0.obs;
   RxList<Widget> pageList = <Widget>[].obs;
   Rx<VendorModel> vendorModel = VendorModel().obs;
 
   @override
   void onInit() {
-    // TODO: implement onInit
+    super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     getVendor();
     setPage();
-    super.onInit();
+    _checkMandatoryUpdate();
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _checkMandatoryUpdate();
+  }
+
+  void _checkMandatoryUpdate() {
+    try {
+      final appUpdate = Get.find<AppUpdateController>();
+      appUpdate.checkMandatoryUpdateForLoggedInUser();
+    } catch (_) {}
   }
 
   setPage() {

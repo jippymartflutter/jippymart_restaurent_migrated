@@ -84,15 +84,11 @@ class QrCodeScreen extends StatelessWidget {
               color: themeChange.getThem()
                   ? AppThemeData.grey900
                   : AppThemeData.grey50,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: RoundedButtonFill(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
+              child: RoundedButtonFill(
                   title: "Save".tr,
                   height: 5.5,
-                  color: themeChange.getThem()
-                      ? AppThemeData.secondary300
-                      : AppThemeData.secondary300,
+                  color: AppThemeData.secondary300,
                   textColor: themeChange.getThem()
                       ? AppThemeData.grey900
                       : AppThemeData.grey50,
@@ -119,7 +115,6 @@ class QrCodeScreen extends StatelessWidget {
                     }
                   },
                 ),
-              ),
             ),
           );
         });

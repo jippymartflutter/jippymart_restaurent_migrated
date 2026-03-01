@@ -553,9 +553,10 @@ class AddRestaurantController extends GetxController {
         }
       }
 
-      // 11. Update controllers
+      // 11. Update controllers — force fresh vendor fetch so dashboard shows saved data immediately
       print("🔄 Updating controllers...");
-      dashBoardController.getVendor();
+      FireStoreUtils.invalidateVendorCache();
+      await dashBoardController.getVendor();
 
       if (Get.isRegistered<HomeController>()) {
         final homeController = Get.find<HomeController>();
@@ -575,11 +576,10 @@ class AddRestaurantController extends GetxController {
         Constant.vendorAdminCommission = vendorModel.value.adminCommission!;
       }
 
-      // 13. Show success and navigate back
-      print("🎉 Success! Closing loader and navigating back...");
+      // 13. Show success and navigate back immediately (dashboard already updated via getVendor() above)
+      print("🎉 Success! Navigating back...");
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast("Restaurant details saved successfully".tr);
-
       Get.back(result: true);
 
     } catch (e, stackTrace) {

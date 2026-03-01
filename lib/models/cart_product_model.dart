@@ -7,6 +7,7 @@ class CartProductModel {
   String? photo;
   String? price;
   String? discountPrice;
+  String? merchant_price;
   String? vendorID;
   int? quantity;
   String? extrasPrice;
@@ -20,6 +21,7 @@ class CartProductModel {
     this.photo,
     this.price,
     this.discountPrice,
+    this.merchant_price,
     this.vendorID,
     this.quantity,
     this.extrasPrice,
@@ -36,6 +38,7 @@ class CartProductModel {
         photo: json['photo']?.toString(),
         price: json['price']?.toString() ?? '0.0',
         discountPrice: json['discountPrice']?.toString() ?? '0.0',
+        merchant_price: _parseMerchantPrice(json['merchant_price'], json['price']),
         vendorID: json['vendorID']?.toString(),
         quantity: _parseInt(json['quantity']),
         extrasPrice: json['extras_price']?.toString() ?? '0.0',
@@ -51,11 +54,20 @@ class CartProductModel {
         name: json['name']?.toString() ?? 'Unknown Product',
         price: '0.0',
         discountPrice: '0.0',
+        merchant_price: '0.0',
         quantity: 1,
         extrasPrice: '0.0',
         extras: [],
       );
     }
+  }
+
+  /// Use merchant_price from JSON; if missing or zero, fall back to price so vendor total is preserved.
+  static String _parseMerchantPrice(dynamic merchantPrice, dynamic price) {
+    final String p = price?.toString() ?? '0.0';
+    final String mp = merchantPrice?.toString() ?? '0.0';
+    if (mp.isEmpty || mp == '0' || mp == '0.0') return p;
+    return mp;
   }
 
   static int _parseInt(dynamic value) {
@@ -94,6 +106,7 @@ class CartProductModel {
     data['photo'] = photo;
     data['price'] = price;
     data['discountPrice'] = discountPrice;
+    data['merchant_price'] = merchant_price;
     data['vendorID'] = vendorID;
     data['quantity'] = quantity;
     data['extras_price'] = extrasPrice;

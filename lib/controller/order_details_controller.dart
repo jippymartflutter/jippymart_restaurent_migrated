@@ -36,15 +36,15 @@ class OrderDetailsController extends GetxController {
     if (argumentData != null) {
       orderModel.value = argumentData['orderModel'];
       for (var element in orderModel.value.products!) {
-        if (double.parse(element.discountPrice.toString()) <= 0) {
+        if (double.parse(element.merchant_price.toString()) <= 0) {
           subTotal.value = subTotal.value +
-              double.parse(element.price.toString()) *
+              double.parse(element.merchant_price.toString()) *
                   double.parse(element.quantity.toString()) +
               (double.parse(element.extrasPrice.toString()) *
                   double.parse(element.quantity.toString()));
         } else {
           subTotal.value = subTotal.value +
-              double.parse(element.discountPrice.toString()) *
+              double.parse(element.merchant_price.toString()) *
                   double.parse(element.quantity.toString()) +
               (double.parse(element.extrasPrice.toString()) *
                   double.parse(element.quantity.toString()));
@@ -322,7 +322,7 @@ class OrderDetailsController extends GetxController {
 
     List<CartProductModel> products = orderModel.value.products!;
     for (int i = 0; i < products.length; i++) {
-      allTotalProduct += double.parse(products[i].price.toString()) *
+      allTotalProduct += double.parse(products[i].merchant_price.toString()) *
           double.parse(products[i].quantity.toString());
       bytes += generator.row([
         PosColumn(
@@ -338,7 +338,7 @@ class OrderDetailsController extends GetxController {
           width: 1, // Spacer column
         ),
         PosColumn(
-            text: '${products[i].price} x ${products[i].quantity}',
+            text: '${products[i].merchant_price} x ${products[i].quantity}',
             width: 5,
             styles: const PosStyles(
               align: PosAlign.right,
@@ -351,7 +351,7 @@ class OrderDetailsController extends GetxController {
         ),
       ]);
 
-      double singleProductTotal = double.parse(products[i].price.toString()) *
+      double singleProductTotal = double.parse(products[i].merchant_price.toString()) *
           double.parse(products[i].quantity.toString());
       bytes += generator.row([
         PosColumn(
@@ -1039,6 +1039,7 @@ class OrderDetailsController extends GetxController {
   Future<void> acceptOrder() async {
     // Update order status in Firestore
     orderModel.value.status = Constant.orderAccepted;
+
     await FireStoreUtils.updateOrder(orderModel.value);
     // Send notification to customer
     if (orderModel.value.author?.fcmToken != null && orderModel.value.author!.fcmToken!.isNotEmpty) {

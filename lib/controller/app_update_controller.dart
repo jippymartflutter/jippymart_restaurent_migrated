@@ -48,25 +48,77 @@ class AppUpdateController extends GetxController {
     }
   }
   
-  /// Check for app updates
+  /// Fetches force-update config from API and sets Constant.showUpdate.
+  /// When show_update is true, also parses min version and dialog data for mandatory update screen.
+  Future<void> getForceUpdateConfig() async {
+    try {
+      if (currentVersion.value.isEmpty) await _initializeCurrentVersion();
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}restaurant/version'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode != 200) return;
+      final body = json.decode(response.body);
+      final data = body is Map && body['success'] == true && body['data'] != null
+          ? body['data'] as Map<String, dynamic>
+          : body is Map
+              ? body as Map<String, dynamic>
+              : null;
+      if (data == null) return;
+      Constant.showUpdate = _parseBool(data['show_update']);
+      if (!Constant.showUpdate) {
+        print('📱 show_update is false – skipping update check');
+        return;
+      }
+      _minRequiredVersion = data['min_required_version']?.toString() ?? data['min_app_version']?.toString();
+      latestVersion.value = data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '';
+      updateUrl.value = data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '';
+      if (updateUrl.value.isEmpty && data['appStoreLink'] != null && data['appStoreLink'].toString() != 'update_url') {
+        updateUrl.value = data['appStoreLink']?.toString() ?? '';
+      }
+      updateMessage.value = data['update_message']?.toString() ?? 'Update available!';
+      isForceUpdate.value = data['force_update'] == true;
+      print('📱 show_update is true, min_required_version: $_minRequiredVersion');
+      // Process and show update dialog if required (using same data we just fetched)
+      _processUpdateData(data);
+    } catch (e) {
+      print('❌ getForceUpdateConfig error: $e');
+    }
+  }
+
+  static bool _parseBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final n = value.toLowerCase();
+      return n == 'true' || n == '1';
+    }
+    return false;
+  }
+
+  /// Returns true only when show_update is true and current version < min_app_version.
+  bool isMandatoryUpdateRequired() {
+    if (!Constant.showUpdate) return false;
+    if (_minRequiredVersion == null || _minRequiredVersion!.isEmpty) return false;
+    final required = _isVersionLower(currentVersion.value, _minRequiredVersion!);
+    print('📱 isMandatoryUpdateRequired: $required (current: ${currentVersion.value}, min: $_minRequiredVersion)');
+    return required;
+  }
+
+  /// Check for app updates (runs only when Constant.showUpdate is true).
   Future<void> checkForUpdates() async {
     if (isCheckingForUpdates.value) return;
-    
     try {
       isCheckingForUpdates.value = true;
       print('🔍 Checking for updates...');
-      
-      // Get current version if not already set
-      if (currentVersion.value.isEmpty) {
-        await _initializeCurrentVersion();
+      if (currentVersion.value.isEmpty) await _initializeCurrentVersion();
+      await getForceUpdateConfig();
+      if (!Constant.showUpdate) {
+        print('📱 Update check skipped (show_update is false)');
+        return;
       }
-      
-      // Listen for real-time updates from Firestore
       await _setupUpdateListener();
-      
-      // Also do an immediate check
       await _performUpdateCheck();
-      
     } catch (e) {
       print('❌ Error checking for updates: $e');
     } finally {
@@ -108,10 +160,12 @@ class AppUpdateController extends GetxController {
         },
       );
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        if (jsonResponse['success'] == true) {
-          _processUpdateData(jsonResponse['data']);
-        }
+        final body = json.decode(response.body);
+        if (body is! Map) return;
+        final data = body['success'] == true && body['data'] != null
+            ? body['data'] as Map<String, dynamic>
+            : body as Map<String, dynamic>;
+        if (data.isNotEmpty) _processUpdateData(data);
       } else {
         print('❌ API request failed with status: ${response.statusCode}');
       }
@@ -136,21 +190,20 @@ class AppUpdateController extends GetxController {
 
 
   Future<void> _performUpdateCheck() async {
-    final String url = '${Constant.baseUrl}restaurant/version'; // your API endpoint
+    final String url = '${Constant.baseUrl}restaurant/version';
 
     try {
       final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data != null) {
-          _processUpdateData(data);
-        } else {
-          print('⚠️ No data received from API');
-        }
-      } else {
+      if (response.statusCode != 200) {
         print('❌ Failed to fetch update info. Status code: ${response.statusCode}');
+        return;
       }
+      final body = json.decode(response.body);
+      if (body is! Map) return;
+      final data = body['success'] == true && body['data'] != null
+          ? body['data'] as Map<String, dynamic>
+          : body as Map<String, dynamic>;
+      if (data.isNotEmpty) _processUpdateData(data);
     } catch (e) {
       print('❌ Error performing update check: $e');
     }
@@ -162,12 +215,16 @@ class AppUpdateController extends GetxController {
     try {
       print('📊 Processing update data: $data');
       
-      // Extract data from Firestore
-      final latestVersionFromFirestore = data['latest_version']?.toString() ?? '';
+      // Extract data from Firestore / API
+      final latestVersionFromFirestore = data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '';
       final forceUpdate = data['force_update'] == true;
-      final updateUrlFromFirestore = data['update_url']?.toString() ?? '';
+      String updateUrlFromFirestore = data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '';
+      if (updateUrlFromFirestore.isEmpty) {
+        final appStore = data['appStoreLink']?.toString();
+        if (appStore != null && appStore != 'update_url') updateUrlFromFirestore = appStore;
+      }
       final updateMessageFromFirestore = data['update_message']?.toString() ?? 'Update available!';
-      final minRequiredVersion = data['min_required_version']?.toString();
+      final minRequiredVersion = data['min_required_version']?.toString() ?? data['min_app_version']?.toString();
       
       // Update observable variables
       latestVersion.value = latestVersionFromFirestore;
@@ -198,16 +255,16 @@ class AppUpdateController extends GetxController {
   
   /// Check if update is available
   bool _isUpdateAvailable() {
-    if (latestVersion.value.isEmpty) return false;
-    
     try {
-      // Check minimum required version first
-      if (_minRequiredVersion != null && _isVersionLower(currentVersion.value, _minRequiredVersion!)) {
+      // Check minimum required version first (works even when latest_version is not in API)
+      if (_minRequiredVersion != null && _minRequiredVersion!.isNotEmpty && _isVersionLower(currentVersion.value, _minRequiredVersion!)) {
         print('🚨 Current version is below minimum required version');
         isForceUpdate.value = true; // Force update if below minimum
         return true;
       }
-      
+
+      if (latestVersion.value.isEmpty) return false;
+
       // Check if current version is lower than latest
       return _isVersionLower(currentVersion.value, latestVersion.value);
     } catch (e) {
@@ -279,6 +336,12 @@ class AppUpdateController extends GetxController {
     }
   }
   
+  /// For logged-in users (e.g. dashboard): fetch config and show mandatory update screen if required.
+  Future<void> checkMandatoryUpdateForLoggedInUser() async {
+    await getForceUpdateConfig();
+    if (isMandatoryUpdateRequired()) _showUpdateDialog();
+  }
+
   /// Manual update check (for profile screen)
   Future<void> manualUpdateCheck() async {
     print('🔍 Manual update check triggered');
