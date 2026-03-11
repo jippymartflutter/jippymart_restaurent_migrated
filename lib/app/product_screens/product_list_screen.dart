@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:jippymart_restaurant/utils/const/color_const.dart';
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_screen.dart';
+import 'package:jippymart_restaurant/app/product_screens/add_from_catalog_screen.dart';
 import 'package:jippymart_restaurant/app/product_screens/add_product_screen.dart';
 import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
@@ -163,41 +164,55 @@ class ProductListScreen extends StatelessWidget {
                     (controller.userModel.value.vendorID == null ||
                         controller.userModel.value.vendorID!.isEmpty)
                     ? const SizedBox()
-                    : InkWell(
-                  onTap: () {
-                    Get.to(const AddProductScreen())!.then(
-                          (value) {
-                        if (value == true) {
-                          controller.getProduct();
-                        }
+                    : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Get.to(const AddFromCatalogScreen())!.then(
+                              (value) {
+                            if (value == true) {
+                              controller.getProduct();
+                            }
+                          },
+                        );
                       },
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.add,
-                          color: themeChange.getThem()
-                              ? AppThemeData.grey50
-                              : AppThemeData.grey50,
-                        ),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        Text(
-                          "Add".tr,
-                          style: TextStyle(
-                              color: themeChange.getThem()
-                                  ? AppThemeData.grey50
-                                  : AppThemeData.grey50,
-                              fontSize: 18,
-                              fontFamily: AppThemeData.medium),
-                        )
-                      ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        // child: Row(
+                        //   children: [
+                        //     Icon(Icons.library_add, color: AppThemeData.grey50, size: 20),
+                        //     const SizedBox(width: 4),
+                        //     Text("From catalog".tr, style: TextStyle(color: AppThemeData.grey50, fontSize: 14, fontFamily: AppThemeData.medium)),
+                        //   ],
+                        // ),
+                      ),
                     ),
-                  ),
+                    InkWell(
+                      onTap: () {
+                        Get.to(const AddProductScreen())!.then(
+                              (value) {
+                            if (value == true) {
+                              controller.getProduct();
+                            }
+                          },
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Icon(Icons.add, color: AppThemeData.grey50),
+                            const SizedBox(width: 5),
+                            Text(
+                              "Add".tr,
+                              style: TextStyle(color: AppThemeData.grey50, fontSize: 18, fontFamily: AppThemeData.medium),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
@@ -548,10 +563,7 @@ class ProductListScreen extends StatelessWidget {
                         onTap: product.isAvailable == false
                             ? null
                             : () {
-                          Get.to(const AddProductScreen(),
-                              arguments: {
-                                "productModel": product
-                              })!
+                          Get.to(() => AddProductScreen(product: product))!
                               .then(
                                 (value) {
                               if (value == true) {

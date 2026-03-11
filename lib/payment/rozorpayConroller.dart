@@ -11,7 +11,10 @@ class RazorPayController {
     RazorPayModel razorPayData = razorpayModel!;
     print(razorPayData.razorpayKey);
     print("we Enter In");
-    const url = "${Constant.globalUrl}payments/razorpay/createorder";
+
+    // Hit the web domain backend (same as jippymart.in).
+    // Example: https://jippymart.in/payments/razorpay/createorder
+    final String url = "${Constant.globalUrl}payments/razorpay/createorder";
     print(orderId);
     final response = await http.post(
       Uri.parse(url),
@@ -25,13 +28,21 @@ class RazorPayController {
       },
     );
 
-    if (response.statusCode == 500) {
+    // Defensive: backend might return HTML or error text; only parse JSON when expected.
+    if (response.statusCode != 200) {
+      print('Razorpay createorder failed: ${response.statusCode} ${response.body}');
       return null;
-    } else {
-      final data = jsonDecode(response.body);
-      print(data);
-
-      return CreateRazorPayOrderModel.fromJson(data);
     }
+
+    final body = response.body.trim();
+    if (body.isEmpty || body.startsWith('<')) {
+      // HTML/error page or empty
+      print('Razorpay createorder returned non‑JSON body: $body');
+      return null;
+    }
+
+    final data = jsonDecode(body);
+    print(data);
+    return CreateRazorPayOrderModel.fromJson(data);
   }
 }

@@ -74,14 +74,14 @@ class ProductModel {
     takeawayOption = _convertToBool(json['takeawayOption']);
     isAvailable = _convertToBool(json['isAvailable']);
 
-    // FIX: Handle Firestore arrayValue format for addOnsTitle
-    addOnsTitle = _extractArrayFromFirestore(json['addOnsTitle']) ?? [];
+    // FIX: Handle Firestore arrayValue format for addOnsTitle (accept API keys: addOnsTitle, add_ons_title)
+    addOnsTitle = _extractArrayFromFirestore(json['addOnsTitle'] ?? json['add_ons_title']) ?? [];
 
     calories = json['calories'];
     proteins = json['proteins'];
 
-    // FIX: Handle Firestore arrayValue format for addOnsPrice
-    addOnsPrice = _extractArrayFromFirestore(json['addOnsPrice']) ?? [];
+    // FIX: Handle Firestore arrayValue format for addOnsPrice (accept API keys: addOnsPrice, add_ons_price)
+    addOnsPrice = _extractArrayFromFirestore(json['addOnsPrice'] ?? json['add_ons_price']) ?? [];
 
     reviewsSum = json['reviewsSum'] ?? 0.0;
     name = json['name'];
@@ -92,8 +92,34 @@ class ProductModel {
     // FIX: Handle product_specification that can be either List or Map or String
     productSpecification = _parseJsonField(json['product_specification']) ?? {};
 
-    // FIX: Handle item_attribute that can be either List or Map or String
-    itemAttribute = _parseItemAttribute(json['item_attribute']);
+    // FIX: Handle item_attribute / itemAttribute (object). Top-level "options" array is handled below.
+    itemAttribute = _parseItemAttribute(json['item_attribute'] ?? json['itemAttribute']);
+
+    // API may send top-level "options" as array: [{ id, title, subtitle, original_price, price, is_available }, ...]
+    final optionsList = json['options'];
+    if (optionsList is List && optionsList.isNotEmpty) {
+      final variants = <Variants>[];
+      for (var o in optionsList) {
+        if (o is Map) {
+          final m = Map<String, dynamic>.from(o);
+          final title = m['title']?.toString() ?? '';
+          final subtitle = m['subtitle']?.toString();
+          final price = m['price']?.toString() ?? m['original_price']?.toString() ?? '0';
+          final sku = subtitle != null && subtitle.isNotEmpty ? '$title - $subtitle' : title;
+          variants.add(Variants(
+            variantSku: sku,
+            variantPrice: price,
+            variantId: m['id']?.toString(),
+            variantQuantity: '0',
+            variantImage: null,
+          ));
+        }
+      }
+      if (variants.isNotEmpty) {
+        itemAttribute ??= ItemAttribute(attributes: [], variants: []);
+        itemAttribute!.variants = variants;
+      }
+    }
 
     id = json['id'];
     quantity = json['quantity'];
@@ -103,7 +129,7 @@ class ProductModel {
     // Fix: Convert disPrice to string
     disPrice = _convertToString(json['disPrice']) ?? "0";
 
-    // FIX: Handle Firestore arrayValue format for photos
+    // FIX: Handle photos as array or JSON string (e.g. "[\"url1\", \"url2\"]")
     photos = _extractArrayFromFirestore(json['photos']) ?? [];
 
     photo = json['photo'];
@@ -522,11 +548,11 @@ class Variants {
   });
 
   Variants.fromJson(Map<String, dynamic> json) {
-    variantId = _convertToString(json['variant_id']);
-    variantImage = _convertToString(json['variant_image']);
-    variantPrice = _convertToString(json['variant_price']) ?? '0';
-    variantQuantity = _convertToString(json['variant_quantity']) ?? '0';
-    variantSku = _convertToString(json['variant_sku']);
+    variantId = _convertToString(json['variant_id'] ?? json['variantId']);
+    variantImage = _convertToString(json['variant_image'] ?? json['variantImage']);
+    variantPrice = _convertToString(json['variant_price'] ?? json['variantPrice']) ?? '0';
+    variantQuantity = _convertToString(json['variant_quantity'] ?? json['variantQuantity']) ?? '0';
+    variantSku = _convertToString(json['variant_sku'] ?? json['variantSku']);
   }
 
   // Helper method to convert various types to string

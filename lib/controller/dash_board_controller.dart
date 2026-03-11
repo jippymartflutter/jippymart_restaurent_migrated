@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/app/Home_screen/home_screen.dart';
 import 'package:jippymart_restaurant/app/dine_in_order_screen/dine_in_order_screen.dart';
+import 'package:jippymart_restaurant/app/dash_board_screens/sales_report_screen.dart';
 import 'package:jippymart_restaurant/app/product_screens/product_list_screen.dart';
 import 'package:jippymart_restaurant/app/profile_screen/profile_screen.dart';
 import 'package:jippymart_restaurant/app/wallet_screen/wallet_screen.dart';
@@ -57,6 +58,7 @@ class DashBoardController extends GetxController with WidgetsBindingObserver {
     [
             const HomeScreen(),
             const ProductListScreen(),
+            const SalesReportScreen(),
             const ProfileScreen(),
           ];
   }

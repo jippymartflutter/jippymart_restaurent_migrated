@@ -20,8 +20,8 @@ class Preferences {
   static const xenditSettings = "xenditSettings";
   static const codSettings = "CODSettings";
   static const orderRingtone = "audioSound";
+  static const zoneIdKey = "zone_id";
   static const googleMapsApiKey = "AIzaSyCKCRzqaR1-uzbnEmB-JqVkbUKNGOJHv34";
-
 
   static late SharedPreferences pref;
 

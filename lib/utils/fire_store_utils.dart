@@ -2012,6 +2012,70 @@ class FireStoreUtils {
     return list;
   }
 
+
+  static Future<bool> createProductPromotion(
+      Map<String, dynamic> promotionData) async {
+    try {
+      log('createProductPromotion payload: ${jsonEncode(promotionData)}');
+      final response = await http.post(
+        Uri.parse('${Constant.baseUrl}vendor/promotions'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(promotionData),
+      );
+      log('createProductPromotion response: ${response.statusCode} ${response.body}');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      }
+      return false;
+    } catch (e, s) {
+      log('createProductPromotion error: $e $s');
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getProductPromotions(
+      String vendorId) async {
+    final List<Map<String, dynamic>> list = [];
+    try {
+      final response = await http.get(
+        Uri.parse('${Constant.baseUrl}promotions/vendor/$vendorId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      log('getProductPromotions response: ${response.statusCode} ${response.body}');
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['success'] == true &&
+            responseData['data'] is List<dynamic>) {
+          for (final item in (responseData['data'] as List<dynamic>)) {
+            if (item is Map<String, dynamic>) {
+              list.add(item);
+            }
+          }
+        }
+      }
+    } catch (e, s) {
+      log('getProductPromotions error: $e $s');
+    }
+    return list;
+  }
+
+  static Future<bool> updateProductPromotion(
+      String promotionId, Map<String, dynamic> promotionData) async {
+    try {
+      log('updateProductPromotion[$promotionId] payload: ${jsonEncode(promotionData)}');
+      final response = await http.put(
+        Uri.parse('${Constant.baseUrl}vendor/promotions/$promotionId'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(promotionData),
+      );
+      log('updateProductPromotion response: ${response.statusCode} ${response.body}');
+      return response.statusCode == 200;
+    } catch (e, s) {
+      log('updateProductPromotion error: $e $s');
+      return false;
+    }
+  }
+
   static Future<List<DocumentModel>> getDocumentList() async {
     List<DocumentModel> documentList = [];
     try {

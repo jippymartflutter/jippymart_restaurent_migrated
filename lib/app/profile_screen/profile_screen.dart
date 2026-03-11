@@ -16,6 +16,7 @@ import 'package:jippymart_restaurant/app/edit_profile_screen/edit_profile_screen
 import 'package:jippymart_restaurant/app/offer_screens/offer_screen.dart';
 import 'package:jippymart_restaurant/app/special_discount_screen/special_discount_screen.dart';
 
+import 'package:jippymart_restaurant/app/profile_screen/subscription_plans_screen.dart';
 import 'package:jippymart_restaurant/app/terms_and_condition/terms_and_condition_screen.dart';
 import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
 import 'package:jippymart_restaurant/app/withdraw_method_setup_screens/withdraw_method_setup_screen.dart';
@@ -36,6 +37,9 @@ import 'package:jippymart_restaurant/utils/network_image_widget.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../utils/const/image_const.dart';
+import '../offer_screens/product_promotion_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -290,97 +294,124 @@ class ProfileScreen extends StatelessWidget {
                             ),
                           ),
                           // Offers & Discounts Section
-                          Visibility(
-                            visible: false,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 20),
-                                Text(
-                                  "Offers & Discounts".tr,
-                                  style: TextStyle(
-                                    color: themeChange.getThem()
-                                        ? AppThemeData.grey400
-                                        : AppThemeData.grey500,
-                                    fontFamily: AppThemeData.semiBold,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                          // Visibility(
+                          //   visible: true,
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       const SizedBox(height: 20),
+                          //       Text(
+                          //         "Offers & Discounts".tr,
+                          //         style: TextStyle(
+                          //           color: themeChange.getThem()
+                          //               ? AppThemeData.grey400
+                          //               : AppThemeData.grey500,
+                          //           fontFamily: AppThemeData.semiBold,
+                          //           fontWeight: FontWeight.w500,
+                          //         ),
+                          //       ),
+                          //       const SizedBox(height: 10),
+                          //       Container(
+                          //         width: Responsive.width(100, context),
+                          //         decoration: ShapeDecoration(
+                          //           color: themeChange.getThem()
+                          //               ? AppThemeData.grey900
+                          //               : AppThemeData.grey50,
+                          //           shape: RoundedRectangleBorder(
+                          //               borderRadius: BorderRadius.circular(12)),
+                          //         ),
+                          //         child: Padding(
+                          //           padding: const EdgeInsets.symmetric(
+                          //               horizontal: 10, vertical: 8),
+                          //           child: Column(
+                          //             children: [
+                          //               cardDecoration(
+                          //                 themeChange,
+                          //                 controller,
+                          //                 Container(
+                          //                   width: 44,
+                          //                   height: 44,
+                          //                   decoration: ShapeDecoration(
+                          //                     color: themeChange.getThem()
+                          //                         ? AppThemeData.success600
+                          //                         : AppThemeData.success50,
+                          //                     shape: RoundedRectangleBorder(
+                          //                       borderRadius: BorderRadius.circular(120),
+                          //                     ),
+                          //                   ),
+                          //                   child: Padding(
+                          //                     padding: const EdgeInsets.all(10),
+                          //                     child: SvgPicture.asset(
+                          //                         "assets/icons/ic_gift_box.svg"),
+                          //                   ),
+                          //                 ),
+                          //                 "Offers",
+                          //                 () {
+                          //                   Get.to(const OfferScreen());
+                          //                 },
+                          //               ),
+                          //               Constant.specialDiscountOfferEnable == false
+                          //                   ? const SizedBox()
+                          //                   : cardDecoration(
+                          //                       themeChange,
+                          //                       controller,
+                          //                       Container(
+                          //                         width: 44,
+                          //                         height: 44,
+                          //                         decoration: ShapeDecoration(
+                          //                           color: themeChange.getThem()
+                          //                               ? AppThemeData.success600
+                          //                               : AppThemeData.success50,
+                          //                           shape: RoundedRectangleBorder(
+                          //                             borderRadius: BorderRadius.circular(120),
+                          //                           ),
+                          //                         ),
+                          //                         child: Padding(
+                          //                           padding: const EdgeInsets.all(10),
+                          //                           child: SvgPicture.asset(
+                          //                             "assets/icons/ic_coupon.svg",
+                          //                           ),
+                          //                         ),
+                          //                       ),
+                          //                       "Special Discounts",
+                          //                       () {
+                          //                         Get.to(
+                          //                             const SpecialDiscountScreen());
+                          //                       },
+                          //                     ),
+                          //             ],
+                          //           ),
+                          //         ),
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+
+                          cardDecoration(
+                            themeChange,
+                            controller,
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: ShapeDecoration(
+                                color: themeChange.getThem()
+                                    ? AppThemeData.secondary600
+                                    : AppThemeData.driverApp50,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                  BorderRadius.circular(120),
                                 ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  width: Responsive.width(100, context),
-                                  decoration: ShapeDecoration(
-                                    color: themeChange.getThem()
-                                        ? AppThemeData.grey900
-                                        : AppThemeData.grey50,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 8),
-                                    child: Column(
-                                      children: [
-                                        cardDecoration(
-                                          themeChange,
-                                          controller,
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: ShapeDecoration(
-                                              color: themeChange.getThem()
-                                                  ? AppThemeData.success600
-                                                  : AppThemeData.success50,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(120),
-                                              ),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(10),
-                                              child: SvgPicture.asset(
-                                                  "assets/icons/ic_gift_box.svg"),
-                                            ),
-                                          ),
-                                          "Offers",
-                                          () {
-                                            Get.to(const OfferScreen());
-                                          },
-                                        ),
-                                        Constant.specialDiscountOfferEnable == false
-                                            ? const SizedBox()
-                                            : cardDecoration(
-                                                themeChange,
-                                                controller,
-                                                Container(
-                                                  width: 44,
-                                                  height: 44,
-                                                  decoration: ShapeDecoration(
-                                                    color: themeChange.getThem()
-                                                        ? AppThemeData.success600
-                                                        : AppThemeData.success50,
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(120),
-                                                    ),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(10),
-                                                    child: SvgPicture.asset(
-                                                      "assets/icons/ic_coupon.svg",
-                                                    ),
-                                                  ),
-                                                ),
-                                                "Special Discounts",
-                                                () {
-                                                  Get.to(
-                                                      const SpecialDiscountScreen());
-                                                },
-                                              ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: SvgPicture.asset(
+                                    "assets/icons/ic_subscription.svg"),
+                              ),
                             ),
+                            "Subscription Plans",
+                                () {
+                              Get.to(const SubscriptionPlansScreen());
+                            },
                           ),
                           Text(
                             "Restaurant Information".tr,
@@ -544,10 +575,163 @@ class ProfileScreen extends StatelessWidget {
                                       Get.to(const WithdrawMethodSetupScreen());
                                     },
                                   ),
+
+
                                 ],
                               ),
                             ),
                           ),
+
+                          Visibility(
+                            visible: true,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 20),
+                                Text(
+                                  "Offers & Discounts".tr,
+                                  style: TextStyle(
+                                    color: themeChange.getThem()
+                                        ? AppThemeData.grey400
+                                        : AppThemeData.grey500,
+                                    fontFamily: AppThemeData.semiBold,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
+                                  width: Responsive.width(100, context),
+                                  decoration: ShapeDecoration(
+                                    color: themeChange.getThem()
+                                        ? AppThemeData.grey900
+                                        : AppThemeData.grey50,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 8),
+                                    child: Column(
+                                      children: [
+                                        cardDecoration(
+                                          themeChange,
+                                          controller,
+                                          Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: ShapeDecoration(
+                                              color: themeChange.getThem()
+                                                  ? AppThemeData.success600
+                                                  : AppThemeData.success50,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(120),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10),
+                                              child: SvgPicture.asset(
+                                                  "assets/icons/ic_gift_box.svg"),
+                                            ),
+                                          ),
+                                          "Offers",
+                                              () {
+                                            Get.to(const ProductPromotionScreen());
+                                          },
+                                        ),
+
+                                        cardDecoration(
+                                          themeChange,
+                                          controller,
+                                          Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: ShapeDecoration(
+                                              color: themeChange.getThem()
+                                                  ? AppThemeData.secondary600
+                                                  : AppThemeData.secondary50,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                BorderRadius.circular(120),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10),
+                                              child: SvgPicture.asset(
+                                                ImageConst.whatsApp,
+                                                colorFilter: ColorFilter.mode(
+                                                  AppThemeData.secondary300,
+                                                  BlendMode.srcIn,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          "Boost my orders",
+                                              () async {
+                                            const String phoneNumber = '+916301931498';
+                                            const String message =
+                                                "Hi, I want to boost my restaurant orders. Please contact me with details.";
+                                            final Uri whatsappUrl = Uri.parse(
+                                              'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}',
+                                            );
+                                            try {
+                                              if (await canLaunchUrl(whatsappUrl)) {
+                                                await launchUrl(
+                                                  whatsappUrl,
+                                                  mode: LaunchMode.externalApplication,
+                                                );
+                                              } else {
+                                                final Uri phoneUrl =
+                                                Uri.parse('tel:$phoneNumber');
+                                                if (await canLaunchUrl(phoneUrl)) {
+                                                  await launchUrl(
+                                                    phoneUrl,
+                                                    mode: LaunchMode.externalApplication,
+                                                  );
+                                                }
+                                              }
+                                            } catch (e) {
+                                              debugPrint(
+                                                  'Error launching WhatsApp from Boost my orders: $e');
+                                            }
+                                          },
+                                        ),
+                                        Constant.specialDiscountOfferEnable == false
+                                            ? const SizedBox()
+                                            : cardDecoration(
+                                          themeChange,
+                                          controller,
+                                          Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: ShapeDecoration(
+                                              color: themeChange.getThem()
+                                                  ? AppThemeData.success600
+                                                  : AppThemeData.success50,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(120),
+                                              ),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(10),
+                                              child: SvgPicture.asset(
+                                                "assets/icons/ic_coupon.svg",
+                                              ),
+                                            ),
+                                          ),
+                                          "Special Discounts",
+                                              () {
+                                            Get.to(
+                                                const SpecialDiscountScreen());
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
                           (Constant.isRestaurantVerification == true &&
                                       controller.userModel.value
                                               .isDocumentVerify ==

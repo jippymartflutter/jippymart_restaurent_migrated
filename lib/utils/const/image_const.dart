@@ -4,4 +4,5 @@ class ImageConst {
   static String profile = "assets/svg/profile.svg";
   static String whatsApp = 'assets/images/whatsapp.svg';
   static String splashImage = 'assets/svg/splash_image.svg';
+  static String report = 'assets/icons/ic_book.svg';
 }

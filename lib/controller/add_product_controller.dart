@@ -17,6 +17,10 @@ import 'package:jippymart_restaurant/models/vendor_model.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
 class AddProductController extends GetxController {
+  final ProductModel? productToEdit;
+
+  AddProductController({this.productToEdit});
+
   RxBool isLoading = true.obs;
   Rx<TextEditingController> attributesValueController =
       TextEditingController().obs;
@@ -80,6 +84,17 @@ class AddProductController extends GetxController {
     attributesList!.add(Attributes(attributeId: id, attributeOptions: []));
     itemAttributes.value = itemAttribute;
     update();
+  }
+
+  /// Update a variant's title (sku) or price at [index]. Reassigns [itemAttributes] so UI updates.
+  void updateVariantAt(int index, {String? variantSku, String? variantPrice}) {
+    final att = itemAttributes.value;
+    if (att == null || att.variants == null || index < 0 || index >= att.variants!.length) return;
+    final newVariants = List<Variants>.from(att.variants!);
+    final v = newVariants[index];
+    if (variantSku != null) v.variantSku = variantSku;
+    if (variantPrice != null) v.variantPrice = variantPrice;
+    itemAttributes.value = ItemAttribute(attributes: att.attributes, variants: newVariants);
   }
 
   RxDouble regularPrice = 0.0.obs;
@@ -150,64 +165,76 @@ class AddProductController extends GetxController {
       }
     });
 
-    dynamic argumentData = Get.arguments;
-    if (argumentData != null) {
-      productModel.value = argumentData['productModel'];
+    ProductModel? editProduct = productToEdit;
+    if (editProduct == null) {
+      final argumentData = Get.arguments;
+      if (argumentData != null && argumentData is Map && argumentData['productModel'] != null) {
+        editProduct = argumentData['productModel'] as ProductModel;
+      }
+    }
+    if (editProduct != null) {
+      productModel.value = editProduct;
 
-      for (var element in productModel.value.photos!) {
-        images.add(element);
+      final photosList = editProduct.photos;
+      if (photosList != null && photosList.isNotEmpty) {
+        images.clear();
+        for (var element in photosList) {
+          images.add(element);
+        }
       }
 
-      isPublish.value = productModel.value.publish ?? false;
-      productTitleController.value.text = productModel.value.name.toString();
-      productDescriptionController.value.text =
-          productModel.value.description.toString();
-      regularPriceController.value.text = productModel.value.merchant_price.toString();
-      discountedPriceController.value.text =
-          productModel.value.disPrice.toString();
-      productQuantityController.value.text =
-          productModel.value.quantity.toString();
+      isPublish.value = editProduct.publish ?? false;
+      productTitleController.value.text = editProduct.name?.toString() ?? '';
+      productDescriptionController.value.text = editProduct.description?.toString() ?? '';
+      regularPriceController.value.text = editProduct.merchant_price?.toString() ?? editProduct.price?.toString() ?? '0';
+      discountedPriceController.value.text = editProduct.disPrice?.toString() ?? '0';
+      productQuantityController.value.text = editProduct.quantity?.toString() ?? '0';
 
-      caloriesController.value.text = productModel.value.calories.toString();
-      gramsController.value.text = productModel.value.grams.toString();
-      fatsController.value.text = productModel.value.fats.toString();
-      proteinController.value.text = productModel.value.proteins.toString();
-      isPureVeg.value = productModel.value.veg ?? true;
-      isNonVeg.value = productModel.value.nonveg ?? false;
-      takeAway.value = productModel.value.takeawayOption ?? false;
+      caloriesController.value.text = editProduct.calories?.toString() ?? '0';
+      gramsController.value.text = editProduct.grams?.toString() ?? '0';
+      fatsController.value.text = editProduct.fats?.toString() ?? '0';
+      proteinController.value.text = editProduct.proteins?.toString() ?? '0';
+      isPureVeg.value = editProduct.veg ?? true;
+      isNonVeg.value = editProduct.nonveg ?? false;
+      takeAway.value = editProduct.takeawayOption ?? false;
 
-      if (productModel.value.productSpecification != null) {
-        productModel.value.productSpecification!.forEach((key, value) {
-          specificationList
-              .add(ProductSpecificationModel(lable: key, value: value.toString()));
+      if (editProduct.productSpecification != null && editProduct.productSpecification!.isNotEmpty) {
+        specificationList.clear();
+        editProduct.productSpecification!.forEach((key, value) {
+          specificationList.add(ProductSpecificationModel(lable: key, value: value.toString()));
         });
       }
 
-      itemAttributes.value =
-          productModel.value.itemAttribute ?? ItemAttribute();
+      itemAttributes.value = editProduct.itemAttribute ?? ItemAttribute(attributes: [], variants: []);
 
-      if (productModel.value.itemAttribute != null) {
-        for (var element in productModel.value.itemAttribute!.attributes!) {
-          AttributesModel attributesModel = attributesList
-              .firstWhere((product) => product.id == element.attributeId);
-          selectedAttributesList.add(attributesModel);
+      if (editProduct.itemAttribute?.attributes != null && editProduct.itemAttribute!.attributes!.isNotEmpty) {
+        selectedAttributesList.clear();
+        for (var element in editProduct.itemAttribute!.attributes!) {
+          try {
+            final attributesModel = attributesList.firstWhere((product) => product.id == element.attributeId);
+            selectedAttributesList.add(attributesModel);
+          } catch (_) {}
         }
       }
-      // CORRECTED: Properly handle add-ons data
-      if (productModel.value.addOnsTitle != null && productModel.value.addOnsPrice != null) {
-        for (int i = 0; i < productModel.value.addOnsTitle!.length; i++) {
-          if (i < productModel.value.addOnsPrice!.length) {
-            addonsList.add(ProductSpecificationModel(
-              lable: productModel.value.addOnsTitle![i],
-              value: productModel.value.addOnsPrice![i].toString(), // Get individual price
+      if (editProduct.addOnsTitle != null && editProduct.addOnsPrice != null && editProduct.addOnsTitle!.isNotEmpty) {
+        final list = <ProductSpecificationModel>[];
+        for (int i = 0; i < editProduct.addOnsTitle!.length; i++) {
+          if (i < editProduct.addOnsPrice!.length) {
+            list.add(ProductSpecificationModel(
+              lable: editProduct.addOnsTitle![i].toString(),
+              value: editProduct.addOnsPrice![i].toString(),
             ));
           }
         }
+        addonsList.assignAll(list);
       }
 
-      for (var element in vendorCategoryList) {
-        if (element.id == productModel.value.categoryID) {
-          selectedProductCategory.value = element;
+      if (editProduct.categoryID != null) {
+        for (var element in vendorCategoryList) {
+          if (element.id == editProduct!.categoryID) {
+            selectedProductCategory.value = element;
+            break;
+          }
         }
       }
     }
