@@ -32,7 +32,7 @@ class SalesReportController extends GetxController {
   }
 
   /// Refreshes data for current report type (coming vs settled) and filter.
-  Future<void> fetchReport() async {
+  Future<void> fetchReport({bool forceRefresh = false}) async {
     final vendorId = Constant.userModel?.vendorID?.toString() ?? '';
     if (vendorId.isEmpty) {
       loading.value = false;
@@ -49,11 +49,13 @@ class SalesReportController extends GetxController {
       result = await DashboardApiService.getSettledReport(
         vendorId: vendorId,
         filter: selectedFilter.value,
+        forceRefresh: forceRefresh,
       );
     } else {
       result = await DashboardApiService.getDashboard(
         vendorId: vendorId,
         filter: selectedFilter.value,
+        forceRefresh: forceRefresh,
       );
     }
 

@@ -21,6 +21,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:http/http.dart' as http;
 
 import '../app/on_boarding_screen.dart' show OnBoardingScreen;
+import '../models/vendor_model.dart';
 import '../utils/preferences.dart' show Preferences;
 
 
@@ -191,7 +192,8 @@ class LoginController extends GetxController {
     await prefs.setBool('is_active', _parseBoolValue(userData['active'] ?? userData['active']));
     await prefs.setString('user_id', userData['id'].toString());
     await prefs.setString('profile_picture', userData['profilePictureURL'] ?? '');
-    await prefs.setString('zone_id', userData['zoneId'] ?? '');
+
+    // Do NOT persist zone here – vendor data is not available yet.
     await prefs.setBool('is_document_verify', _parseBoolValue(userData['isDocumentVerify']));
     await prefs.setBool('is_logged_in', true);
   }

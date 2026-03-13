@@ -67,12 +67,12 @@ class ProductModel {
     fats = json['fats'];
     vendorID = json['vendorID'];
 
-    // Handle boolean fields that might come as integers (0/1)
+    // Handle boolean fields that might come as int (0/1), bool, or String from API
     veg = _convertToBool(json['veg']);
     publish = _convertToBool(json['publish']);
     nonveg = _convertToBool(json['nonveg']);
-    takeawayOption = _convertToBool(json['takeawayOption']);
-    isAvailable = _convertToBool(json['isAvailable']);
+    takeawayOption = _convertToBool(json['takeawayOption'] ?? json['takeaway_option']);
+    isAvailable = _convertToBool(json['isAvailable'] ?? json['is_available']);
 
     // FIX: Handle Firestore arrayValue format for addOnsTitle (accept API keys: addOnsTitle, add_ons_title)
     addOnsTitle = _extractArrayFromFirestore(json['addOnsTitle'] ?? json['add_ons_title']) ?? [];

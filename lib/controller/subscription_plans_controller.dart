@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 
-import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
 import 'package:jippymart_restaurant/models/subscription_plan_model.dart';
 import 'package:jippymart_restaurant/service/subscription_api_service.dart';
-import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 
+import '../models/vendor_model.dart';
+
 /// GetX controller for subscription plans screen.
-/// Resolves zone from restaurant (vendor) details, then user, then preferences.
+/// Resolves zone from restaurant (vendor) details, then preferences.
 class SubscriptionPlansController extends GetxController {
   final RxList<SubscriptionPlanModel> plans = <SubscriptionPlanModel>[].obs;
   final RxBool isLoading = true.obs;
@@ -20,48 +20,45 @@ class SubscriptionPlansController extends GetxController {
     super.onReady();
   }
 
-  /// Resolves zone_id in order: dashboard vendor → user model → fetch vendor by vendorID → preferences.
+  /// Resolves `zoneId` in order:
+  /// 1. From current dashboard vendor (`VendorModel.zoneId`)
+  /// 2. From persisted preferences (`VendorModel.zoneIdPrefKey`)
   Future<String> _resolveZoneId() async {
-    // 1. From dashboard's restaurant (vendor) – already loaded when user is in app
-    if (Get.isRegistered<DashBoardController>()) {
-      try {
-        final dashboard = Get.find<DashBoardController>();
-        final zoneId = dashboard.vendorModel.value.zoneId;
-        if (zoneId != null && zoneId.toString().trim().isNotEmpty) {
-          return zoneId.toString().trim();
-        }
-      } catch (_) {}
+    // 1) Try from in‑memory dashboard vendor
+    try {
+      final dashboard = Get.find<DashBoardController>();
+      final vendor = dashboard.vendorModel.value;
+      final zoneId = vendor.zoneId;
+      if (zoneId != null && zoneId.trim().isNotEmpty) {
+        return zoneId.trim();
+      }
+    } catch (_) {
+      // Ignore and fall back to preferences
     }
 
-    // 2. From current user (login API often returns zoneId)
-    final userZone = Constant.userModel?.zoneId?.toString().trim();
-    if (userZone != null && userZone.isNotEmpty) {
-      return userZone;
-    }
-
-    // 3. Fetch vendor by vendorID to get zone from restaurant details
-    final vendorId = Constant.userModel?.vendorID?.toString().trim();
-    if (vendorId != null && vendorId.isNotEmpty) {
-      try {
-        final vendor = await FireStoreUtils.getVendorById(vendorId);
-        final zoneId = vendor?.zoneId?.toString().trim();
-        if (zoneId != null && zoneId.isNotEmpty) {
-          return zoneId;
-        }
-      } catch (_) {}
-    }
-
-    // 4. From preferences (saved at login)
-    return Preferences.getString(Preferences.zoneIdKey, defaultValue: '').trim();
+    // 2) Fallback: previously stored zone id (if any)
+    final prefZoneId =
+        await Preferences.getString(VendorModel.zoneIdPrefKey) ?? '';
+    return prefZoneId.trim();
   }
 
   /// Fetches plans from API. Use for initial load and pull-to-refresh.
-  Future<void> fetchPlans() async {
+  Future<void> fetchPlans({bool forceRefresh = false}) async {
     isLoading.value = true;
     errorMessage.value = '';
 
     final zoneId = await _resolveZoneId();
-    final response = await SubscriptionApiService.getSubscriptionPlans(zoneId: zoneId);
+    if (zoneId.isEmpty) {
+      isLoading.value = false;
+      plans.clear();
+      errorMessage.value = 'Unable to determine your zone. Please try again.';
+      return;
+    }
+
+    final response = await SubscriptionApiService.getSubscriptionPlans(
+      zoneId: zoneId,
+      forceRefresh: forceRefresh,
+    );
 
     isLoading.value = false;
 

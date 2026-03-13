@@ -15,6 +15,8 @@ import 'package:get/get.dart';
 import 'package:jippymart_restaurant/app/splash_screen.dart';
 import 'package:jippymart_restaurant/firebase_options.dart';
 import 'package:jippymart_restaurant/widget/osm_map/map_controller.dart';
+import 'package:jippymart_restaurant/controller/dash_board_controller.dart';
+import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 import 'package:jippymart_restaurant/controller/global_setting_controller.dart';
@@ -187,7 +189,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Notifications are already initialized in main() via notificationService.initInfo()
     // No need to initialize again here to avoid duplicate notifications
     super.initState();
-    Get.put(OSMMapController()); // Add this line
+    Get.put(OSMMapController());
+    // Pre-initialize core dashboard controllers once at app start.
+    Get.put(DashBoardController(), permanent: true);
+    Get.put(ProductListController(), permanent: true);
   }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

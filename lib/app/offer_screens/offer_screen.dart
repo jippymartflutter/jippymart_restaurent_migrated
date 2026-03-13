@@ -56,219 +56,28 @@ class OfferScreen extends StatelessWidget {
                           itemCount: controller.offerList.length,
                           shrinkWrap: true,
                           itemBuilder: (context, index) {
-                            CouponModel couponModel =
-                                controller.offerList[index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 5),
-                              child: Container(
-                                decoration: ShapeDecoration(
-                                  color: themeChange.getThem()
-                                      ? AppThemeData.grey900
-                                      : AppThemeData.grey50,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          NetworkImageWidget(
-                                            imageUrl:
-                                                couponModel.image.toString(),
-                                            height: 72,
-                                            width: 72,
-                                          ),
-                                          const SizedBox(
-                                            width: 20,
-                                          ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                DottedBorder(
-                                                  borderType: BorderType.RRect,
-                                                  radius:
-                                                      const Radius.circular(10),
-                                                  dashPattern: const [
-                                                    6,
-                                                    6,
-                                                    6,
-                                                    6
-                                                  ],
-                                                  color: themeChange.getThem()
-                                                      ? AppThemeData.grey600
-                                                      : AppThemeData.grey300,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: themeChange
-                                                              .getThem()
-                                                          ? AppThemeData.grey800
-                                                          : AppThemeData
-                                                              .grey100,
-                                                      borderRadius:
-                                                          const BorderRadius
-                                                              .all(
-                                                        Radius.circular(10),
-                                                      ),
-                                                    ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 18,
-                                                          vertical: 4),
-                                                      child: Text(
-                                                        "${couponModel.code}"
-                                                            .tr,
-                                                        style: TextStyle(
-                                                            color: themeChange
-                                                                    .getThem()
-                                                                ? AppThemeData
-                                                                    .grey200
-                                                                : AppThemeData
-                                                                    .grey700,
-                                                            fontSize: 18,
-                                                            fontFamily:
-                                                                AppThemeData
-                                                                    .medium),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                Text(
-                                                  (couponModel.discountType ==
-                                                              "Fix Price"
-                                                          ? "${Constant.amountShow(amount: couponModel.discount)} ${"Off".tr}"
-                                                          : "${couponModel.discount} % ${"Off".tr}")
-                                                      .tr,
-                                                  style: TextStyle(
-                                                      color:
-                                                          themeChange.getThem()
-                                                              ? AppThemeData
-                                                                  .secondary300
-                                                              : AppThemeData
-                                                                  .secondary300,
-                                                      fontSize: 14,
-                                                      fontFamily:
-                                                          AppThemeData.medium),
-                                                )
-                                              ],
-                                            ),
-                                          ),
-                                          InkWell(
-                                            onTap: () {
-                                              Get.to(const AddEditOfferScreen(),
-                                                      arguments: {
-                                                    "couponModel": couponModel
-                                                  })!
-                                                  .then(
-                                                (value) {
-                                                  if (value == true) {
-                                                    controller.getOffers();
-                                                  }
-                                                },
-                                              );
-                                            },
-                                            child: Container(
-                                              decoration: ShapeDecoration(
-                                                shape: RoundedRectangleBorder(
-                                                  side: BorderSide(
-                                                      width: 1,
-                                                      color: themeChange
-                                                              .getThem()
-                                                          ? AppThemeData.grey800
-                                                          : AppThemeData
-                                                              .grey100),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          120),
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: SvgPicture.asset(
-                                                    "assets/icons/ic_edit_coupon.svg"),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          InkWell(
-                                            onTap: () async {
-                                              ShowToastDialog.showLoader(
-                                                  "Please wait".tr);
-                                              await FireStoreUtils.deleteCoupon(
-                                                      couponModel)
-                                                  .then(
-                                                (value) {
-                                                  controller.getOffers();
-                                                  ShowToastDialog.closeLoader();
-                                                },
-                                              );
-                                            },
-                                            child: Container(
-                                              decoration: ShapeDecoration(
-                                                shape: RoundedRectangleBorder(
-                                                  side: BorderSide(
-                                                      width: 1,
-                                                      color: themeChange
-                                                              .getThem()
-                                                          ? AppThemeData.grey800
-                                                          : AppThemeData
-                                                              .grey100),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          120),
-                                                ),
-                                              ),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: SvgPicture.asset(
-                                                    "assets/icons/ic_delete-one.svg"),
-                                              ),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10),
-                                        child: MySeparator(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey700
-                                                : AppThemeData.grey200),
-                                      ),
-                                      Text(
-                                        "${"This offer is expire on".tr} ${Constant.timestampToDateTime(couponModel.expiresAt!)}"
-                                            .tr,
-                                        style: TextStyle(
-                                            color: themeChange.getThem()
-                                                ? AppThemeData.grey300
-                                                : AppThemeData.grey600,
-                                            fontSize: 14,
-                                            fontFamily: AppThemeData.medium),
-                                      ),
-                                      const SizedBox(
-                                        height: 5,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                            final couponModel = controller.offerList[index];
+                            return OfferListTile(
+                              themeChange: themeChange,
+                              couponModel: couponModel,
+                              onEdit: () {
+                                Get.to(const AddEditOfferScreen(), arguments: {
+                                  "couponModel": couponModel
+                                })!
+                                    .then((value) {
+                                  if (value == true) {
+                                    controller.getOffers();
+                                  }
+                                });
+                              },
+                              onDelete: () async {
+                                ShowToastDialog.showLoader("Please wait".tr);
+                                await FireStoreUtils.deleteCoupon(couponModel)
+                                    .then((value) {
+                                  controller.getOffers();
+                                  ShowToastDialog.closeLoader();
+                                });
+                              },
                             );
                           },
                         ),
@@ -290,5 +99,168 @@ class OfferScreen extends StatelessWidget {
             ),
           );
         });
+  }
+}
+
+class OfferListTile extends StatelessWidget {
+  const OfferListTile({
+    super.key,
+    required this.themeChange,
+    required this.couponModel,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final DarkThemeProvider themeChange;
+  final CouponModel couponModel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Container(
+        decoration: ShapeDecoration(
+          color:
+              themeChange.getThem() ? AppThemeData.grey900 : AppThemeData.grey50,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  NetworkImageWidget(
+                    imageUrl: couponModel.image.toString(),
+                    height: 72,
+                    width: 72,
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DottedBorder(
+                          borderType: BorderType.RRect,
+                          radius: const Radius.circular(10),
+                          dashPattern: const [6, 6, 6, 6],
+                          color: themeChange.getThem()
+                              ? AppThemeData.grey600
+                              : AppThemeData.grey300,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: themeChange.getThem()
+                                  ? AppThemeData.grey800
+                                  : AppThemeData.grey100,
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(10)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 18, vertical: 4),
+                              child: Text(
+                                "${couponModel.code}".tr,
+                                style: TextStyle(
+                                  color: themeChange.getThem()
+                                      ? AppThemeData.grey200
+                                      : AppThemeData.grey700,
+                                  fontSize: 18,
+                                  fontFamily: AppThemeData.medium,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          (couponModel.discountType == "Fix Price"
+                                  ? "${Constant.amountShow(amount: couponModel.discount)} ${"Off".tr}"
+                                  : "${couponModel.discount} % ${"Off".tr}")
+                              .tr,
+                          style: TextStyle(
+                            color: AppThemeData.secondary300,
+                            fontSize: 14,
+                            fontFamily: AppThemeData.medium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: onEdit,
+                    child: Container(
+                      decoration: ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            width: 1,
+                            color: themeChange.getThem()
+                                ? AppThemeData.grey800
+                                : AppThemeData.grey100,
+                          ),
+                          borderRadius: BorderRadius.circular(120),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SvgPicture.asset(
+                            "assets/icons/ic_edit_coupon.svg"),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  InkWell(
+                    onTap: onDelete,
+                    child: Container(
+                      decoration: ShapeDecoration(
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(
+                            width: 1,
+                            color: themeChange.getThem()
+                                ? AppThemeData.grey800
+                                : AppThemeData.grey100,
+                          ),
+                          borderRadius: BorderRadius.circular(120),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child:
+                            SvgPicture.asset("assets/icons/ic_delete-one.svg"),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: MySeparator(
+                  color: themeChange.getThem()
+                      ? AppThemeData.grey700
+                      : AppThemeData.grey200,
+                ),
+              ),
+              Text(
+                "${"This offer is expire on".tr} ${Constant.timestampToDateTime(couponModel.expiresAt!)}"
+                    .tr,
+                style: TextStyle(
+                  color: themeChange.getThem()
+                      ? AppThemeData.grey300
+                      : AppThemeData.grey600,
+                  fontSize: 14,
+                  fontFamily: AppThemeData.medium,
+                ),
+              ),
+              const SizedBox(height: 5),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

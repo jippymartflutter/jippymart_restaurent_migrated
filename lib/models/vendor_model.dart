@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/models/admin_commission.dart';
 
+/// Restaurant/vendor entity. [isOpen] and [reststatus] drive dashboard open/closed state.
 class VendorModel {
+  /// Preference key used to persist this vendor's zone id.
+  static const String zoneIdPrefKey = 'zone_id';
   String? author;
   bool? dineInActive;
   String? openDineTime;
@@ -100,7 +103,7 @@ class VendorModel {
 
   VendorModel.fromJson(Map<String, dynamic> json) {
     author = json['author'];
-    dineInActive = json['dine_in_active'];
+    dineInActive = _parseToBool(json['dine_in_active']);
     openDineTime = json['openDineTime'];
 
     // Handle categoryID - it might be a string or array
@@ -146,8 +149,8 @@ class VendorModel {
 
     hidephotos = _parseToBool(json['hidephotos']);
 
-    // Handle reststatus - it might be int (1/0) or bool
-    reststatus = _parseToBool(json['reststatus']);
+    // Handle reststatus - it might be int (1/0) or bool; API may use reststatus or rest_status
+    reststatus = _parseToBool(json['reststatus']) ?? _parseToBool(json['rest_status']);
 
     // Handle filters - it might be a string or object
     if (json['filters'] is String) {
@@ -278,8 +281,10 @@ class VendorModel {
     cuisineID = json['cuisineID'];
     cuisineTitle = json['cuisineTitle'];
 
-    // Handle isOpen - it might be int (1/0) or bool
-    isOpen = _parseToBool(json['isOpen']);
+    // Handle isOpen only - int (1/0), bool, or string; API may use isOpen, is_open, or open
+    isOpen = _parseToBool(json['isOpen']) ??
+        _parseToBool(json['is_open']) ??
+        _parseToBool(json['open']);
   }
 
 // Add this helper method to VendorModel class for boolean parsing
@@ -292,6 +297,57 @@ class VendorModel {
       if (value.toLowerCase() == 'false' || value == '0') return false;
     }
     return null;
+  }
+
+  /// Returns a copy with [isOpen] and/or [reststatus] updated; other fields shared.
+  VendorModel copyWith({bool? isOpen, bool? reststatus}) {
+    return VendorModel(
+      author: author,
+      dineInActive: dineInActive,
+      openDineTime: openDineTime,
+      categoryID: categoryID,
+      id: id,
+      categoryPhoto: categoryPhoto,
+      restaurantMenuPhotos: restaurantMenuPhotos,
+      workingHours: workingHours,
+      location: location,
+      fcmToken: fcmToken,
+      g: g,
+      hidephotos: hidephotos,
+      reststatus: reststatus ?? this.reststatus,
+      filters: filters,
+      reviewsCount: reviewsCount,
+      photo: photo,
+      description: description,
+      walletAmount: walletAmount,
+      closeDineTime: closeDineTime,
+      zoneId: zoneId,
+      createdAt: createdAt,
+      longitude: longitude,
+      enabledDiveInFuture: enabledDiveInFuture,
+      restaurantCost: restaurantCost,
+      deliveryCharge: deliveryCharge,
+      adminCommission: adminCommission,
+      authorProfilePic: authorProfilePic,
+      authorName: authorName,
+      phonenumber: phonenumber,
+      specialDiscount: specialDiscount,
+      specialDiscountEnable: specialDiscountEnable,
+      coordinates: coordinates,
+      reviewsSum: reviewsSum,
+      photos: photos,
+      title: title,
+      categoryTitle: categoryTitle,
+      latitude: latitude,
+      subscriptionPlanId: subscriptionPlanId,
+      subscriptionExpiryDate: subscriptionExpiryDate,
+      subscriptionPlan: subscriptionPlan,
+      subscriptionTotalOrders: subscriptionTotalOrders,
+      isSelfDelivery: isSelfDelivery,
+      cuisineID: cuisineID,
+      cuisineTitle: cuisineTitle,
+      isOpen: isOpen ?? this.isOpen,
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -547,14 +603,14 @@ class Filters {
         this.takesReservations});
 
   Filters.fromJson(Map<String, dynamic> json) {
-    goodForLunch = json['Good for Lunch'];
-    outdoorSeating = json['Outdoor Seating'];
-    liveMusic = json['Live Music'];
-    vegetarianFriendly = json['Vegetarian Friendly'];
-    goodForDinner = json['Good for Dinner'];
-    goodForBreakfast = json['Good for Breakfast'];
-    freeWiFi = json['Free Wi-Fi'];
-    takesReservations = json['Takes Reservations'];
+    goodForLunch = json['Good for Lunch']?.toString();
+    outdoorSeating = json['Outdoor Seating']?.toString();
+    liveMusic = json['Live Music']?.toString();
+    vegetarianFriendly = json['Vegetarian Friendly']?.toString();
+    goodForDinner = json['Good for Dinner']?.toString();
+    goodForBreakfast = json['Good for Breakfast']?.toString();
+    freeWiFi = json['Free Wi-Fi']?.toString();
+    takesReservations = json['Takes Reservations']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -587,7 +643,19 @@ class DeliveryCharge {
     minimumDeliveryChargesWithinKm = _parseNum(json['minimum_delivery_charges_within_km']);
     minimumDeliveryCharges = _parseNum(json['minimum_delivery_charges']);
     deliveryChargesPerKm = _parseNum(json['delivery_charges_per_km']);
-    vendorCanModify = json['vendor_can_modify'];
+    vendorCanModify = _parseBool(json['vendor_can_modify']);
+  }
+
+  static bool? _parseBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is int) return value != 0;
+    if (value is String) {
+      final n = value.toLowerCase();
+      if (n == 'true' || n == '1') return true;
+      if (n == 'false' || n == '0') return false;
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {

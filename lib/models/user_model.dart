@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
 
 class UserModel {
+  // Preference key for storing user's zone id.
+  static const String zoneIdPrefKey = 'user_zone_id';
   String? id;
   String? firstName;
   String?firebaseId;

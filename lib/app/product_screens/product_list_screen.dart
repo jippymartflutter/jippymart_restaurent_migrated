@@ -1,3 +1,735 @@
+// // Helper method to build price display
+//
+// import 'package:flutter/cupertino.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_svg/flutter_svg.dart';
+// import 'package:get/get.dart';
+// import 'package:jippymart_restaurant/utils/const/color_const.dart';
+// import 'package:provider/provider.dart';
+// import 'package:jippymart_restaurant/app/add_restaurant_screen/add_restaurant_screen.dart';
+// import 'package:jippymart_restaurant/app/product_screens/add_from_catalog_screen.dart';
+// import 'package:jippymart_restaurant/app/product_screens/add_product_screen.dart';
+// import 'package:jippymart_restaurant/app/verification_screen/verification_screen.dart';
+// import 'package:jippymart_restaurant/constant/constant.dart';
+// import 'package:jippymart_restaurant/controller/product_list_controller.dart';
+// import 'package:jippymart_restaurant/themes/app_them_data.dart';
+// import 'package:jippymart_restaurant/themes/responsive.dart';
+// import 'package:jippymart_restaurant/themes/round_button_fill.dart';
+// import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
+// import 'package:jippymart_restaurant/utils/network_image_widget.dart';
+// import 'package:jippymart_restaurant/config/app_config.dart';
+//
+// import '../../models/product_model.dart';
+//
+// class ProductToggles extends StatelessWidget {
+//   final bool isPublished;
+//   final bool isAvailable;
+//   final ValueChanged<bool> onPublishChanged;
+//   final ValueChanged<bool> onAvailableChanged;
+//
+//   const ProductToggles({
+//     required this.isPublished,
+//     required this.isAvailable,
+//     required this.onPublishChanged,
+//     required this.onAvailableChanged,
+//     Key? key,
+//   }) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final isSmall = MediaQuery.of(context).size.width < 350;
+//     return isSmall
+//         ? Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         _toggleRow('Publish', isPublished, onPublishChanged),
+//         _toggleRow('Available', isAvailable, onAvailableChanged),
+//       ],
+//     )
+//         : Row(
+//       mainAxisAlignment: MainAxisAlignment.center,
+//       children: [
+//         _toggleRow('Publish', isPublished, onPublishChanged),
+//         SizedBox(width: 12),
+//         _toggleRow('Available', isAvailable, onAvailableChanged),
+//       ],
+//     );
+//   }
+//
+//   Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+//     return Row(
+//       mainAxisSize: MainAxisSize.min,
+//       children: [
+//         Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+//         IgnorePointer(
+//           ignoring: false,
+//           child: Transform.scale(
+//             scale: 0.7,
+//             child: CupertinoSwitch(
+//               value: value,
+//               onChanged: onChanged,
+//               activeColor: Color(0xFF229954),
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+//
+// class ProductListScreen extends StatelessWidget {
+//   const ProductListScreen({super.key});
+//
+//   // Helper method for safe double parsing
+//   double _safeParseDouble(String value) {
+//     if (value.isEmpty) return 0.0;
+//     try {
+//       return double.tryParse(value) ?? 0.0;
+//     } catch (e) {
+//       return 0.0;
+//     }
+//   }
+//
+//   // Helper method to build price display
+//   Widget _buildPriceDisplay(String price, String disPrice, DarkThemeProvider themeChange) {
+//     if (AppConfig.enablePerfLogs) {
+//       // Debug prints to see what's happening
+//       // Guarded behind AppConfig to avoid noisy logs in production.
+//       // ignore: avoid_print
+//       print("🔍 Price Display - Raw Price: '$price', Raw DisPrice: '$disPrice'");
+//     }
+//     double parsedPrice = _safeParseDouble(price);
+//     double parsedDisPrice = _safeParseDouble(disPrice);
+//     if (AppConfig.enablePerfLogs) {
+//       // ignore: avoid_print
+//       print("🔍 Price Display - Parsed Price: $parsedPrice, Parsed DisPrice: $parsedDisPrice");
+//     }
+//     // Check if we should show discounted price
+//     bool shouldShowDiscounted = parsedDisPrice > 0 && parsedDisPrice < parsedPrice;
+//     if (!shouldShowDiscounted) {
+//       return Text(
+//         Constant.amountShow(amount: parsedPrice.toString()),
+//         style: TextStyle(
+//           fontSize: 16,
+//           color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+//           fontFamily: AppThemeData.semiBold,
+//           fontWeight: FontWeight.w600,
+//         ),
+//       );
+//     } else {
+//       // Show both discounted price and original price
+//       return Row(
+//         children: [
+//           Text(
+//             Constant.amountShow(amount: parsedDisPrice.toString()),
+//             style: TextStyle(
+//               fontSize: 16,
+//               color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+//               fontFamily: AppThemeData.semiBold,
+//               fontWeight: FontWeight.w600,
+//             ),
+//           ),
+//           const SizedBox(width: 5),
+//           Text(
+//             Constant.amountShow(amount: parsedPrice.toString()),
+//             style: TextStyle(
+//               fontSize: 14,
+//               decoration: TextDecoration.lineThrough,
+//               decorationColor: themeChange.getThem() ? AppThemeData.grey500 : AppThemeData.grey400,
+//               color: themeChange.getThem() ? AppThemeData.grey500 : AppThemeData.grey400,
+//               fontFamily: AppThemeData.semiBold,
+//               fontWeight: FontWeight.w600,
+//             ),
+//           ),
+//         ],
+//       );
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final themeChange = Provider.of<DarkThemeProvider>(context);
+//     return GetX<ProductListController>(
+//         init: ProductListController(),
+//         builder: (controller) {
+//           return Scaffold(
+//             appBar: AppBar(
+//               backgroundColor: ColorConst.orange,
+//               centerTitle: false,
+//               title: Text(
+//                 "Restaurant Inventory".tr,
+//                 style: TextStyle(
+//                     color: themeChange.getThem()
+//                         ? AppThemeData.grey50
+//                         : AppThemeData.grey50,
+//                     fontSize: 18,
+//                     fontFamily: AppThemeData.medium),
+//               ),
+//               actions: [
+//                 (Constant.isRestaurantVerification == true &&
+//                     controller.userModel.value.isDocumentVerify ==
+//                         false) ||
+//                     (controller.userModel.value.vendorID == null ||
+//                         controller.userModel.value.vendorID!.isEmpty)
+//                     ? const SizedBox()
+//                     : Row(
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     InkWell(
+//                       onTap: () {
+//                         Get.to(const AddFromCatalogScreen())!.then(
+//                               (value) {
+//                             if (value == true) {
+//                               controller.getProduct();
+//                             }
+//                           },
+//                         );
+//                       },
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(horizontal: 8),
+//                         // child: Row(
+//                         //   children: [
+//                         //     Icon(Icons.library_add, color: AppThemeData.grey50, size: 20),
+//                         //     const SizedBox(width: 4),
+//                         //     Text("From catalog".tr, style: TextStyle(color: AppThemeData.grey50, fontSize: 14, fontFamily: AppThemeData.medium)),
+//                         //   ],
+//                         // ),
+//                       ),
+//                     ),
+//                     InkWell(
+//                       onTap: () {
+//                         Get.to(const AddProductScreen())!.then(
+//                               (value) {
+//                             if (value == true) {
+//                               controller.getProduct();
+//                             }
+//                           },
+//                         );
+//                       },
+//                       child: Padding(
+//                         padding: const EdgeInsets.symmetric(horizontal: 16),
+//                         child: Row(
+//                           children: [
+//                             Icon(Icons.add, color: AppThemeData.grey50),
+//                             const SizedBox(width: 5),
+//                             Text(
+//                               "Add".tr,
+//                               style: TextStyle(color: AppThemeData.grey50, fontSize: 18, fontFamily: AppThemeData.medium),
+//                             )
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 )
+//               ],
+//             ),
+//             body: controller.isLoading.value
+//                 ? Constant.loader()
+//                 : Constant.isRestaurantVerification == true &&
+//                 controller.userModel.value.isDocumentVerify == false
+//                 ? Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16),
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   Container(
+//                     decoration: ShapeDecoration(
+//                       color: themeChange.getThem()
+//                           ? AppThemeData.grey700
+//                           : AppThemeData.grey200,
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(120),
+//                       ),
+//                     ),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(20),
+//                       child: SvgPicture.asset(
+//                           "assets/icons/ic_document.svg"),
+//                     ),
+//                   ),
+//                   const SizedBox(
+//                     height: 12,
+//                   ),
+//                   Text(
+//                     "Document Verification in Pending".tr,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey100
+//                             : AppThemeData.grey800,
+//                         fontSize: 22,
+//                         fontFamily: AppThemeData.semiBold),
+//                   ),
+//                   const SizedBox(
+//                     height: 5,
+//                   ),
+//                   Text(
+//                     "Your documents are being reviewed. We will notify you once the verification is complete."
+//                         .tr,
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey50
+//                             : AppThemeData.grey500,
+//                         fontSize: 16,
+//                         fontFamily: AppThemeData.bold),
+//                   ),
+//                   const SizedBox(
+//                     height: 20,
+//                   ),
+//                   RoundedButtonFill(
+//                     title: "View Status".tr,
+//                     width: 55,
+//                     height: 5.5,
+//                     color: AppThemeData.secondary300,
+//                     textColor: AppThemeData.grey50,
+//                     onPress: () async {
+//                       Get.to(const VerificationScreen());
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             )
+//                 : controller.userModel.value.vendorID == null ||
+//                 controller.userModel.value.vendorID!.isEmpty
+//                 ? Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16),
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   Container(
+//                     decoration: ShapeDecoration(
+//                       color: themeChange.getThem()
+//                           ? AppThemeData.grey700
+//                           : AppThemeData.grey200,
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(120),
+//                       ),
+//                     ),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(20),
+//                       child: SvgPicture.asset(
+//                           "assets/icons/ic_building_two.svg"),
+//                     ),
+//                   ),
+//                   const SizedBox(
+//                     height: 12,
+//                   ),
+//                   Text(
+//                     "Add Your First Restaurant".tr,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey100
+//                             : AppThemeData.grey800,
+//                         fontSize: 22,
+//                         fontFamily: AppThemeData.semiBold),
+//                   ),
+//                   const SizedBox(
+//                     height: 5,
+//                   ),
+//                   Text(
+//                     "Get started by adding your restaurant details to manage your menu, orders, and reservations."
+//                         .tr,
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey50
+//                             : AppThemeData.grey500,
+//                         fontSize: 16,
+//                         fontFamily: AppThemeData.bold),
+//                   ),
+//                   const SizedBox(
+//                     height: 20,
+//                   ),
+//                   RoundedButtonFill(
+//                     title: "Add Restaurant".tr,
+//                     width: 55,
+//                     height: 5.5,
+//                     color: AppThemeData.secondary300,
+//                     textColor: AppThemeData.grey50,
+//                     onPress: () async {
+//                       final result = await Get.to(const AddRestaurantScreen());
+//                       if (result == true) {
+//                         await controller.getUserProfile();
+//                       }
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             )
+//                 : controller.productList.isEmpty
+//                 ? Padding(
+//               padding:
+//               const EdgeInsets.symmetric(horizontal: 16),
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   Container(
+//                     decoration: ShapeDecoration(
+//                       color: themeChange.getThem()
+//                           ? AppThemeData.grey700
+//                           : AppThemeData.grey200,
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius:
+//                         BorderRadius.circular(120),
+//                       ),
+//                     ),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(20),
+//                       child: SvgPicture.asset(
+//                         "assets/icons/ic_knife_fork.svg",
+//                         colorFilter: ColorFilter.mode(
+//                             themeChange.getThem()
+//                                 ? AppThemeData.grey400
+//                                 : AppThemeData.grey500,
+//                             BlendMode.srcIn),
+//                       ),
+//                     ),
+//                   ),
+//                   const SizedBox(
+//                     height: 12,
+//                   ),
+//                   Text(
+//                     "No Products Available".tr,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey100
+//                             : AppThemeData.grey800,
+//                         fontSize: 22,
+//                         fontFamily: AppThemeData.semiBold),
+//                   ),
+//                   const SizedBox(
+//                     height: 5,
+//                   ),
+//                   Text(
+//                     "Your menu is currently empty. Create your first product to start showcasing your offerings."
+//                         .tr,
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(
+//                         color: themeChange.getThem()
+//                             ? AppThemeData.grey50
+//                             : AppThemeData.grey500,
+//                         fontSize: 16,
+//                         fontFamily: AppThemeData.bold),
+//                   ),
+//                   const SizedBox(
+//                     height: 20,
+//                   ),
+//                   RoundedButtonFill(
+//                     title: "Add Product".tr,
+//                     width: 55,
+//                     height: 5.5,
+//                     color: AppThemeData.secondary300,
+//                     textColor: AppThemeData.grey50,
+//                     onPress: () async {
+//                       Get.to(const AddProductScreen())!
+//                           .then(
+//                             (value) {
+//                           if (value == true) {
+//                             controller.getProduct();
+//                           }
+//                         },
+//                       );
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             )
+//                 : Column(
+//               crossAxisAlignment: CrossAxisAlignment.stretch,
+//               children: [
+//                 SizedBox(
+//                   height: 56,
+//                   child: ListView.builder(
+//                     scrollDirection: Axis.horizontal,
+//                     padding: const EdgeInsets.symmetric(vertical: 6),
+//                     itemCount: controller.categoryList.length + 1,
+//                     itemBuilder: (context, index) {
+//                       final isAll = index == 0;
+//                       final isSelected = isAll
+//                           ? controller.selectedCategory.value == null
+//                           : controller.selectedCategory.value?.id == controller.categoryList[index - 1].id;
+//                       if (isAll) {
+//                         return Padding(
+//                           padding: const EdgeInsets.symmetric(horizontal: 4),
+//                           child: ChoiceChip(
+//                             label: Text('All'),
+//                             selected: isSelected,
+//                             onSelected: (_) {
+//                               controller.selectedCategory.value = null;
+//                             },
+//                             selectedColor: AppThemeData.secondary300,
+//                             backgroundColor: AppThemeData.grey200,
+//                             labelStyle: TextStyle(
+//                               color: isSelected ? Colors.white : AppThemeData.grey900,
+//                               fontWeight: FontWeight.bold,
+//                             ),
+//                           ),
+//                         );
+//                       }
+//                       final category = controller.categoryList[index - 1];
+//                       final isActive = category.isActive ?? true;
+//                       return Padding(
+//                         padding: const EdgeInsets.symmetric(horizontal: 4),
+//                         child: Opacity(
+//                           opacity: isActive ? 1.0 : 0.4,
+//                           child: Row(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: [
+//                               ChoiceChip(
+//                                 label: Text((category.title ?? '').trim().isEmpty ? 'Category' : (category.title ?? '').trim()),
+//                                 selected: isSelected,
+//                                 onSelected: isActive
+//                                     ? (_) {
+//                                   controller.selectedCategory.value = category;
+//                                 }
+//                                     : null,
+//                                 selectedColor: AppThemeData.secondary300,
+//                                 backgroundColor: AppThemeData.grey200,
+//                                 labelStyle: TextStyle(
+//                                   color: isSelected ? Colors.white : AppThemeData.grey900,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                               Switch(
+//                                 value: isActive,
+//                                 onChanged: (_) => controller.toggleCategoryActive(index - 1),
+//                                 activeColor: AppThemeData.secondary300,
+//                                 thumbColor: MaterialStatePropertyAll(Colors.white),
+//                                 trackColor: MaterialStatePropertyAll(Color(0xFFE74C3C)),
+//                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ),
+//                 Expanded(
+//                   child: ListView.builder(
+//                     itemCount: controller.filteredProductList.length,
+//                     itemBuilder: (context, index) {
+//                       final product = controller.filteredProductList[index];
+//                       print("🛒 Product: ${product.name} - Price: ${product.price}, DisPrice: ${product.disPrice}");
+//
+//                       // FIXED: Simplified price extraction logic
+//                       String price = "0.0";
+//                       String disPrice = "0.0";
+//
+//                       // Check if product has variants/attributes
+//                       bool hasVariants = product.itemAttribute != null &&
+//                           product.itemAttribute!.variants != null &&
+//                           product.itemAttribute!.variants!.isNotEmpty;
+//
+//                       if (hasVariants) {
+//                         // Handle products with variants
+//                         List<String> selectedVariants = [];
+//                         if (product.itemAttribute!.attributes != null &&
+//                             product.itemAttribute!.attributes!.isNotEmpty) {
+//                           for (var element in product.itemAttribute!.attributes!) {
+//                             if (element.attributeOptions != null &&
+//                                 element.attributeOptions!.isNotEmpty) {
+//                               selectedVariants.add(element.attributeOptions![0]);
+//                             }
+//                           }
+//                         }
+//
+//                         if (selectedVariants.isNotEmpty) {
+//                           final variantSku = selectedVariants.join('-');
+//                           final matchingVariant = product.itemAttribute!.variants!
+//                               .firstWhere((element) => element.variantSku == variantSku,
+//                               orElse: () => Variants());
+//
+//                           if (matchingVariant.variantPrice != null &&
+//                               matchingVariant.variantPrice!.isNotEmpty) {
+//                             price = matchingVariant.variantPrice!;
+//                             disPrice = '0';
+//                           }
+//                         }
+//                       } else {
+//                         // Use direct product prices - FIXED: Ensure we use actual product prices
+//                         price = product.merchant_price?.toString() ?? "0.0";
+//                         disPrice = product.merchant_price?.toString() ?? "0.0";
+//
+//                         // Debug: Check if we're getting the right prices
+//                         print("💰 Direct prices - Price: $price, DisPrice: $disPrice");
+//                         print("💰 Product price field: ${product.price}, disPrice field: ${product.disPrice}");
+//                       }
+//
+//                       // If price is still 0.0, try to get from product directly as fallback
+//                       if (price == "0.0" || price.isEmpty) {
+//                         price = product.merchant_price?.toString() ?? "0.0";
+//                         disPrice = product.merchant_price?.toString() ?? "0.0";
+//                         print("🔄 Fallback to direct prices - Price: $price, DisPrice: $disPrice");
+//                       }
+//
+//                       return InkWell(
+//                         onTap: product.isAvailable == false
+//                             ? null
+//                             : () {
+//                           Get.to(() => AddProductScreen(product: product))!
+//                               .then(
+//                                 (value) {
+//                               if (value == true) {
+//                                 controller.getProduct();
+//                               }
+//                             },
+//                           );
+//                         },
+//                         child: Padding(
+//                           padding: const EdgeInsets.symmetric(vertical: 5),
+//                           child: Opacity(
+//                             opacity: product.isAvailable == false ? 0.5 : 1.0,
+//                             child: Container(
+//                               decoration: ShapeDecoration(
+//                                 color: product.isAvailable == false
+//                                     ? Colors.grey[300]
+//                                     : themeChange.getThem()
+//                                     ? AppThemeData.grey900
+//                                     : AppThemeData.grey50,
+//                                 shape: RoundedRectangleBorder(
+//                                   borderRadius: BorderRadius.circular(16),
+//                                 ),
+//                               ),
+//                               child: Padding(
+//                                 padding: const EdgeInsets.all(8.0),
+//                                 child: Column(
+//                                   mainAxisSize: MainAxisSize.min,
+//                                   crossAxisAlignment: CrossAxisAlignment.stretch,
+//                                   children: [
+//                                     Row(
+//                                       children: [
+//                                         ClipRRect(
+//                                           borderRadius: const BorderRadius.all(Radius.circular(16)),
+//                                           child: Stack(
+//                                             children: [
+//                                               NetworkImageWidget(
+//                                                 imageUrl: product.photo.toString(),
+//                                                 fit: BoxFit.cover,
+//                                                 height: Responsive.height(12, context),
+//                                                 width: Responsive.width(24, context),
+//                                               ),
+//                                               Container(
+//                                                 height: Responsive.height(12, context),
+//                                                 width: Responsive.width(24, context),
+//                                                 decoration: BoxDecoration(
+//                                                   gradient: LinearGradient(
+//                                                     begin: const Alignment(-0.00, -1.00),
+//                                                     end: const Alignment(0, 1),
+//                                                     colors: [
+//                                                       Colors.black.withOpacity(0),
+//                                                       const Color(0xFF111827)
+//                                                     ],
+//                                                   ),
+//                                                 ),
+//                                               ),
+//                                             ],
+//                                           ),
+//                                         ),
+//                                         const SizedBox(width: 10),
+//                                         Expanded(
+//                                           child: Column(
+//                                             crossAxisAlignment: CrossAxisAlignment.start,
+//                                             children: [
+//                                               Text(
+//                                                 product.name.toString(),
+//                                                 style: TextStyle(
+//                                                   fontSize: 18,
+//                                                   color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+//                                                   fontFamily: AppThemeData.semiBold,
+//                                                   fontWeight: FontWeight.w600,
+//                                                 ),
+//                                               ),
+//                                               // Use the fixed price display method
+//                                               _buildPriceDisplay(price, disPrice, themeChange),
+//                                               Row(
+//                                                 children: [
+//                                                   SvgPicture.asset(
+//                                                     "assets/icons/ic_star.svg",
+//                                                     colorFilter: const ColorFilter.mode(AppThemeData.warning300, BlendMode.srcIn),
+//                                                   ),
+//                                                   const SizedBox(width: 5),
+//                                                   Text(
+//                                                     "${Constant.calculateReview(reviewCount: product.reviewsCount!.toStringAsFixed(0), reviewSum: product.reviewsSum.toString())} (${product.reviewsCount!.toStringAsFixed(0)})",
+//                                                     style: TextStyle(
+//                                                       color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+//                                                       fontFamily: AppThemeData.regular,
+//                                                       fontWeight: FontWeight.w500,
+//                                                     ),
+//                                                   ),
+//                                                 ],
+//                                               ),
+//                                               Text(
+//                                                 product.description.toString(),
+//                                                 maxLines: 1,
+//                                                 style: TextStyle(
+//                                                   fontSize: 12,
+//                                                   color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+//                                                   fontFamily: AppThemeData.regular,
+//                                                 ),
+//                                               ),
+//                                             ],
+//                                           ),
+//                                         ),
+//                                         IconButton(
+//                                           icon: Icon(Icons.delete, color: Color(0xFFC0392B)),
+//                                           onPressed: () {
+//                                             showDialog(
+//                                               context: context,
+//                                               builder: (context) => AlertDialog(
+//                                                 title: Text('Delete Product?'),
+//                                                 content: Text('Are you sure you want to delete this product?'),
+//                                                 actions: [
+//                                                   TextButton(
+//                                                     onPressed: () => Navigator.of(context).pop(),
+//                                                     child: Text('Cancel'),
+//                                                   ),
+//                                                   TextButton(
+//                                                     onPressed: () {
+//                                                       Navigator.of(context).pop();
+//                                                       controller.deleteProduct(index);
+//                                                     },
+//                                                     child: Text('Delete', style: TextStyle(color: Color(0xFFC0392B))),
+//                                                   ),
+//                                                 ],
+//                                               ),
+//                                             );
+//                                           },
+//                                         ),
+//                                       ],
+//                                     ),
+//                                     const SizedBox(height: 10),
+//                                     ProductToggles(
+//                                       isPublished: product.publish ?? false,
+//                                       isAvailable: product.isAvailable ?? true,
+//                                       onPublishChanged: (val) => controller.updateList(product.id!, product.publish!),
+//                                       onAvailableChanged: (val) => controller.updateAvailableStatus(product.id!, product.isAvailable ?? true),
+//                                     ),
+//                                     // App Store: Subscription limitations removed - app is 100% free
+//                                   ],
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         });
+//   }
+// }
+
+
+
+
 // Helper method to build price display
 
 import 'package:flutter/cupertino.dart';
@@ -17,58 +749,60 @@ import 'package:jippymart_restaurant/themes/responsive.dart';
 import 'package:jippymart_restaurant/themes/round_button_fill.dart';
 import 'package:jippymart_restaurant/utils/dark_theme_provider.dart';
 import 'package:jippymart_restaurant/utils/network_image_widget.dart';
+import 'package:jippymart_restaurant/config/app_config.dart';
 
 import '../../models/product_model.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ProductToggles — identical look, removed redundant IgnorePointer wrapper
+// ─────────────────────────────────────────────────────────────────────────────
 class ProductToggles extends StatelessWidget {
-  final bool isPublished;
-  final bool isAvailable;
-  final ValueChanged<bool> onPublishChanged;
-  final ValueChanged<bool> onAvailableChanged;
-
   const ProductToggles({
     required this.isPublished,
     required this.isAvailable,
     required this.onPublishChanged,
     required this.onAvailableChanged,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
+
+  final bool isPublished;
+  final bool isAvailable;
+  final ValueChanged<bool> onPublishChanged;
+  final ValueChanged<bool> onAvailableChanged;
 
   @override
   Widget build(BuildContext context) {
     final isSmall = MediaQuery.of(context).size.width < 350;
+    final publish = _toggleRow('Publish', isPublished, onPublishChanged);
+    final available = _toggleRow('Available', isAvailable, onAvailableChanged);
+
     return isSmall
         ? Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _toggleRow('Publish', isPublished, onPublishChanged),
-        _toggleRow('Available', isAvailable, onAvailableChanged),
-      ],
+      children: [publish, available],
     )
         : Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _toggleRow('Publish', isPublished, onPublishChanged),
-        SizedBox(width: 12),
-        _toggleRow('Available', isAvailable, onAvailableChanged),
-      ],
+      children: [publish, const SizedBox(width: 12), available],
     );
   }
 
-  Widget _toggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _toggleRow(
+      String label, bool value, ValueChanged<bool> onChanged) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        IgnorePointer(
-          ignoring: false,
-          child: Transform.scale(
-            scale: 0.7,
-            child: CupertinoSwitch(
-              value: value,
-              onChanged: onChanged,
-              activeColor: Color(0xFF229954),
-            ),
+        Text(
+          label,
+          style: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        Transform.scale(
+          scale: 0.7,
+          child: CupertinoSwitch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF229954),
           ),
         ),
       ],
@@ -76,645 +810,701 @@ class ProductToggles extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ProductListScreen
+// ─────────────────────────────────────────────────────────────────────────────
 class ProductListScreen extends StatelessWidget {
   const ProductListScreen({super.key});
 
-  // Helper method for safe double parsing
-  double _safeParseDouble(String value) {
-    if (value.isEmpty) return 0.0;
-    try {
-      return double.tryParse(value) ?? 0.0;
-    } catch (e) {
-      return 0.0;
+  // ── Price helpers ──────────────────────────────────────────────────────────
+
+  /// Safely parses a string to double; returns 0.0 on any failure.
+  static double _safeParseDouble(String? value) =>
+      double.tryParse(value?.trim() ?? '') ?? 0.0;
+
+  /// Resolves the display price pair (price, disPrice) for a product.
+  static (String, String) _resolvePrices(ProductModel product) {
+    final variants = product.itemAttribute?.variants;
+    final hasVariants = variants?.isNotEmpty == true;
+
+    if (hasVariants) {
+      final keys = (product.itemAttribute!.attributes ?? [])
+          .map((a) => a.attributeOptions?.isNotEmpty == true
+          ? a.attributeOptions![0]
+          : null)
+          .whereType<String>()
+          .toList();
+
+      if (keys.isNotEmpty) {
+        final sku = keys.join('-');
+        final match = variants!.firstWhere(
+              (v) => v.variantSku == sku,
+          orElse: Variants.new,
+        );
+        if (match.variantPrice?.isNotEmpty == true) {
+          return (match.variantPrice!, '0');
+        }
+      }
     }
+
+    // Direct price fallback
+    final p = product.merchant_price?.toString() ?? '0.0';
+    return (p, p);
   }
 
-  // Helper method to build price display
-  Widget _buildPriceDisplay(String price, String disPrice, DarkThemeProvider themeChange) {
-    // Debug prints to see what's happening
-    print("🔍 Price Display - Raw Price: '$price', Raw DisPrice: '$disPrice'");
-    double parsedPrice = _safeParseDouble(price);
-    double parsedDisPrice = _safeParseDouble(disPrice);
-    print("🔍 Price Display - Parsed Price: $parsedPrice, Parsed DisPrice: $parsedDisPrice");
-    // Check if we should show discounted price
-    bool shouldShowDiscounted = parsedDisPrice > 0 && parsedDisPrice < parsedPrice;
+  Widget _buildPriceDisplay(
+      String price, String disPrice, DarkThemeProvider themeChange) {
+    if (AppConfig.enablePerfLogs) {
+      // ignore: avoid_print
+      print("🔍 Price: '$price'  DisPrice: '$disPrice'");
+    }
+
+    final parsedPrice = _safeParseDouble(price);
+    final parsedDisPrice = _safeParseDouble(disPrice);
+    final isDark = themeChange.getThem();
+    final shouldShowDiscounted =
+        parsedDisPrice > 0 && parsedDisPrice < parsedPrice;
+
     if (!shouldShowDiscounted) {
       return Text(
         Constant.amountShow(amount: parsedPrice.toString()),
         style: TextStyle(
           fontSize: 16,
-          color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
+          color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
           fontFamily: AppThemeData.semiBold,
           fontWeight: FontWeight.w600,
         ),
       );
-    } else {
-      // Show both discounted price and original price
-      return Row(
-        children: [
-          Text(
-            Constant.amountShow(amount: parsedDisPrice.toString()),
-            style: TextStyle(
-              fontSize: 16,
-              color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-              fontFamily: AppThemeData.semiBold,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            Constant.amountShow(amount: parsedPrice.toString()),
-            style: TextStyle(
-              fontSize: 14,
-              decoration: TextDecoration.lineThrough,
-              decorationColor: themeChange.getThem() ? AppThemeData.grey500 : AppThemeData.grey400,
-              color: themeChange.getThem() ? AppThemeData.grey500 : AppThemeData.grey400,
-              fontFamily: AppThemeData.semiBold,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      );
     }
+
+    return Row(
+      children: [
+        Text(
+          Constant.amountShow(amount: parsedDisPrice.toString()),
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+            fontFamily: AppThemeData.semiBold,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          Constant.amountShow(amount: parsedPrice.toString()),
+          style: TextStyle(
+            fontSize: 14,
+            decoration: TextDecoration.lineThrough,
+            decorationColor:
+            isDark ? AppThemeData.grey500 : AppThemeData.grey400,
+            color: isDark ? AppThemeData.grey500 : AppThemeData.grey400,
+            fontFamily: AppThemeData.semiBold,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── AppBar action visibility ───────────────────────────────────────────────
+  static bool _canShowActions(ProductListController c) {
+    final pendingVerify = Constant.isRestaurantVerification == true &&
+        c.userModel.value.isDocumentVerify == false;
+    final noVendor =
+        c.userModel.value.vendorID?.isEmpty != false;
+    return !pendingVerify && !noVendor;
   }
 
   @override
   Widget build(BuildContext context) {
     final themeChange = Provider.of<DarkThemeProvider>(context);
+
     return GetX<ProductListController>(
-        init: ProductListController(),
-        builder: (controller) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: ColorConst.orange,
-              centerTitle: false,
-              title: Text(
-                "Restaurant Inventory".tr,
-                style: TextStyle(
-                    color: themeChange.getThem()
-                        ? AppThemeData.grey50
-                        : AppThemeData.grey50,
-                    fontSize: 18,
-                    fontFamily: AppThemeData.medium),
-              ),
-              actions: [
-                (Constant.isRestaurantVerification == true &&
-                    controller.userModel.value.isDocumentVerify ==
-                        false) ||
-                    (controller.userModel.value.vendorID == null ||
-                        controller.userModel.value.vendorID!.isEmpty)
-                    ? const SizedBox()
-                    : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        Get.to(const AddFromCatalogScreen())!.then(
-                              (value) {
-                            if (value == true) {
-                              controller.getProduct();
-                            }
-                          },
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        // child: Row(
-                        //   children: [
-                        //     Icon(Icons.library_add, color: AppThemeData.grey50, size: 20),
-                        //     const SizedBox(width: 4),
-                        //     Text("From catalog".tr, style: TextStyle(color: AppThemeData.grey50, fontSize: 14, fontFamily: AppThemeData.medium)),
-                        //   ],
-                        // ),
+      init: ProductListController(),
+      builder: (controller) => Scaffold(
+        appBar: AppBar(
+          backgroundColor: ColorConst.orange,
+          centerTitle: false,
+          title: Text(
+            'Restaurant Inventory'.tr,
+            style: const TextStyle(
+              color: AppThemeData.grey50,
+              fontSize: 18,
+              fontFamily: AppThemeData.medium,
+            ),
+          ),
+          actions: [
+            if (_canShowActions(controller))
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // From catalog (tap target preserved, content commented out as original)
+                  InkWell(
+                    onTap: () => Get.to(const AddFromCatalogScreen())
+                        ?.then((v) {
+                      if (v == true) controller.getProduct();
+                    }),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      // Intentionally empty — matches original commented-out UI
+                    ),
+                  ),
+                  // Add product
+                  InkWell(
+                    onTap: () => Get.to(const AddProductScreen())
+                        ?.then((v) {
+                      if (v == true) controller.getProduct();
+                    }),
+                    child: Padding(
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.add,
+                              color: AppThemeData.grey50),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Add'.tr,
+                            style: const TextStyle(
+                              color: AppThemeData.grey50,
+                              fontSize: 18,
+                              fontFamily: AppThemeData.medium,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    InkWell(
-                      onTap: () {
-                        Get.to(const AddProductScreen())!.then(
-                              (value) {
-                            if (value == true) {
-                              controller.getProduct();
-                            }
-                          },
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
+                  ),
+                ],
+              ),
+          ],
+        ),
+        body: controller.isLoading.value
+            ? Constant.loader()
+            : _buildBody(context, themeChange, controller),
+      ),
+    );
+  }
+
+  // ── Body ───────────────────────────────────────────────────────────────────
+  Widget _buildBody(
+      BuildContext context,
+      DarkThemeProvider themeChange,
+      ProductListController controller,
+      ) {
+    // Document verification pending
+    if (Constant.isRestaurantVerification == true &&
+        controller.userModel.value.isDocumentVerify == false) {
+      return _EmptyState(
+        svgAsset: 'assets/icons/ic_document.svg',
+        title: 'Document Verification in Pending'.tr,
+        subtitle:
+        'Your documents are being reviewed. We will notify you once the verification is complete.'
+            .tr,
+        buttonLabel: 'View Status'.tr,
+        onTap: () => Get.to(const VerificationScreen()),
+        themeChange: themeChange,
+      );
+    }
+
+    // No restaurant linked
+    if (controller.userModel.value.vendorID?.isEmpty != false) {
+      return _EmptyState(
+        svgAsset: 'assets/icons/ic_building_two.svg',
+        title: 'Add Your First Restaurant'.tr,
+        subtitle:
+        'Get started by adding your restaurant details to manage your menu, orders, and reservations.'
+            .tr,
+        buttonLabel: 'Add Restaurant'.tr,
+        onTap: () async {
+          final result = await Get.to(const AddRestaurantScreen());
+          if (result == true) await controller.getUserProfile();
+        },
+        themeChange: themeChange,
+      );
+    }
+
+    // No products
+    if (controller.productList.isEmpty) {
+      return _EmptyState(
+        svgAsset: 'assets/icons/ic_knife_fork.svg',
+        svgColorFilter: ColorFilter.mode(
+          themeChange.getThem()
+              ? AppThemeData.grey400
+              : AppThemeData.grey500,
+          BlendMode.srcIn,
+        ),
+        title: 'No Products Available'.tr,
+        subtitle:
+        'Your menu is currently empty. Create your first product to start showcasing your offerings.'
+            .tr,
+        buttonLabel: 'Add Product'.tr,
+        onTap: () => Get.to(const AddProductScreen())
+            ?.then((v) {
+          if (v == true) controller.getProduct();
+        }),
+        themeChange: themeChange,
+      );
+    }
+
+    // Product list
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Category filter row ─────────────────────────────────────────
+        SizedBox(
+          height: 56,
+          child: Obx(() => ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            itemCount: controller.categoryList.length + 1,
+            itemBuilder: (_, index) {
+              if (index == 0) {
+                final isSelected =
+                    controller.selectedCategory.value == null;
+                return Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    label: Text('All'.tr),
+                    selected: isSelected,
+                    onSelected: (_) =>
+                    controller.selectedCategory.value = null,
+                    selectedColor: AppThemeData.secondary300,
+                    backgroundColor: AppThemeData.grey200,
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? Colors.white
+                          : AppThemeData.grey900,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }
+
+              final category =
+              controller.categoryList[index - 1];
+              final isSelected =
+                  controller.selectedCategory.value?.id ==
+                      category.id;
+              final isActive = category.isActive ?? true;
+
+              return Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 4),
+                child: Opacity(
+                  opacity: isActive ? 1.0 : 0.4,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ChoiceChip(
+                        label: Text(
+                          (category.title ?? '').trim().isEmpty
+                              ? 'Category'
+                              : category.title!.trim(),
+                        ),
+                        selected: isSelected,
+                        onSelected: isActive
+                            ? (_) => controller
+                            .selectedCategory.value = category
+                            : null,
+                        selectedColor: AppThemeData.secondary300,
+                        backgroundColor: AppThemeData.grey200,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : AppThemeData.grey900,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Switch(
+                        value: isActive,
+                        onChanged: (_) =>
+                            controller.toggleCategoryActive(
+                                index - 1),
+                        activeColor: AppThemeData.secondary300,
+                        thumbColor:
+                        const MaterialStatePropertyAll(
+                            Colors.white),
+                        trackColor: const MaterialStatePropertyAll(
+                            Color(0xFFE74C3C)),
+                        materialTapTargetSize:
+                        MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          )),
+        ),
+
+        // ── Product list ────────────────────────────────────────────────
+        Expanded(
+          child: Obx(() => ListView.builder(
+            itemCount: controller.filteredProductList.length,
+            itemBuilder: (_, index) {
+              final product =
+              controller.filteredProductList[index];
+              final (price, disPrice) = _resolvePrices(product);
+
+              if (AppConfig.enablePerfLogs) {
+                // ignore: avoid_print
+                print(
+                    '🛒 ${product.name} price=$price dis=$disPrice');
+              }
+
+              return _ProductCard(
+                product: product,
+                index: index,
+                controller: controller,
+                themeChange: themeChange,
+                priceWidget:
+                _buildPriceDisplay(price, disPrice, themeChange),
+                context: context,
+              );
+            },
+          )),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _ProductCard — extracted from itemBuilder; identical visual output
+// ─────────────────────────────────────────────────────────────────────────────
+class _ProductCard extends StatelessWidget {
+  const _ProductCard({
+    required this.product,
+    required this.index,
+    required this.controller,
+    required this.themeChange,
+    required this.priceWidget,
+    required this.context,
+  });
+
+  final ProductModel product;
+  final int index;
+  final ProductListController controller;
+  final DarkThemeProvider themeChange;
+  final Widget priceWidget;
+  final BuildContext context;
+
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Product?'),
+        content: const Text(
+            'Are you sure you want to delete this product?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              controller.deleteProduct(index);
+            },
+            child: const Text('Delete',
+                style: TextStyle(color: Color(0xFFC0392B))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext _) {
+    final isDark = themeChange.getThem();
+    final isAvailable = product.isAvailable != false;
+
+    return InkWell(
+      onTap: !isAvailable
+          ? null
+          : () => Get.to(() => AddProductScreen(product: product))
+          ?.then((v) {
+        if (v == true) controller.getProduct();
+      }),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Opacity(
+          opacity: isAvailable ? 1.0 : 0.5,
+          child: Container(
+            decoration: ShapeDecoration(
+              color: !isAvailable
+                  ? Colors.grey[300]
+                  : isDark
+                  ? AppThemeData.grey900
+                  : AppThemeData.grey50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      // Product image
+                      _ProductImage(
+                        imageUrl: product.photo,
+                        height: Responsive.height(12, context),
+                        width: Responsive.width(24, context),
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 10),
+
+                      // Info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.add, color: AppThemeData.grey50),
-                            const SizedBox(width: 5),
                             Text(
-                              "Add".tr,
-                              style: TextStyle(color: AppThemeData.grey50, fontSize: 18, fontFamily: AppThemeData.medium),
-                            )
+                              product.name.toString(),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: isDark
+                                    ? AppThemeData.grey50
+                                    : AppThemeData.grey900,
+                                fontFamily: AppThemeData.semiBold,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            priceWidget,
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/ic_star.svg',
+                                  colorFilter: const ColorFilter.mode(
+                                      AppThemeData.warning300,
+                                      BlendMode.srcIn),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '${Constant.calculateReview(reviewCount: (product.reviewsCount ?? 0).toStringAsFixed(0), reviewSum: (product.reviewsSum ?? 0).toString())} (${(product.reviewsCount ?? 0).toStringAsFixed(0)})',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? AppThemeData.grey50
+                                        : AppThemeData.grey900,
+                                    fontFamily: AppThemeData.regular,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              product.description.toString(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? AppThemeData.grey50
+                                    : AppThemeData.grey900,
+                                fontFamily: AppThemeData.regular,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ),
+
+                      // Delete
+                      IconButton(
+                        icon: const Icon(Icons.delete,
+                            color: Color(0xFFC0392B)),
+                        onPressed: _confirmDelete,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ProductToggles(
+                    isPublished: product.publish ?? false,
+                    isAvailable: product.isAvailable ?? true,
+                    onPublishChanged: (_) => controller.updateList(
+                        product.id!, product.publish ?? false),
+                    onAvailableChanged: (_) =>
+                        controller.updateAvailableStatus(
+                            product.id!, product.isAvailable ?? true),
+                  ),
+                  // App Store: Subscription limitations removed - app is 100% free
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _ProductImage — network image with gradient overlay + placeholder fallback
+// ─────────────────────────────────────────────────────────────────────────────
+class _ProductImage extends StatelessWidget {
+  const _ProductImage({
+    required this.imageUrl,
+    required this.height,
+    required this.width,
+    required this.isDark,
+  });
+
+  final String? imageUrl;
+  final double height;
+  final double width;
+  final bool isDark;
+
+  bool get _hasImage {
+    final url = imageUrl?.trim() ?? '';
+    return url.isNotEmpty && url != 'null';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: const BorderRadius.all(Radius.circular(16)),
+      child: SizedBox(
+        height: height,
+        width: width,
+        child: _hasImage
+            ? Stack(
+          fit: StackFit.expand,
+          children: [
+            NetworkImageWidget(
+              imageUrl: imageUrl!,
+              fit: BoxFit.cover,
+              height: height,
+              width: width,
+            ),
+            // Gradient overlay (same as original)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: const Alignment(0, -1),
+                  end: const Alignment(0, 1),
+                  colors: [
+                    Colors.black.withOpacity(0),
+                    const Color(0xFF111827),
                   ],
-                )
-              ],
-            ),
-            body: controller.isLoading.value
-                ? Constant.loader()
-                : Constant.isRestaurantVerification == true &&
-                controller.userModel.value.isDocumentVerify == false
-                ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: ShapeDecoration(
-                      color: themeChange.getThem()
-                          ? AppThemeData.grey700
-                          : AppThemeData.grey200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(120),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: SvgPicture.asset(
-                          "assets/icons/ic_document.svg"),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Text(
-                    "Document Verification in Pending".tr,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey100
-                            : AppThemeData.grey800,
-                        fontSize: 22,
-                        fontFamily: AppThemeData.semiBold),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Text(
-                    "Your documents are being reviewed. We will notify you once the verification is complete."
-                        .tr,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey50
-                            : AppThemeData.grey500,
-                        fontSize: 16,
-                        fontFamily: AppThemeData.bold),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  RoundedButtonFill(
-                    title: "View Status".tr,
-                    width: 55,
-                    height: 5.5,
-                    color: AppThemeData.secondary300,
-                    textColor: AppThemeData.grey50,
-                    onPress: () async {
-                      Get.to(const VerificationScreen());
-                    },
-                  ),
-                ],
-              ),
-            )
-                : controller.userModel.value.vendorID == null ||
-                controller.userModel.value.vendorID!.isEmpty
-                ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: ShapeDecoration(
-                      color: themeChange.getThem()
-                          ? AppThemeData.grey700
-                          : AppThemeData.grey200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(120),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: SvgPicture.asset(
-                          "assets/icons/ic_building_two.svg"),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Text(
-                    "Add Your First Restaurant".tr,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey100
-                            : AppThemeData.grey800,
-                        fontSize: 22,
-                        fontFamily: AppThemeData.semiBold),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Text(
-                    "Get started by adding your restaurant details to manage your menu, orders, and reservations."
-                        .tr,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey50
-                            : AppThemeData.grey500,
-                        fontSize: 16,
-                        fontFamily: AppThemeData.bold),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  RoundedButtonFill(
-                    title: "Add Restaurant".tr,
-                    width: 55,
-                    height: 5.5,
-                    color: AppThemeData.secondary300,
-                    textColor: AppThemeData.grey50,
-                    onPress: () async {
-                      final result = await Get.to(const AddRestaurantScreen());
-                      if (result == true) {
-                        await controller.getUserProfile();
-                      }
-                    },
-                  ),
-                ],
-              ),
-            )
-                : controller.productList.isEmpty
-                ? Padding(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: ShapeDecoration(
-                      color: themeChange.getThem()
-                          ? AppThemeData.grey700
-                          : AppThemeData.grey200,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                        BorderRadius.circular(120),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: SvgPicture.asset(
-                        "assets/icons/ic_knife_fork.svg",
-                        colorFilter: ColorFilter.mode(
-                            themeChange.getThem()
-                                ? AppThemeData.grey400
-                                : AppThemeData.grey500,
-                            BlendMode.srcIn),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Text(
-                    "No Products Available".tr,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey100
-                            : AppThemeData.grey800,
-                        fontSize: 22,
-                        fontFamily: AppThemeData.semiBold),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  Text(
-                    "Your menu is currently empty. Create your first product to start showcasing your offerings."
-                        .tr,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: themeChange.getThem()
-                            ? AppThemeData.grey50
-                            : AppThemeData.grey500,
-                        fontSize: 16,
-                        fontFamily: AppThemeData.bold),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  RoundedButtonFill(
-                    title: "Add Product".tr,
-                    width: 55,
-                    height: 5.5,
-                    color: AppThemeData.secondary300,
-                    textColor: AppThemeData.grey50,
-                    onPress: () async {
-                      Get.to(const AddProductScreen())!
-                          .then(
-                            (value) {
-                          if (value == true) {
-                            controller.getProduct();
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            )
-                : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 56,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    itemCount: controller.categoryList.length + 1,
-                    itemBuilder: (context, index) {
-                      final isAll = index == 0;
-                      final isSelected = isAll
-                          ? controller.selectedCategory.value == null
-                          : controller.selectedCategory.value?.id == controller.categoryList[index - 1].id;
-                      if (isAll) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text('All'),
-                            selected: isSelected,
-                            onSelected: (_) {
-                              controller.selectedCategory.value = null;
-                            },
-                            selectedColor: AppThemeData.secondary300,
-                            backgroundColor: AppThemeData.grey200,
-                            labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : AppThemeData.grey900,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        );
-                      }
-                      final category = controller.categoryList[index - 1];
-                      final isActive = category.isActive ?? true;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Opacity(
-                          opacity: isActive ? 1.0 : 0.4,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ChoiceChip(
-                                label: Text((category.title ?? '').trim().isEmpty ? 'Category' : (category.title ?? '').trim()),
-                                selected: isSelected,
-                                onSelected: isActive
-                                    ? (_) {
-                                  controller.selectedCategory.value = category;
-                                }
-                                    : null,
-                                selectedColor: AppThemeData.secondary300,
-                                backgroundColor: AppThemeData.grey200,
-                                labelStyle: TextStyle(
-                                  color: isSelected ? Colors.white : AppThemeData.grey900,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Switch(
-                                value: isActive,
-                                onChanged: (_) => controller.toggleCategoryActive(index - 1),
-                                activeColor: AppThemeData.secondary300,
-                                thumbColor: MaterialStatePropertyAll(Colors.white),
-                                trackColor: MaterialStatePropertyAll(Color(0xFFE74C3C)),
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: controller.filteredProductList.length,
-                    itemBuilder: (context, index) {
-                      final product = controller.filteredProductList[index];
-                      print("🛒 Product: ${product.name} - Price: ${product.price}, DisPrice: ${product.disPrice}");
-
-                      // FIXED: Simplified price extraction logic
-                      String price = "0.0";
-                      String disPrice = "0.0";
-
-                      // Check if product has variants/attributes
-                      bool hasVariants = product.itemAttribute != null &&
-                          product.itemAttribute!.variants != null &&
-                          product.itemAttribute!.variants!.isNotEmpty;
-
-                      if (hasVariants) {
-                        // Handle products with variants
-                        List<String> selectedVariants = [];
-                        if (product.itemAttribute!.attributes != null &&
-                            product.itemAttribute!.attributes!.isNotEmpty) {
-                          for (var element in product.itemAttribute!.attributes!) {
-                            if (element.attributeOptions != null &&
-                                element.attributeOptions!.isNotEmpty) {
-                              selectedVariants.add(element.attributeOptions![0]);
-                            }
-                          }
-                        }
-
-                        if (selectedVariants.isNotEmpty) {
-                          final variantSku = selectedVariants.join('-');
-                          final matchingVariant = product.itemAttribute!.variants!
-                              .firstWhere((element) => element.variantSku == variantSku,
-                              orElse: () => Variants());
-
-                          if (matchingVariant.variantPrice != null &&
-                              matchingVariant.variantPrice!.isNotEmpty) {
-                            price = matchingVariant.variantPrice!;
-                            disPrice = '0';
-                          }
-                        }
-                      } else {
-                        // Use direct product prices - FIXED: Ensure we use actual product prices
-                        price = product.merchant_price?.toString() ?? "0.0";
-                        disPrice = product.merchant_price?.toString() ?? "0.0";
-
-                        // Debug: Check if we're getting the right prices
-                        print("💰 Direct prices - Price: $price, DisPrice: $disPrice");
-                        print("💰 Product price field: ${product.price}, disPrice field: ${product.disPrice}");
-                      }
-
-                      // If price is still 0.0, try to get from product directly as fallback
-                      if (price == "0.0" || price.isEmpty) {
-                        price = product.merchant_price?.toString() ?? "0.0";
-                        disPrice = product.merchant_price?.toString() ?? "0.0";
-                        print("🔄 Fallback to direct prices - Price: $price, DisPrice: $disPrice");
-                      }
-
-                      return InkWell(
-                        onTap: product.isAvailable == false
-                            ? null
-                            : () {
-                          Get.to(() => AddProductScreen(product: product))!
-                              .then(
-                                (value) {
-                              if (value == true) {
-                                controller.getProduct();
-                              }
-                            },
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: Opacity(
-                            opacity: product.isAvailable == false ? 0.5 : 1.0,
-                            child: Container(
-                              decoration: ShapeDecoration(
-                                color: product.isAvailable == false
-                                    ? Colors.grey[300]
-                                    : themeChange.getThem()
-                                    ? AppThemeData.grey900
-                                    : AppThemeData.grey50,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: const BorderRadius.all(Radius.circular(16)),
-                                          child: Stack(
-                                            children: [
-                                              NetworkImageWidget(
-                                                imageUrl: product.photo.toString(),
-                                                fit: BoxFit.cover,
-                                                height: Responsive.height(12, context),
-                                                width: Responsive.width(24, context),
-                                              ),
-                                              Container(
-                                                height: Responsive.height(12, context),
-                                                width: Responsive.width(24, context),
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: const Alignment(-0.00, -1.00),
-                                                    end: const Alignment(0, 1),
-                                                    colors: [
-                                                      Colors.black.withOpacity(0),
-                                                      const Color(0xFF111827)
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                product.name.toString(),
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                                  fontFamily: AppThemeData.semiBold,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              // Use the fixed price display method
-                                              _buildPriceDisplay(price, disPrice, themeChange),
-                                              Row(
-                                                children: [
-                                                  SvgPicture.asset(
-                                                    "assets/icons/ic_star.svg",
-                                                    colorFilter: const ColorFilter.mode(AppThemeData.warning300, BlendMode.srcIn),
-                                                  ),
-                                                  const SizedBox(width: 5),
-                                                  Text(
-                                                    "${Constant.calculateReview(reviewCount: product.reviewsCount!.toStringAsFixed(0), reviewSum: product.reviewsSum.toString())} (${product.reviewsCount!.toStringAsFixed(0)})",
-                                                    style: TextStyle(
-                                                      color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                                      fontFamily: AppThemeData.regular,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Text(
-                                                product.description.toString(),
-                                                maxLines: 1,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: themeChange.getThem() ? AppThemeData.grey50 : AppThemeData.grey900,
-                                                  fontFamily: AppThemeData.regular,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(Icons.delete, color: Color(0xFFC0392B)),
-                                          onPressed: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) => AlertDialog(
-                                                title: Text('Delete Product?'),
-                                                content: Text('Are you sure you want to delete this product?'),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () => Navigator.of(context).pop(),
-                                                    child: Text('Cancel'),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      Navigator.of(context).pop();
-                                                      controller.deleteProduct(index);
-                                                    },
-                                                    child: Text('Delete', style: TextStyle(color: Color(0xFFC0392B))),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    ProductToggles(
-                                      isPublished: product.publish ?? false,
-                                      isAvailable: product.isAvailable ?? true,
-                                      onPublishChanged: (val) => controller.updateList(product.id!, product.publish!),
-                                      onAvailableChanged: (val) => controller.updateAvailableStatus(product.id!, product.isAvailable ?? true),
-                                    ),
-                                    // App Store: Subscription limitations removed - app is 100% free
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        });
+          ],
+        )
+            : _Placeholder(isDark: isDark),
+      ),
+    );
+  }
+}
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: isDark ? AppThemeData.grey700 : AppThemeData.grey200,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.fastfood_rounded,
+            size: 32,
+            color: isDark ? AppThemeData.grey500 : AppThemeData.grey400,
+          ),
+          const SizedBox(height: 4),
+          // Text(
+          //   'No Image',
+          //   style: TextStyle(
+          //     fontSize: 10,
+          //     fontFamily: AppThemeData.regular,
+          //     color: isDark ? AppThemeData.grey500 : AppThemeData.grey400,
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _EmptyState — deduplicates the 3 identical empty-state blocks
+// ─────────────────────────────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.svgAsset,
+    required this.title,
+    required this.subtitle,
+    required this.buttonLabel,
+    required this.onTap,
+    required this.themeChange,
+    this.svgColorFilter,
+  });
+
+  final String svgAsset;
+  final String title;
+  final String subtitle;
+  final String buttonLabel;
+  final VoidCallback onTap;
+  final DarkThemeProvider themeChange;
+  final ColorFilter? svgColorFilter;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeChange.getThem();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            decoration: ShapeDecoration(
+              color: isDark ? AppThemeData.grey700 : AppThemeData.grey200,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(120)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: SvgPicture.asset(svgAsset,
+                  colorFilter: svgColorFilter),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(
+              color: isDark ? AppThemeData.grey100 : AppThemeData.grey800,
+              fontSize: 22,
+              fontFamily: AppThemeData.semiBold,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDark ? AppThemeData.grey50 : AppThemeData.grey500,
+              fontSize: 16,
+              fontFamily: AppThemeData.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          RoundedButtonFill(
+            title: buttonLabel,
+            width: 55,
+            height: 5.5,
+            color: AppThemeData.secondary300,
+            textColor: AppThemeData.grey50,
+            onPress: onTap,
+          ),
+        ],
+      ),
+    );
   }
 }

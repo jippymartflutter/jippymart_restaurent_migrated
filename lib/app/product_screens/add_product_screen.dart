@@ -30,17 +30,8 @@ class AddProductScreen extends StatelessWidget {
       return EditProductScreen(product: productToEdit);
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: ColorConst.orange,
-        centerTitle: false,
-        iconTheme: const IconThemeData(color: AppThemeData.grey50),
-        title: Text(
-          "Add Product".tr,
-          style: const TextStyle(color: AppThemeData.grey50, fontSize: 18, fontFamily: AppThemeData.medium),
-        ),
-      ),
-      body: const AddFromCatalogBody(),
-    );
+    // When adding a new product, go through the new
+    // 2-step catalog flow (category → products).
+    return const AddFromCatalogScreen();
   }
 }

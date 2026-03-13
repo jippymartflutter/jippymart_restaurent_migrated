@@ -21,6 +21,7 @@ class Preferences {
   static const codSettings = "CODSettings";
   static const orderRingtone = "audioSound";
   static const zoneIdKey = "zone_id";
+  static const vendorIsOpenKey = "vendor_is_open";
   static const googleMapsApiKey = "AIzaSyCKCRzqaR1-uzbnEmB-JqVkbUKNGOJHv34";
 
   static late SharedPreferences pref;

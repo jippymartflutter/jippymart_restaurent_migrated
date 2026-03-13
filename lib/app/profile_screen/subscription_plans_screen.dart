@@ -658,7 +658,7 @@ class SubscriptionPlansScreen extends StatelessWidget {
                   shadowColor: const Color(0xFF25D366).withValues(alpha: 0.45),
                 ),
                 onPressed: () async {
-                  const String phoneNumber = '+916301931498';
+                  const String phoneNumber = '+918106625666';
                   const String message =
                       "I'm interested in more information about your subscription plans";
                   final Uri whatsappUrl = Uri.parse(

@@ -1643,7 +1643,7 @@ class FireStoreUtils {
         if (decoded is List) {
           rawList = decoded;
         } else if (decoded is Map) {
-          final jsonResponse = Map<String, dynamic>.from(decoded as Map);
+          final jsonResponse = Map<String, dynamic>.from(decoded);
           final success = jsonResponse['success'];
           final isSuccess = success == true || success == 1 || success == 'true';
           final data = jsonResponse['data'] ?? jsonResponse['categories'] ?? jsonResponse['vendor_categories'] ?? jsonResponse['result'];

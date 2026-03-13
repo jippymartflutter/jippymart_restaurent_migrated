@@ -77,7 +77,7 @@ class AppUpdateController extends GetxController {
         updateUrl.value = data['appStoreLink']?.toString() ?? '';
       }
       updateMessage.value = data['update_message']?.toString() ?? 'Update available!';
-      isForceUpdate.value = data['force_update'] == true;
+      isForceUpdate.value = _parseBool(data['force_update']);
       print('📱 show_update is true, min_required_version: $_minRequiredVersion');
       // Process and show update dialog if required (using same data we just fetched)
       _processUpdateData(data);
@@ -217,7 +217,7 @@ class AppUpdateController extends GetxController {
       
       // Extract data from Firestore / API
       final latestVersionFromFirestore = data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '';
-      final forceUpdate = data['force_update'] == true;
+      final forceUpdate = _parseBool(data['force_update']);
       String updateUrlFromFirestore = data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '';
       if (updateUrlFromFirestore.isEmpty) {
         final appStore = data['appStoreLink']?.toString();

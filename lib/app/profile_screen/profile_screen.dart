@@ -667,7 +667,7 @@ class ProfileScreen extends StatelessWidget {
                                           ),
                                           "Boost my orders",
                                               () async {
-                                            const String phoneNumber = '+916301931498';
+                                            const String phoneNumber = '+918106625666';
                                             const String message =
                                                 "Hi, I want to boost my restaurant orders. Please contact me with details.";
                                             final Uri whatsappUrl = Uri.parse(

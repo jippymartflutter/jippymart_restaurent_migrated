@@ -1,289 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:jippymart_restaurant/constant/constant.dart';
-// import 'package:jippymart_restaurant/constant/show_toast_dialog.dart';
-// import 'package:jippymart_restaurant/models/product_model.dart';
-// import 'package:jippymart_restaurant/models/vendor_model.dart';
-// import 'package:jippymart_restaurant/themes/app_them_data.dart';
-// import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
-//
-// class ProductPromotionScreen extends StatefulWidget {
-//   const ProductPromotionScreen({super.key});
-//
-//   @override
-//   State<ProductPromotionScreen> createState() => _ProductPromotionScreenState();
-// }
-//
-// class _ProductPromotionScreenState extends State<ProductPromotionScreen> {
-//   final TextEditingController _promoPriceController = TextEditingController();
-//   DateTime? _endDate;
-//   List<ProductModel> _products = [];
-//   ProductModel? _selectedProduct;
-//   bool _isLoading = true;
-//   String? _restaurantTitle;
-//   List<Map<String, dynamic>> _promotions = [];
-//   Map<String, dynamic>? _editingPromotion;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadData();
-//   }
-//
-//   Future<void> _loadData() async {
-//     try {
-//       final products = await FireStoreUtils.getProduct();
-//       String? vendorId = Constant.userModel?.vendorID?.toString();
-//       VendorModel? vendor;
-//       if (vendorId != null && vendorId.isNotEmpty) {
-//         vendor = await FireStoreUtils.getVendorById(vendorId);
-//         _promotions = await FireStoreUtils.getProductPromotions(vendorId);
-//       }
-//       setState(() {
-//         _products = products ?? [];
-//         _restaurantTitle = vendor?.title;
-//         _isLoading = false;
-//       });
-//     } catch (_) {
-//       setState(() {
-//         _isLoading = false;
-//       });
-//       ShowToastDialog.showToast('Failed to load products');
-//     }
-//   }
-//
-//   Future<void> _pickEndDate() async {
-//     final now = DateTime.now();
-//     final picked = await showDatePicker(
-//       context: context,
-//       initialDate: now,
-//       firstDate: now,
-//       lastDate: DateTime(now.year + 5),
-//     );
-//     if (picked != null) {
-//       setState(() {
-//         _endDate = picked;
-//       });
-//     }
-//   }
-//
-//   Future<void> _submit() async {
-//     if (_selectedProduct == null) {
-//       ShowToastDialog.showToast('Please select a product');
-//       return;
-//     }
-//     if (_promoPriceController.text.trim().isEmpty) {
-//       ShowToastDialog.showToast('Please enter promotion price');
-//       return;
-//     }
-//     if (_endDate == null) {
-//       ShowToastDialog.showToast('Please select end date');
-//       return;
-//     }
-//
-//     final user = Constant.userModel;
-//     final data = {
-//       'restaurant_id': user?.vendorID?.toString(),
-//       'restaurant_title': _restaurantTitle ?? '',
-//       'zone_id': user?.zoneId?.toString(),
-//       'product_id': _selectedProduct!.id?.toString(),
-//       'product_title': _selectedProduct!.name ?? '',
-//       'promo_price': _promoPriceController.text.trim(),
-//       'end_date': _endDate!.toIso8601String(),
-//     };
-//
-//     ShowToastDialog.showLoader('Please wait');
-//     bool ok;
-//     if (_editingPromotion != null && _editingPromotion!['id'] != null) {
-//       ok = await FireStoreUtils.updateProductPromotion(
-//         _editingPromotion!['id'].toString(),
-//         data,
-//       );
-//     } else {
-//       ok = await FireStoreUtils.createProductPromotion(data);
-//     }
-//     ShowToastDialog.closeLoader();
-//
-//     if (ok) {
-//       ShowToastDialog.showToast('Promotion saved');
-//       _promoPriceController.clear();
-//       _endDate = null;
-//       _selectedProduct = null;
-//       _editingPromotion = null;
-//       await _loadData();
-//     } else {
-//       ShowToastDialog.showToast('Failed to save promotion');
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text(
-//           'Product Promotions',
-//           style: TextStyle(
-//             fontFamily: AppThemeData.medium,
-//             fontSize: 18,
-//           ),
-//         ),
-//       ),
-//       body: _isLoading
-//           ? Constant.loader()
-//           : Column(
-//               children: [
-//                 // Existing promotions list
-//                 Expanded(
-//                   child: _promotions.isEmpty
-//                       ? Center(
-//                           child: Text(
-//                             'No promotions found',
-//                             style: TextStyle(
-//                               color: AppThemeData.grey500,
-//                               fontFamily: AppThemeData.medium,
-//                             ),
-//                           ),
-//                         )
-//                       : ListView.builder(
-//                           itemCount: _promotions.length,
-//                           itemBuilder: (context, index) {
-//                             final promo = _promotions[index];
-//                             final productTitle =
-//                                 promo['product_title']?.toString() ?? '';
-//                             final promoPrice =
-//                                 promo['promo_price']?.toString() ?? '';
-//                             final endDate = promo['end_date']?.toString() ?? '';
-//                             return Card(
-//                               margin: const EdgeInsets.symmetric(
-//                                   horizontal: 16, vertical: 6),
-//                               shape: RoundedRectangleBorder(
-//                                 borderRadius: BorderRadius.circular(12),
-//                               ),
-//                               child: ListTile(
-//                                 title: Text(
-//                                   productTitle,
-//                                   style: const TextStyle(
-//                                     fontFamily: AppThemeData.medium,
-//                                   ),
-//                                 ),
-//                                 subtitle: Column(
-//                                   crossAxisAlignment: CrossAxisAlignment.start,
-//                                   children: [
-//                                     const SizedBox(height: 4),
-//                                     Text('Promo price: $promoPrice'),
-//                                     if (endDate.isNotEmpty)
-//                                       Text('Ends on: $endDate'),
-//                                   ],
-//                                 ),
-//                                 trailing: IconButton(
-//                                   icon: const Icon(Icons.edit),
-//                                   onPressed: () {
-//                                     // Find matching product
-//                                     final product = _products.firstWhere(
-//                                       (p) =>
-//                                           p.id?.toString() ==
-//                                           promo['product_id']?.toString(),
-//                                       orElse: () => ProductModel(),
-//                                     );
-//                                     setState(() {
-//                                       _editingPromotion = promo;
-//                                       _selectedProduct = product.id == null
-//                                           ? null
-//                                           : product;
-//                                       _promoPriceController.text = promoPrice;
-//                                       if (endDate.isNotEmpty) {
-//                                         try {
-//                                           _endDate = DateTime.parse(endDate);
-//                                         } catch (_) {
-//                                           _endDate = null;
-//                                         }
-//                                       } else {
-//                                         _endDate = null;
-//                                       }
-//                                     });
-//                                   },
-//                                 ),
-//                               ),
-//                             );
-//                           },
-//                         ),
-//                 ),
-//                 const Divider(height: 0),
-//                 // Form to add / edit
-//                 Padding(
-//                   padding:
-//                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       DropdownButtonFormField<ProductModel>(
-//                         value: _selectedProduct,
-//                         decoration: const InputDecoration(
-//                           labelText: 'Select product',
-//                           border: OutlineInputBorder(),
-//                         ),
-//                         items: _products
-//                             .map(
-//                               (p) => DropdownMenuItem<ProductModel>(
-//                                 value: p,
-//                                 child: Text(p.name ?? 'Unnamed product'),
-//                               ),
-//                             )
-//                             .toList(),
-//                         onChanged: (p) {
-//                           setState(() {
-//                             _selectedProduct = p;
-//                           });
-//                         },
-//                       ),
-//                       const SizedBox(height: 10),
-//                       TextField(
-//                         controller: _promoPriceController,
-//                         keyboardType:
-//                             const TextInputType.numberWithOptions(decimal: true),
-//                         decoration: const InputDecoration(
-//                           labelText: 'Promotion price',
-//                           border: OutlineInputBorder(),
-//                         ),
-//                       ),
-//                       const SizedBox(height: 10),
-//                       Row(
-//                         children: [
-//                           Expanded(
-//                             child: Text(
-//                               _endDate == null
-//                                   ? 'End date: not selected'
-//                                   : 'End date: ${_endDate!.toLocal().toString().split(' ').first}',
-//                             ),
-//                           ),
-//                           TextButton(
-//                             onPressed: _pickEndDate,
-//                             child: const Text('Select date'),
-//                           ),
-//                         ],
-//                       ),
-//                       const SizedBox(height: 10),
-//                       SizedBox(
-//                         width: double.infinity,
-//                         child: ElevatedButton(
-//                           onPressed: _submit,
-//                           child: Text(
-//                             _editingPromotion == null
-//                                 ? 'Add Promotion'
-//                                 : 'Update Promotion',
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ],
-//             ),
-//     );
-//   }
-// }
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jippymart_restaurant/constant/constant.dart';
@@ -668,6 +382,7 @@ class PromotionFormSheet extends StatefulWidget {
 class _PromotionFormSheetState extends State<PromotionFormSheet> {
   final TextEditingController _promoPriceController = TextEditingController();
   int? _itemLimit;
+  DateTime? _startDate;
   DateTime? _endDate;
   ProductModel? _selectedProduct;
 
@@ -688,6 +403,12 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
       if (limit != null) {
         _itemLimit = int.tryParse(limit.toString());
       }
+      final startDateStr = promo['start_date']?.toString() ?? '';
+      if (startDateStr.isNotEmpty) {
+        try {
+          _startDate = DateTime.parse(startDateStr);
+        } catch (_) {}
+      }
       final endDate = promo['end_date']?.toString() ?? '';
       if (endDate.isNotEmpty) {
         try {
@@ -695,6 +416,29 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
         } catch (_) {}
       }
     }
+  }
+
+  Future<void> _pickStartDate() async {
+    final now = DateTime.now();
+    final initial = (_startDate != null && _startDate!.isAfter(now))
+        ? _startDate!
+        : now;
+    final lastDate = _endDate ?? DateTime(now.year + 5);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial.isBefore(lastDate) ? initial : lastDate,
+      firstDate: now,
+      lastDate: lastDate,
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: AppThemeData.secondary300,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _startDate = picked);
   }
 
   Future<void> _pickEndDate() async {
@@ -732,21 +476,26 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
       ShowToastDialog.showToast('Please select end date');
       return;
     }
+    if (_startDate == null) {
+      ShowToastDialog.showToast('Please select start date');
+      return;
+    }
+    if (_startDate!.isAfter(_endDate!)) {
+      ShowToastDialog.showToast('Start date must be on or before end date');
+      return;
+    }
     if (_itemLimit == null) {
       ShowToastDialog.showToast('Please select item limit');
       return;
     }
 
     final vendor = widget.vendor;
-    // Fix end date format: always send 10:00 time in ISO-like string (YYYY-MM-DDTHH:MM)
-    final endDateAtTen = DateTime(
-      _endDate!.year,
-      _endDate!.month,
-      _endDate!.day,
-      10,
-      0,
-    );
-    final formattedEndDate = endDateAtTen.toIso8601String().substring(0, 16);
+    final formatDate = (DateTime d) {
+      final atTen = DateTime(d.year, d.month, d.day, 10, 0, 0);
+      return atTen.toIso8601String().substring(0, 16);
+    };
+    final formattedStartDate = formatDate(_startDate!);
+    final formattedEndDate = formatDate(_endDate!);
     final data = {
       'restaurant_id': vendor?.id?.toString(),
       'restaurant_title': vendor?.title ?? widget.restaurantTitle ?? '',
@@ -754,6 +503,7 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
       'product_id': _selectedProduct!.id?.toString(),
       'product_title': _selectedProduct!.name ?? '',
       'promo_price': _promoPriceController.text.trim(),
+      'start_date': formattedStartDate,
       'end_date': formattedEndDate,
       'item_limit': _itemLimit.toString(),
     };
@@ -958,6 +708,47 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
                 ),
                 const SizedBox(height: 16),
 
+                _label('Start Date'),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _pickStartDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F6FA),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_rounded,
+                            size: 18, color: AppThemeData.secondary300),
+                        const SizedBox(width: 12),
+                        Text(
+                          _startDate == null
+                              ? 'Select start date'
+                              : _startDate!
+                              .toLocal()
+                              .toString()
+                              .split(' ')
+                              .first,
+                          style: TextStyle(
+                            fontFamily: AppThemeData.medium,
+                            fontSize: 14,
+                            color: _startDate == null
+                                ? Colors.grey.shade400
+                                : Colors.black87,
+                          ),
+                        ),
+                        const Spacer(),
+                        Icon(Icons.chevron_right_rounded,
+                            color: Colors.grey.shade400),
+                      ],
+                    ),
+                  ),
+                ),
+
                 // End date
                 _label('End Date'),
                 const SizedBox(height: 8),
@@ -999,6 +790,10 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+
+                // Start date (below end date)
+
                 const SizedBox(height: 28),
 
                 // Submit

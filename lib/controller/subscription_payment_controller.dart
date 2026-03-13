@@ -14,6 +14,9 @@ import 'package:jippymart_restaurant/service/subscription_purchase_service.dart'
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 import 'package:jippymart_restaurant/utils/preferences.dart';
 
+import '../models/user_model.dart';
+import '../models/vendor_model.dart';
+
 /// Handles Razorpay payment for subscription plans and sends data to subscription_history.
 class SubscriptionPaymentController extends GetxController {
   late Razorpay _razorPay;
@@ -168,8 +171,11 @@ class SubscriptionPaymentController extends GetxController {
       } catch (_) {}
     }
 
-    // 4. From preferences fallback
-    return Preferences.getString(Preferences.zoneIdKey, defaultValue: '').trim();
+    // 4. From preferences fallback using vendor model key
+    return Preferences.getString(
+      VendorModel.zoneIdPrefKey,
+      defaultValue: '',
+    ).trim();
   }
 
   DateTime? _computeExpiry(SubscriptionPlanModel plan) {
