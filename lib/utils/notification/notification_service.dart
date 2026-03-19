@@ -17,18 +17,12 @@ Future<void> firebaseMessageBackgroundHandle(RemoteMessage message) async {
   log("BackGround Message :: ${message.messageId}");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Preferences.initPref();
-  // Play sound based on order state
-  bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
-  await AudioPlayerService.initAudio();
-  if (hasNewOrders) {
-    await AudioPlayerService.playSound(true);
-  } else {
-    await AudioPlayerService.playSound(false);
-  }
   // Show local notification when in background so user always sees it (FCM may not show if data-only)
   final notificationService = NotificationService();
   await notificationService.showBackgroundNotification(message);
 }
+const String _orderChannelId = 'order_channel_v2';
+
 class NotificationService {
   NotificationHandler notificationHandler = NotificationHandler();
   //////////////
@@ -40,6 +34,7 @@ class NotificationService {
         .setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
+          // Let OS play notification sound from channel.
           sound: true,
         );
     var request = await FirebaseMessaging.instance.requestPermission(
@@ -49,6 +44,7 @@ class NotificationService {
       carPlay: false,
       criticalAlert: false,
       provisional: false,
+      // Allow system sound (configured via notification channels).
       sound: true,
     );
 
@@ -92,14 +88,17 @@ class NotificationService {
       );
       await flutterLocalNotificationsPlugin.initialize(initSettings);
       await _ensureOrderChannelCreated();
-      AndroidNotificationDetails androidDetails =
-          const AndroidNotificationDetails(
-        'order_channel',
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        _orderChannelId,
         'Order Notifications',
         channelDescription: 'Channel for order notifications',
         importance: Importance.high,
         priority: Priority.high,
+        // Play bundled raw sound + vibration.
         sound: RawResourceAndroidNotificationSound('order_ringtone'),
+        playSound: true,
+        enableVibration: true,
       );
       final details = NotificationDetails(
         android: androidDetails,
@@ -129,30 +128,12 @@ class NotificationService {
       if (message.notification != null) {
         log(message.notification.toString());
         display(message);
-        // Always check actual order state before playing sound (most reliable method)
-        // This prevents sound from restarting when orders are accepted from admin panel
-        bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
-        await AudioPlayerService.initAudio();
-        if (hasNewOrders) {
-          await AudioPlayerService.playSound(true);
-        } else {
-          // Stop sound if no new orders
-          await AudioPlayerService.playSound(false);
-        }
       }
     });
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       if (message.notification != null) {
         log(message.notification.toString());
       }
-      // Always check actual order state before playing sound (most reliable method)
-      bool hasNewOrders = await NotificationService.checkIfHasNewOrders();
-      await AudioPlayerService.initAudio();
-        if (hasNewOrders) {
-          await AudioPlayerService.playSound(true);
-        } else {
-          await AudioPlayerService.playSound(false);
-        }
     });
     log("::::::::::::Permission authorized:::::::::::::::::");
     await FirebaseMessaging.instance.subscribeToTopic("restaurant");
@@ -241,11 +222,14 @@ class NotificationService {
   Future<void> _ensureOrderChannelCreated() async {
     try {
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
-        'order_channel',
+        _orderChannelId,
         'Order Notifications',
         description: 'Channel for order notifications',
         importance: Importance.max,
+        // Use bundled raw sound + vibration for all order notifications.
         sound: RawResourceAndroidNotificationSound('order_ringtone'),
+        playSound: true,
+        enableVibration: true,
       );
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
@@ -262,15 +246,15 @@ class NotificationService {
     log('Message data:  [32m${message.notification!.body.toString()} [0m');
     try {
       await _ensureOrderChannelCreated();
-      AndroidNotificationDetails notificationDetails =
-          const AndroidNotificationDetails(
-        'order_channel',
+      const AndroidNotificationDetails notificationDetails =
+          AndroidNotificationDetails(
+        _orderChannelId,
         'Order Notifications',
         channelDescription: 'Channel for order notifications',
         importance: Importance.high,
         priority: Priority.high,
         ticker: 'ticker',
-        sound: RawResourceAndroidNotificationSound('order_ringtone'),
+        // No explicit sound – AudioPlayerService handles ringtone using Preferences.orderRingtone.
       );
       const DarwinNotificationDetails darwinNotificationDetails =
           DarwinNotificationDetails(

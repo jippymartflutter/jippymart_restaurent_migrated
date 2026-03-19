@@ -2076,6 +2076,24 @@ class FireStoreUtils {
     }
   }
 
+  static Future<bool> deleteProductPromotion(String promotionId) async {
+    try {
+      log('deleteProductPromotion[$promotionId]');
+
+      final response = await http.delete(
+        Uri.parse('${Constant.baseUrl}vendor/promotions/$promotionId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      log('deleteProductPromotion response: ${response.statusCode} ${response.body}');
+
+      return response.statusCode == 200;
+    } catch (e, s) {
+      log('deleteProductPromotion error: $e $s');
+      return false;
+    }
+  }
+
   static Future<List<DocumentModel>> getDocumentList() async {
     List<DocumentModel> documentList = [];
     try {

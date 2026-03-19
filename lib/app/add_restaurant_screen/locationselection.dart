@@ -19,7 +19,7 @@ class MapPickerPage extends StatefulWidget {
 
 class _MapPickerPageState extends State<MapPickerPage> {
   final OSMMapController osmController = Get.find<OSMMapController>();
-  late GoogleMapController _mapController;
+  GoogleMapController? _mapController;
   LatLng _currentPosition = const LatLng(20.5937, 78.9629);
   Set<Marker> _markers = {};
   final TextEditingController _searchController = TextEditingController();
@@ -93,6 +93,65 @@ class _MapPickerPageState extends State<MapPickerPage> {
               },
             ),
           ),
+          Obx(() => osmController.searchResults.isNotEmpty
+              ? Positioned(
+                  top: 80,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    constraints: const BoxConstraints(maxHeight: 280),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: osmController.searchResults.length,
+                      itemBuilder: (context, index) {
+                        final place =
+                            osmController.searchResults[index] as Map<String, dynamic>;
+                        return ListTile(
+                          title: Text(
+                            place['display_name'] ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          onTap: () {
+                            osmController.selectSearchResult(place);
+                            final lat = double.parse(place['lat'].toString());
+                            final lng = double.parse(place['lon'].toString());
+                            final newPosition = LatLng(lat, lng);
+                            setState(() {
+                              _currentPosition = newPosition;
+                              _markers.clear();
+                              _markers.add(
+                                Marker(
+                                  markerId: const MarkerId('selected_location'),
+                                  position: newPosition,
+                                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                                    BitmapDescriptor.hueRed,
+                                  ),
+                                ),
+                              );
+                            });
+                            _mapController?.animateCamera(
+                              CameraUpdate.newLatLngZoom(newPosition, 15),
+                            );
+                            _searchController.text =
+                                place['display_name'] ?? '';
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink()),
         ],
       ),
       bottomNavigationBar: Container(
@@ -180,14 +239,14 @@ class _MapPickerPageState extends State<MapPickerPage> {
     osmController.addLatLngOnly(latlongCoords);
 
     // Center map on tapped location
-    _mapController.animateCamera(
+    _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(position, 15),
     );
   }
 
   @override
   void dispose() {
-    _mapController.dispose();
+    _mapController?.dispose();
     super.dispose();
   }
 }

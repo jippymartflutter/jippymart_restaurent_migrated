@@ -30,8 +30,8 @@ import 'package:uuid/uuid.dart';
 import 'package:video_player/video_player.dart';
 
 class Constant {
-  static String baseUrl  = "http://192.168.88.30:8000/api/";
-  // static String baseUrl = "https://web.jippymart.in/api/";
+  // static String baseUrl  = "http://192.168.88.11:8000/api/";
+  static String baseUrl = "http://192.168.88.12:8000/api/";
   static String userRoleDriver = 'driver';
   static String userRoleCustomer = 'customer';
   static String userRoleVendor = 'vendor';
@@ -46,9 +46,28 @@ class Constant {
   static String jsonNotificationFileURL = 'https://storage.googleapis.com/app_notification/jippymart-27c08-7191b6fdcd74.json';
   static String distanceType = "km";
   static String placeholderImage = "";
-  static String googlePlayLink = "";
-  static String appStoreLink = "";
-  static String appVersion = "";
+  static String googlePlayLink = "https://play.google.com/store/apps/details?id=com.jippymart.restaurant";
+  static String appStoreLink = "https://apps.apple.com/us/app/jippymart-merchant/id6755134966";
+  /// Android app version (e.g. from build).
+  static String appVersionAndroid = "2.2.10";
+  /// iOS app version (e.g. from build).
+  static String appVersionIos = "1.0.2";
+  /// Runtime override coming from /restaurant/version. If set, UI should show this.
+  static String? overrideAppVersion;
+  /// Current platform version for display (profile, etc).
+  static String get appVersion {
+    if (overrideAppVersion != null && overrideAppVersion!.isNotEmpty) {
+      return overrideAppVersion!;
+    }
+    return Platform.isIOS ? appVersionIos : appVersionAndroid;
+  }
+
+  /// Setter used by settings loaders to override the displayed app version.
+  /// This simply updates `overrideAppVersion`, leaving platform-specific
+  /// build versions (`appVersionAndroid` / `appVersionIos`) unchanged.
+  static set appVersion(String value) {
+    overrideAppVersion = value;
+  }
   static String storeUrl = "";
   static String termsAndConditions = "";
   static String privacyPolicy = "";

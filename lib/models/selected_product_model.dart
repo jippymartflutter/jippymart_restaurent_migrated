@@ -256,8 +256,10 @@ class SelectedProductModel {
   /// Options serialized as JSON array:
   ///   [{"id":"opt_xxx","title":"...","subtitle":"...","price":"329",
   ///     "original_price":"329","is_available":true,"is_featured":false}]
+  ///
+  /// Only options with `isAvailable == true` are sent to backend.
   List<Map<String, dynamic>> get optionsJson =>
-      options.map((o) => o.toJson()).toList();
+      options.where((o) => o.isAvailable).map((o) => o.toJson()).toList();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

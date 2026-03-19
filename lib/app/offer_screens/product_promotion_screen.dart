@@ -289,7 +289,7 @@ class _ProductPromotionScreenState extends State<ProductPromotionScreen> {
                 ],
               ),
             ),
-            // Status + edit
+            // Status + edit/delete
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -310,17 +310,43 @@ class _ProductPromotionScreenState extends State<ProductPromotionScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () => _openForm(promo: promo),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F0F5),
-                      borderRadius: BorderRadius.circular(10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Edit
+                    GestureDetector(
+                      onTap: () => _openForm(promo: promo),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F0F5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.edit_rounded,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.edit_rounded,
-                        size: 18, color: Colors.black54),
-                  ),
+                    const SizedBox(width: 6),
+                    // Delete
+                    GestureDetector(
+                      onTap: () => _confirmDeletePromotion(promo),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: Colors.red.shade500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -328,6 +354,58 @@ class _ProductPromotionScreenState extends State<ProductPromotionScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeletePromotion(Map<String, dynamic> promo) async {
+    final id = promo['id']?.toString() ?? '';
+    if (id.isEmpty) {
+      ShowToastDialog.showToast('Unable to delete: missing promotion id');
+      return;
+    }
+
+    final productTitle =
+        (promo['product_name'] ?? promo['product_title'])?.toString().trim() ??
+            'this promotion';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Delete promotion?',
+            style: TextStyle(fontFamily: AppThemeData.semiBold),
+          ),
+          content: Text(
+            'Are you sure you want to delete the promotion for "$productTitle"?',
+            style: const TextStyle(fontFamily: AppThemeData.regular),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    ShowToastDialog.showLoader('Deleting...');
+    final ok = await FireStoreUtils.deleteProductPromotion(id);
+    ShowToastDialog.closeLoader();
+
+    if (ok) {
+      ShowToastDialog.showToast('Promotion deleted');
+      await _loadData(); // refresh list
+    } else {
+      ShowToastDialog.showToast('Failed to delete promotion');
+    }
   }
 
   Widget _infoChip(IconData icon, String label, Color bg, Color fg) {
@@ -490,12 +568,19 @@ class _PromotionFormSheetState extends State<PromotionFormSheet> {
     }
 
     final vendor = widget.vendor;
-    final formatDate = (DateTime d) {
-      final atTen = DateTime(d.year, d.month, d.day, 10, 0, 0);
-      return atTen.toIso8601String().substring(0, 16);
-    };
+    String formatDate(DateTime d, {bool isPM = false}) {
+      final dateTime = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        isPM ? 22 : 10, // 10 AM start, 10 PM end
+      );
+
+      return dateTime.toIso8601String();
+    }
+
     final formattedStartDate = formatDate(_startDate!);
-    final formattedEndDate = formatDate(_endDate!);
+    final formattedEndDate = formatDate(_endDate!, isPM: true);
     final data = {
       'restaurant_id': vendor?.id?.toString(),
       'restaurant_title': vendor?.title ?? widget.restaurantTitle ?? '',

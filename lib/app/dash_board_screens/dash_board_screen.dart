@@ -1017,7 +1017,7 @@ class _CloseOptionsDialog extends StatelessWidget {
     _CloseOption(
       value: RestaurantCloseOption.untilReopened,
       icon: Icons.lock_outline_rounded,
-      label: 'Close indefinitely',
+      label: 'Close Until I Open',
       sub: 'Reopen manually from the dashboard',
     ),
   ];

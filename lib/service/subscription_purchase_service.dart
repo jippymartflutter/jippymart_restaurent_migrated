@@ -30,8 +30,9 @@ class SubscriptionPurchaseService {
         'user_id': userId,
         'payment_type': paymentType,
         'zone': zoneId,
-        // explicit plan id for easier querying on backend
+        // Send the exact plan ID from backend (what user actually bought)
         'subscription_plan_id': plan.id,
+        // Full snapshot of the plan details at purchase time
         'subscription_plan': jsonEncode(plan.toJson()),
       };
       if (expiryDate != null) {

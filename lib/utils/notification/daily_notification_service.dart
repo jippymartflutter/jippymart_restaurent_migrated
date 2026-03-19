@@ -195,9 +195,6 @@ class NotificationHandler {
           android: _getAndroidNotificationDetails(channelDailyId),
           iOS: const DarwinNotificationDetails(
             sound: 'default',
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -252,9 +249,6 @@ class NotificationHandler {
           android: _getAndroidNotificationDetails(channelCustomId),
           iOS: const DarwinNotificationDetails(
             sound: 'default',
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
           ),
         ),
         payload: payload != null ? jsonEncode(payload) : null,

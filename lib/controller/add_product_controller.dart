@@ -14,6 +14,7 @@ import 'package:jippymart_restaurant/models/product_model.dart';
 import 'package:jippymart_restaurant/models/vendor_category_model.dart';
 import 'package:jippymart_restaurant/controller/product_list_controller.dart';
 import 'package:jippymart_restaurant/models/vendor_model.dart';
+import 'package:jippymart_restaurant/models/selected_product_model.dart';
 import 'package:jippymart_restaurant/utils/fire_store_utils.dart';
 
 class AddProductController extends GetxController {
@@ -69,6 +70,13 @@ class AddProductController extends GetxController {
 
   RxBool takeAway = false.obs;
   RxBool isDiscountedPriceOk = false.obs;
+
+  /// Per-day availability copied from / compatible with `SelectedProductModel`.
+  /// UI edits these, and at save time they are serialized into
+  /// `productModel.availableTimings` to send to backend.
+  RxList<String> availableDays = <String>[].obs;
+  RxMap<String, List<TimeRangeItem>> availableTimings =
+      <String, List<TimeRangeItem>>{}.obs;
 
   @override
   void onInit() {
@@ -237,6 +245,36 @@ class AddProductController extends GetxController {
           }
         }
       }
+
+      // Initialize availability if backend sent any timings
+      if (editProduct.availableTimings != null &&
+          editProduct.availableTimings!.isNotEmpty) {
+        availableDays.clear();
+        availableTimings.clear();
+        for (final item in editProduct.availableTimings!) {
+          if (item is Map) {
+            final day = item['day']?.toString();
+            if (day == null || day.isEmpty) continue;
+            final slotsRaw = item['timeslot'];
+            final slots = <TimeRangeItem>[];
+            if (slotsRaw is List) {
+              for (final s in slotsRaw) {
+                if (s is Map) {
+                  final from = s['from']?.toString() ?? '';
+                  final to = s['to']?.toString() ?? '';
+                  if (from.isNotEmpty && to.isNotEmpty) {
+                    slots.add(TimeRangeItem(from: from, to: to));
+                  }
+                }
+              }
+            }
+            if (slots.isNotEmpty) {
+              availableDays.add(day);
+              availableTimings[day] = slots;
+            }
+          }
+        }
+      }
     }
 
     isLoading.value = false;
@@ -340,6 +378,16 @@ class AddProductController extends GetxController {
 
   Map<String, dynamic> specification = {};
 
+  /// Helper to serialize availability into backend JSON structure:
+  /// `[{"day":"Monday","timeslot":[{"from":"11:00","to":"22:00"}]}]`
+  List<Map<String, dynamic>> get availabilityJson => availableDays
+      .map((day) => {
+            'day': day,
+            'timeslot':
+                (availableTimings[day] ?? []).map((t) => t.toJson()).toList(),
+          })
+      .toList();
+
   saveDetails() async {
     // if(selectedAttributesList.isNotEmpty){
     //   if(itemAttributes.value!.attributes!.isNotEmpty){
@@ -441,6 +489,12 @@ class AddProductController extends GetxController {
       productModel.value.takeawayOption = takeAway.value;
       productModel.value.productSpecification = specification;
       productModel.value.createdAt = Timestamp.now();
+      // Attach availability timings, if any selected.
+      if (availableDays.isNotEmpty) {
+        productModel.value.availableTimings = availabilityJson;
+      } else {
+        productModel.value.availableTimings = null;
+      }
       await FireStoreUtils.updateProduct(productModel.value);
       ShowToastDialog.closeLoader();
       ShowToastDialog.showToast("Product saved successfully".tr);

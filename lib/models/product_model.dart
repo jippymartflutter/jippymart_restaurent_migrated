@@ -31,6 +31,10 @@ class ProductModel {
   String? description;
   Timestamp? createdAt;
   bool? isAvailable;
+  /// Optional per-day time slots when the product is available.
+  /// Matches the JSON that `SelectedProductModel` sends to the backend, e.g.:
+  /// `[{"day":"Monday","timeslot":[{"from":"11:00","to":"22:00"}]}]`
+  List<dynamic>? availableTimings;
 
   ProductModel({
     this.fats,
@@ -61,6 +65,7 @@ class ProductModel {
     this.description,
     this.createdAt,
     this.isAvailable,
+    this.availableTimings,
   });
 
   ProductModel.fromJson(Map<String, dynamic> json) {
@@ -165,6 +170,19 @@ class ProductModel {
       } else {
         createdAt = json['createdAt'];
       }
+    }
+
+    // Optional availability timings (may come as List, Firestore arrayValue, or JSON string)
+    try {
+      final rawAvailability = json['available_timings'];
+      if (rawAvailability != null) {
+        final parsed = _extractArrayFromFirestore(rawAvailability);
+        if (parsed != null) {
+          availableTimings = parsed;
+        }
+      }
+    } catch (_) {
+      availableTimings = null;
     }
   }
 
@@ -379,6 +397,9 @@ class ProductModel {
     data['createdAt'] = createdAt?.millisecondsSinceEpoch;
 
     data['isAvailable'] = isAvailable;
+    if (availableTimings != null && availableTimings!.isNotEmpty) {
+      data['available_timings'] = availableTimings;
+    }
     return data;
   }
 
@@ -415,6 +436,9 @@ class ProductModel {
     data['description'] = description;
     data['createdAt'] = createdAt; // Keep as Timestamp for Firestore
     data['isAvailable'] = isAvailable;
+    if (availableTimings != null && availableTimings!.isNotEmpty) {
+      data['available_timings'] = availableTimings;
+    }
     return data;
   }
 }

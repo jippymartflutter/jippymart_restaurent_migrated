@@ -36,6 +36,32 @@ class AppUpdateController extends GetxController {
     _updateSubscription?.cancel();
     super.onClose();
   }
+
+  /// Update global Constant appVersion* based on a version payload from API/Firestore.
+  /// This ensures UI that reads Constant.appVersion reflects backend values.
+  void _updatePlatformVersionFromApi(Map<String, dynamic> data) {
+    try {
+      String? apiAndroidVersion = data['android_version']?.toString();
+      String? apiIosVersion = data['ios_version']?.toString();
+
+      // Ignore placeholder strings
+      if (apiAndroidVersion == 'latest_version' || apiAndroidVersion == 'version_info') {
+        apiAndroidVersion = null;
+      }
+      if (apiIosVersion == 'latest_version' || apiIosVersion == 'version_info') {
+        apiIosVersion = null;
+      }
+
+      if (apiAndroidVersion != null && apiAndroidVersion.isNotEmpty) {
+        Constant.appVersionAndroid = apiAndroidVersion;
+      }
+      if (apiIosVersion != null && apiIosVersion.isNotEmpty) {
+        Constant.appVersionIos = apiIosVersion;
+      }
+    } catch (e) {
+      print('❌ Error updating platform version from API: $e');
+    }
+  }
   /// Initialize current app version
   Future<void> _initializeCurrentVersion() async {
     try {
@@ -65,14 +91,35 @@ class AppUpdateController extends GetxController {
               ? body as Map<String, dynamic>
               : null;
       if (data == null) return;
+
+      // Always update platform version constants from API if available,
+      // even if show_update is false or missing. This keeps UI like the
+      // profile screen in sync with backend version info.
+      _updatePlatformVersionFromApi(data);
+
       Constant.showUpdate = _parseBool(data['show_update']);
       if (!Constant.showUpdate) {
         print('📱 show_update is false – skipping update check');
         return;
       }
       _minRequiredVersion = data['min_required_version']?.toString() ?? data['min_app_version']?.toString();
-      latestVersion.value = data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '';
-      updateUrl.value = data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '';
+      // Use platform-specific version from API (android_version / ios_version)
+      String? platformVersion = Platform.isAndroid
+          ? (data['android_version']?.toString() ?? data['latest_version']?.toString() ?? data['app_version']?.toString())
+          : (data['ios_version']?.toString() ?? data['latest_version']?.toString() ?? data['app_version']?.toString());
+      if (platformVersion == 'latest_version' || platformVersion == 'version_info') {
+        platformVersion = null;
+      }
+      latestVersion.value = platformVersion ?? '';
+      // Let Constant.appVersion use this override for UI like profile screen
+      if (platformVersion != null && platformVersion.isNotEmpty) {
+        Constant.overrideAppVersion = platformVersion;
+      }
+      // Use platform-specific update URL (android_update_url / ios_update_url)
+      final platformUpdateUrl = Platform.isAndroid
+          ? (data['android_update_url']?.toString() ?? data['update_url']?.toString() ?? data['googlePlayLink']?.toString())
+          : (data['ios_update_url']?.toString() ?? data['update_url']?.toString() ?? data['appStoreLink']?.toString());
+      updateUrl.value = platformUpdateUrl ?? '';
       if (updateUrl.value.isEmpty && data['appStoreLink'] != null && data['appStoreLink'].toString() != 'update_url') {
         updateUrl.value = data['appStoreLink']?.toString() ?? '';
       }
@@ -215,12 +262,20 @@ class AppUpdateController extends GetxController {
     try {
       print('📊 Processing update data: $data');
       
-      // Extract data from Firestore / API
-      final latestVersionFromFirestore = data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '';
+      // Extract data from Firestore / API (platform-specific version and URL)
+      String latestVersionFromFirestore = Platform.isAndroid
+          ? (data['android_version']?.toString() ?? data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '')
+          : (data['ios_version']?.toString() ?? data['latest_version']?.toString() ?? data['app_version']?.toString() ?? '');
+      if (latestVersionFromFirestore == 'latest_version' || latestVersionFromFirestore == 'version_info') {
+        latestVersionFromFirestore = '';
+      }
       final forceUpdate = _parseBool(data['force_update']);
-      String updateUrlFromFirestore = data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '';
+      String updateUrlFromFirestore = Platform.isAndroid
+          ? (data['android_update_url']?.toString() ?? data['update_url']?.toString() ?? data['googlePlayLink']?.toString() ?? '')
+          : (data['ios_update_url']?.toString() ?? data['update_url']?.toString() ?? data['appStoreLink']?.toString() ?? '');
       if (updateUrlFromFirestore.isEmpty) {
-        final appStore = data['appStoreLink']?.toString();
+        final fallback = Platform.isAndroid ? data['googlePlayLink'] : data['appStoreLink'];
+        final appStore = fallback?.toString();
         if (appStore != null && appStore != 'update_url') updateUrlFromFirestore = appStore;
       }
       final updateMessageFromFirestore = data['update_message']?.toString() ?? 'Update available!';
@@ -232,7 +287,20 @@ class AppUpdateController extends GetxController {
       updateUrl.value = updateUrlFromFirestore;
       updateMessage.value = updateMessageFromFirestore;
       _minRequiredVersion = minRequiredVersion;
+      // And update Constant.overrideAppVersion so UI displays this when present
+      if (latestVersionFromFirestore.isNotEmpty) {
+        Constant.overrideAppVersion = latestVersionFromFirestore;
+      }
       
+      // Keep Constant.appVersion* in sync so UI using Constant.appVersion shows latest API version.
+      if (latestVersionFromFirestore.isNotEmpty) {
+        if (Platform.isAndroid) {
+          Constant.appVersionAndroid = latestVersionFromFirestore;
+        } else if (Platform.isIOS) {
+          Constant.appVersionIos = latestVersionFromFirestore;
+        }
+      }
+
       print('📱 Current: ${currentVersion.value}');
       print('🚀 Latest: ${latestVersion.value}');
       print('⚡ Force Update: $forceUpdate');

@@ -3997,17 +3997,17 @@ class _CustomerRow extends StatelessWidget {
               Text(
                 orderModel.takeAway == true
                     ? 'Take Away'.tr
-                    : orderModel.address?.getFullAddress() ?? '',
+                    : orderModel.id ?? '',
                 style: TextStyle(
-                  color: isDark ? AppThemeData.grey400 : AppThemeData.grey500,
-                  fontSize: 12,
+                  color: isDark ? AppThemeData.grey50 : AppThemeData.grey900,
+                  fontSize: 14,
                   fontFamily: AppThemeData.medium,
                 ),
               ),
             ],
           ),
         ),
-        const Icon(Icons.chevron_right),
+        // const Icon(Icons.chevron_right),
       ],
     );
   }
@@ -5181,7 +5181,7 @@ class _EstimatedTimeDialog extends StatelessWidget {
       await AudioPlayerService.playSound(false);
 
       // Radius fetch (cached)
-      double radius = Constant.driverSearchRadius ?? 10.0;
+      double radius = Constant.driverSearchRadius ?? 5.0;
       if (Constant.driverSearchRadius == null) {
         try {
           final res = await http.get(
@@ -5193,12 +5193,12 @@ class _EstimatedTimeDialog extends StatelessWidget {
             if (data['success'] == true) {
               radius = double.tryParse(
                   data['data']['driverRadios'].toString()) ??
-                  10.0;
+                  5.0;
               Constant.driverSearchRadius = radius;
             }
           }
         } catch (_) {
-          radius = 10.0;
+          radius = 5.0;
           Constant.driverSearchRadius = radius;
         }
       }

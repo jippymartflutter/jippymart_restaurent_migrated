@@ -513,7 +513,8 @@ class AddFromCatalogController extends GetxController {
       subtitle: o.subtitle, // carry master option subtitle into UI
       price: (o.price ?? 0).toString(),
       originalPrice: (o.price ?? 0).toString(),
-      isAvailable: true,
+      // New catalog options start disabled; vendor must enable explicitly.
+      isAvailable: false,
     )).toList();
 
     return SelectedProductModel(
@@ -579,10 +580,17 @@ class AddFromCatalogController extends GetxController {
     if (selectedProducts.isEmpty) return 'Please select at least one product.';
     for (final e in selectedProducts.entries) {
       if (e.value.merchantPrice <= 0) {
-        return 'Merchant price must be greater than 0 for "${e.key}".';
+        return 'Merchant price must be greater than 0.';
       }
       if (e.value.discountPrice > e.value.onlinePrice) {
         return 'Discount price cannot be greater than online price.';
+      }
+      for (final opt in e.value.options) {
+        if (!opt.isAvailable) continue;
+        final price = double.tryParse(opt.price) ?? 0;
+        if (price <= 0) {
+          return 'Option "${opt.title}" must have a price greater than 0.';
+        }
       }
     }
     return null;
